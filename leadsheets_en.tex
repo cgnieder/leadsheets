@@ -1,0 +1,847 @@
+% arara: pdflatex: { shell: on }
+% !arara: biber
+% !arara: pdflatex
+\documentclass[load-preamble+]{cnltx-doc}
+\usepackage{leadsheets}
+\setcnltx{
+  package = leadsheets ,
+  authors = Clemens Niederberger ,
+  email   = contact@mychemistry.eu ,
+  url     = https://github.com/cgnieder/leadsheets/ ,
+  add-frame-options = {
+    skipabove = .5\baselineskip ,
+    skipbelow = .5\baselineskip
+  } ,
+%   info = ,
+  add-cmds = {
+    chord , chordname ,
+    definesongtitletemplate ,
+    ifsongproperty ,
+    setchordnames ,
+    setleadsheets ,
+    songproperty
+  } ,
+  add-envs = {
+    chorus,
+    interlude,
+    intro,
+    song,
+    verse
+  } ,
+  index-setup = { othercode=\footnotesize, level=\section} ,
+  makeindex-setup = {  columns=3, columnsep=1em }
+}
+
+\defbibheading{bibliography}{\section{References}}
+\addbibresource{\jobname.bib}
+
+\usepackage{filecontents}
+\begin{filecontents}{\jobname.bib}
+@book{book:realbook,
+  author    = {Various} ,
+  title     = {The Real Book} ,
+  volume    = {I} ,
+  subtitle  = {C Edition} ,
+  publisher = {Hal Leonard Publishing Corporation} ,
+  isbn      = {978-0634060380} ,
+  date      = {2000-01-01} ,
+  edition   = {6th edition}
+}
+@book{book:newrealbook,
+  author    = {Various} ,
+  title     = {The New Real Book} ,
+  volume    = {I} ,
+  subtitle  = {C Edition} ,
+  publisher = {Ama Verlag} ,
+  isbn      = {978-0961470142} ,
+  date      = {2009-02-12} ,
+  edition   = {1st edition}
+}
+\end{filecontents}
+
+\usepackage{booktabs}
+
+\newpackagename\musicsymbols{musicsymbols}
+\newpackagename\chordnames{chordnames}
+
+\setchordnames{format=\libertineLF}
+
+\colorlet{property}{cnltxgreen}
+\newenvironment{properties}
+  {\colorlet{option}{property}\options}
+  {\endoptions}
+
+\newrobustcmd*\property[1]{{\colorlet{option}{property}\option*{#1}}}
+\newrobustcmd*\symarg[1]{\textcolor{argument}{\code{#1}}}
+
+\AfterPackage{hyperref}{%
+\pdfstringdefDisableCommands{%
+  \def\property#1{#1}%
+}}
+
+\begin{document}
+
+\part{About the Bundle}
+
+\section{License and Requirements}
+
+\license
+
+\leadsheets{} requires the bundles \bnd{l3kernel}~\cite{bnd:l3kernel} and
+\bnd{l3packages}~\cite{bnd:l3packages} ro be available.  It also needs the
+package \pkg{translations}~\cite{pkg:translations}.
+
+\section{Background}
+
+Over the years I repeatedly wanted to typeset simple leadsheets of songs, \ie,
+song lyrics and the corresponding chords\footnote{I also have had the need to
+  typeset leadsheets in the style of the \citetitle{book:realbook} -- but this
+  is a task where other software than \LaTeX{} is far easier.}.  This is not
+too hard with standard \LaTeX{} commands and environments but it is not very
+convenient\ldots{} so looking for existing packages is the logical next step
+and I found two very promising packages: \pkg{songs}~\cite{pkg:songs} and
+\pkg{songbook}~\cite{pkg:songbook}.  However, both were note \emph{quite} what
+I wanted.  Just a bit to inflexible in the wrong places, needing tweaking here
+and there, and so one.  On the other hand I had quite some code lying on my
+hard drive with various attempts of typesetting leadsheets.  This bundle of
+packages is now the attempt to have a clean, documented and customisable
+version of my code.
+
+\part{The \musicsymbols{} Package}
+
+The \musicsymbols{} package is a very small package that makes the music
+symbol font provided by MusiX\TeX{} available as text font and then uses it to
+define a number of symbols.  This redefines the macros \cs{sharp}, \cs{flat}
+and \cs{natural}.  All defined symbold are listed in
+table~\ref{tab:musicsymbols}.
+
+\musicsymbols{} defines three further commands, namely \cs{musix},
+\cs{textmusix} -- a font switch and a text font command -- and
+\cs{musicsymbol}.  Those commands are meant for internal use only which is why
+they're not explained here.
+
+\begin{table}
+  \centering
+  \newcommand*\showsymbol[1]{\cs{#1}&\csuse{#1}}
+  \caption{Symbols defined by \musicsymbols.}
+  \begin{tabular}{llll}
+    \toprule
+      \bfseries command & \bfseries symbol &
+      \bfseries command & \bfseries symbol \\
+    \midrule
+      \showsymbol{sharp}       & \showsymbol{flat} \\
+      \showsymbol{doublesharp} & \showsymbol{doubleflat} \\
+      \showsymbol{natural} \\
+    \midrule
+      \showsymbol{trebleclef}  & \showsymbol{bassclef} \\
+      \showsymbol{altoclef}    \\
+    \midrule
+      \showsymbol{allabreve}   & \showsymbol{meterC} \\
+    \midrule
+      \showsymbol{wholerest}   & \showsymbol{halfrest} \\
+      \showsymbol{quarterrest} & \showsymbol{eighthrest} \\
+      \showsymbol{sixteenthrest} \\
+    \bottomrule
+  \end{tabular}
+  \label{tab:musicsymbols}
+\end{table}
+
+\part{The \chordnames{} Package}
+\section{The \cs*{chordname} Command}
+
+\chordnames{} provides the command \cs{chordname}\marg{chord} for convenient
+typesetting of chords:
+
+\begin{example}[side-by-side]
+  \chordname{Bb7(#9)} \chordname{Bbb9}
+  \chordname{C#7(#9)} \chordname{C##9}
+\end{example}
+
+\begin{commands}
+  \command{chordname}[\marg{chord}]
+    Typesetting chords.  Inside the argument every \code{\#} will be replaced
+    by $\sharp$ and every \code{b} is replaced with $\flat$.  Numerals and
+    parentheses are typeset as superscripts.  Everything between parentheses
+    is always a superscript: \verbcode+\chordname{F#7(#11)}+
+    \chordname{F#7(#11)}.
+\end{commands}
+
+There are several token lists that are treated specially inside \cs{chordname}:
+\begin{itemize}
+  \item \code{\^{}} -- This token is replaced by \cs*{textsuperscript}.
+  \item \code{ma} -- The symbol for major chords.  Per default this is
+    empty. \verbcode+\chordname{Gma}+ \chordname{Gma}.
+  \item \code{mi} -- The symbol for minor chords.  Per default this is
+    \code{m}.  \verbcode+\chordname{Gmi}+ \chordname{Gmi}.
+  \item \code{o} -- The symbol for diminished chords.  Per default this is
+    \code{\cs*{textsuperscript}\Marg{o}}.  \verbcode+\chordname{Go}+
+    \chordname{Go}.
+  \item \code{+} -- The symbol for augmented chords.  Per default this is
+    \code{\cs*{textsuperscript}\Marg{+}}.  \verbcode!\chordname{G+}!
+    \chordname{G+}.
+  \item \code{/o} -- The symbol for half diminished chords.  Per default
+    this is \code{\cs*{textsuperscript}\Marg{\cs*{o}\Marg{}}}.
+    \verbcode+\chordname{G/o}+ \chordname{G/o}.
+  \item \code{add} -- This is superscripted: \verbcode+\chordname{Gadd9}+
+    \chordname{Gadd9}.
+  \item \code{sus} -- This is superscripted: \verbcode+\chordname{Gsus4}+
+    \chordname{Gsus4}.
+  \item \code{dim} -- This is superscripted: \verbcode+\chordname{Gdim5}+
+    \chordname{Gdim5}.
+  \item \code{maj7} -- This is superscripted: \verbcode+\chordname{Gmaj7}+
+    \chordname{Gmaj7}.
+  \item \code{maj9} -- This is superscripted: \verbcode+\chordname{Gmaj9}+
+    \chordname{Gmaj9}.
+\end{itemize}
+
+How these token lists are treated depends on optional settings:
+
+\begin{example}
+  \setchordnames{
+    major-seven = $\Delta$ ,
+    major-nine  = $\Delta$\textsuperscript{9}
+  }
+  \chordname{Gmaj7} \chordname{Gmaj9}
+  \chordname{G^6} \chordname{G6}
+  \chordname{G7^#5}
+\end{example}
+
+\section{Options}
+
+Options are set with the command
+\begin{commands}
+  \command{setchordnames}[\marg{options}]
+    where \meta{options} is a comma separated list of keyval options.
+\end{commands}
+\begin{options}
+  \keyval{format}{code}\Default
+    Code inserted before a chord within the same group. Can be used for
+    special formatting of the chords, with \cs*{sffamily}, say.
+  \keyval{sharp}{code}\Default{\cs{sharp}}
+    The sharp symbol.
+  \keyval{flat}{code}\Default{\cs{flat}}
+    The flat symbol.
+  \keyval{double-sharp}{code}\Default{\cs{doublesharp}}
+    The double sharp symbol.
+  \keyval{double-flat}{code}\Default{\cs{doubleflat}}
+    The double flat symbol.
+  \keyval{aug}{code}\Default{+}
+    The augmented symbol.
+  \keyval{half-dim}{code}\Default{\cs*{o}\Marg{}}
+    The half-diminished symbol.
+  \keyval{full-dim}{code}\Default{o}
+    The diminished symbol.
+  \keyval{dim}{code}\Default{\cs*{textsuperscript}\Marg{dim}}
+    The token list \code{dim}.
+  \keyval{add}{code}\Default{\cs*{textsuperscript}\Marg{add}}
+    The token list \code{add}.
+  \keyval{sus}{code}\Default{\cs*{textsuperscript}\Marg{sus}}
+    The token list \code{sus}.
+  \keyval{major}{code}\Default
+    The token list \code{ma}.
+  \keyval{minor}{code}\Default{m}
+    The token list \code{mi}.
+  \keyval{major-seven}{code}\Default{\cs*{textsuperscript}\Marg{maj7}}
+    The token list \code{maj7}.
+  \keyval{major-nine}{code}\Default{\cs*{textsuperscript}\Marg{maj9}}
+    The token list \code{maj9}.
+\end{options}
+
+\part{The \leadsheets{} Package}
+
+The \leadsheets{} package allows for easy creation of leadsheets but it also
+can be used to create complete songbooks. The basic idea is that songs are
+typeset in the \env{song} environment.  Each song gets a number of properties
+(see section~\ref{sec:song-properties}) that determine how the title of the
+song is typeset.  For the typesetting of the titles a template mechansim is
+used (see section~\ref{sec:title-templates}).  Songs can also be tagged.  The
+tags then allow to typeset only songs matching a list of tags that is
+specified via an option.
+
+\section{The \env*{song} Environment}
+
+\begin{environments}
+  \environment{song}[\oarg{options}\marg{properties}]
+    The main environment used to typeset songs.
+\end{environments}
+
+\subsection{A First Example}
+First let's take a look at an example:
+
+\begin{example}[
+  compile,
+  graphics={trim={2cm 18cm 2cm 2cm},clip},
+  add-sourcecode-options={literate=}]
+  \documentclass{article}
+  \usepackage{leadsheets}
+  \begin{document}
+
+  \begin{song}{title=Layla,composer=Eric Clapton,tags={clapton,unplugged,r&b}}
+  \begin{verse}
+    What will you do when you get lonely? \\
+    Noone waiting by your side. \\
+    You've been runnin', hidin' much too long. \\
+    You know it's just your foolish pride .
+  \end{verse}
+  \begin{chorus}
+    Layla, got me on my knees. \\
+    Layla, beggin' darlin', please! \\
+    Layla, darlin' won't you ease my worried mind? 
+  \end{chorus}
+  \end{song}
+  
+  \end{document}
+\end{example}
+
+Per default the songtitle simply is a \cs{section}\sarg{} without any other
+additions.  This is the songtitle template \enquote{minimal}, see
+section~\ref{sec:title-templates} for more details on those templates and how
+to create your own.
+
+\subsection{Using the \env*{song} Environment}
+
+Inside the \env{song} environment a number of additional environments are used
+to specify the different parts of a song.  They all are basically the same
+kind of environment, namely an \env*{itemize} environment internally where the
+only \cs*{item} has the name of the environment as option.  The \env{verse}
+environment is a little bit different since verses can be numbered.  If they
+are then each usage of \env{verse} inside \env{song} will step a vers number
+and print it (as option to the internal \cs*{item}).
+
+\begin{environments}
+  \environment{verse}[\oarg{options}]
+    An environment for specifying the verses of a song.
+  \environment{chorus}[\oarg{options}]
+    An environment for specifying the chorus of a song.\\
+    This is the same as \beginenv*\Marg{verse}\Oarg{type=chorus,\meta{options}}.
+  \environment{intro}[\oarg{options}]
+    An environment for specifying the intro of a song.\\
+    This is the same as \beginenv*\Marg{verse}\Oarg{type=intro,\meta{options}}.
+  \environment{interlude}[\oarg{options}]
+    An environment for specifying an interlude of a song.\\
+    This is the same as \beginenv*\Marg{verse}\Oarg{type=interlude,\meta{options}}.
+  \environment{bridge}[\oarg{bridge}]
+    An environment for specifying a bridge of a song.\\
+    This is the same as \beginenv*\Marg{verse}\Oarg{type=bridge,\meta{options}}.
+\end{environments}
+
+These environments and their options are described in more detail in
+sections~\ref{sec:envverse-environment} and~\ref{sec:other-envverse-like}.
+
+\subsection{Options}
+
+The options to the \env{song} environment are the same as the general options
+of \leadsheets.  This means you can set the following options either local to
+a song or global for the whole document with this command:
+
+\begin{commands}
+  \command{setleadsheets}[\marg{options}]
+    Setup command for \leadsheets.
+\end{commands}
+
+Although I used the word \enquote{global} above \emph{all options are local to
+  the current scope}!
+
+\begin{options}
+  \keyval{title-template}{template name}\Default{minimal}
+    The songtitle template, see section~\ref{sec:title-templates} for
+    details.
+  \keyval{chord-cs}{cs}\Default{\cs*{chordname}}
+    The command that is used to parse the chords.  See
+    section~\ref{sec:placing-chords} for details.  \meta{cs} needs to be a
+    command that takes a mandatory argument.
+  \keyval{song-format}{\TeX{} code}\Default
+    \meta{\TeX{} code} is inserted \emph{before} the song title at the
+    beginning of the \env{song} environment.
+  \keyval{text-format}{\TeX{} code}\Default
+    \meta{\TeX{} code} is inserted \emph{after} the song title at the
+    beginning of the \env{song} environment.
+  \keybool{numbered}\Default{false}
+    Determines wether verses are numbered or not.
+  \keyval{print-tags}{list of tags}
+    A comma separated list of tags. When specified a song will only be printed
+    if it is tagged with at least one of the tags in \meta{list of tags}.
+\end{options}
+
+\subsection{Song Properties}\label{sec:song-properties}
+
+Songs can have a number of properties which basically are used in songtitle
+templates (see section~\ref{sec:title-templates}).  One specific property,
+\property{tags}, plays a different role, though.
+
+\begin{properties}
+  \keyval*{title}{title}
+    This is the main title of the song.
+  \keyval*{subtitle}{subtitle}
+    A subtitle.
+  \keyval*{short-title}{short song title}
+    A short title (may be useful in a template that writes the titles in
+    \cs*{section}s for a version to be used in the table of contents).
+  \keyval*{sort-title}{song title}
+    If not set explicitly this property holds the same value as
+    \property{title}.
+  \keyval*{sort-short-title}{short song title}
+    If not set explicitly this property holds the same value as
+    \property{short-title}.
+  \keyval*{composer}{composer}
+    The composer of the song.  As of now this accepts an arbitrary entry but
+    maybe this will not be supported any more when indexing will be
+    implemented.  No promises.
+  \keyval*{sort-composer}{composer}
+    If not set explicitly this property holds the same value as
+    \property{composer}.
+  \keyval*{lyrics}{writer}
+    Whoever wrote the lyrics if different from the composer.  As of now this
+    accepts an arbitrary entry but maybe this will not be supported any more
+    when indexing will be implemented.  No promises.
+  \keyval*{sort-lyrics}{writer}
+    If not set explicitly this property holds the same value as
+    \property{writer}.
+  \keyval*{arr}{arranger}
+    Whoever arranged the song.  As of now this accepts an arbitrary entry but
+    maybe this will not be supported any more when indexing will be
+    implemented.  No promises.
+  \keyval*{sort-arr}{arranger}
+    If not set explicitly this property holds the same value as
+    \property{arr}.
+  \keyval*{band}{band}
+    The band who plays or played the song.
+  \keyval*{sort-band}{band}
+    If not set explicitly this property holds the same value as
+    \property{band}.
+  \keyval*{interpret}{interpret}
+    The interpret of the song.  As of now this accepts an arbitrary entry but
+    maybe this will not be supported any more when indexing will be
+    implemented.  No promises.
+  \keyval*{sort-interpret}{interpret}
+    If not set explicitly this property holds the same value as
+    \property{interpret}.
+  \keyval*{genre}{genre}
+    The genre of the song.
+  \keyval*{key}{key}
+    The key of the song.  This property will be used when transposing will be
+    implemented, see section~\ref{sec:transposing}.
+  \keyval*{tempo}{tempo}
+    The tempo of the song.
+  \keyval*{tags}{tags}
+    A comma separated list of tags. Those tags play a role for the option
+    {\colorlet{option}{cnltxyellow}\option{print-tags}}.  When that option is
+    used a song is only printed if it has at least one of the tags specified
+    in the option.
+\end{properties}
+
+There are two more properties, \property{counter} and \property{ID} that
+cannot be set but are set automatically for each song.  The \property{counter}
+simply holds the number of the current song starting from \code{1} for the
+first song.  The \property{ID} currently always ia \code{song\meta{counter}}
+where \meta{counter} is the current \property{counter} value.
+
+In principle all properties can get list of entries where items are separated
+with \code{\visualizespaces{ and }}.  Of course this doesn't make sense for
+each property -- a song does only have one title.  But a song can very well
+have more than one composer: think of the Beatles where most songs are written
+by Paul McCartney and John Lennon\footnote{This is not quite true: most songs
+  were written either by Paul or John but legally usually both are the
+  composers.}.
+
+It is possibly to define further such properties.  For details see
+section~\ref{sec:available-commands}.
+
+\section{The \env*{verse} Environment}\label{sec:envverse-environment}
+
+\begin{environments}
+  \environment{verse}[\oarg{options}]
+    An environment for specifying the verses of a song.
+  \environment{verse*}[\oarg{options}]
+    The same as the \env{verse} environment but will always be unnumbered
+    regardless of any option settings.
+\end{environments}
+
+\begin{example}[
+  compile,
+  graphics={trim={2cm 18cm 2cm 2cm},clip},
+  add-sourcecode-options={literate=}]
+  \documentclass{article}
+  \usepackage{leadsheets}
+  \begin{document}
+
+  \begin{song}[numbered]{title=Foo}
+  \begin{verse}
+    Lorem ipsum dolor sit amet, consetetur sadipscing elitr,\\
+    sed diam nonumy eirmod tempor invidunt ut labore et dolore\\
+    magna aliquyam erat, sed diam voluptua.
+  \end{verse}
+  \begin{verse*}
+    Lorem ipsum dolor sit amet, consetetur sadipscing elitr,\\
+    sed diam nonumy eirmod tempor invidunt ut labore et dolore\\
+    magna aliquyam erat, sed diam voluptua.
+  \end{verse*}
+  \begin{verse}
+    Lorem ipsum dolor sit amet, consetetur sadipscing elitr,\\
+    sed diam nonumy eirmod tempor invidunt ut labore et dolore\\
+    magna aliquyam erat, sed diam voluptua.
+  \end{verse}
+  \end{song}
+  
+  \end{document}
+\end{example}
+
+\subsection{Options}
+
+Currently the \env{verse} environment and all related environments only have
+one option:
+
+\begin{options}
+  \keyval{type}{type}
+    The option determines what type of verse is to be typeset. For instance
+    \keyis{type}{chorus} will typeset a chorus.  Which types are available
+    will become clear in section~\ref{sec:other-envverse-like}.
+\end{options}
+
+\begin{example}
+  \begin{verse}[type=chorus]
+    Lorem ipsum dolor sit amet, consetetur sadipscing elitr,\\
+    sed diam nonumy eirmod tempor invidunt ut labore et dolore\\
+    magna aliquyam erat, sed diam voluptua.
+  \end{verse}
+\end{example}
+
+\subsection{Placing Chords}\label{sec:placing-chords}
+
+Inside the \env{song} environment the character \code{\textasciicircum} is an
+active character which is defined to place a chord above words.  More
+precisely is is equal to the following command:
+
+\begin{commands}
+  \command{chord}[\sarg\symarg{-}\marg{chord}\meta{text}\visiblespace]
+    Places \meta{chord} centered above \meta{text}.  The starred version
+    gobbles the trailing space while the unstarred version does not.  Like the
+    star the dash is optional.  It sets the option \option{smash-next-chord}
+    to \code{true}.  \meta{text} may be empty but the trailing space
+    \emph{must} be there.  If \meta{text} is empty then the chord is place
+    above some horizontal space which can be set with the option
+    \option{empty-chord-dim}.
+\end{commands}
+
+\begin{example}[side-by-side]
+  Text \chord{E7}text \chord*{B7}lon ger text 
+\end{example}
+
+Note that per default the width of a chord is not ignored:
+\begin{example}[side-by-side]
+  text \chord{Gbmi7(b5)}text text
+\end{example}
+However, there is an option which sets the width of a chord to zero:
+\begin{options}
+  \keybool{smash-chords}\Default{false}
+    If set to true the width of the chords set with \cs{chord} is set to
+    zero.
+  \keybool{smash-next-chord}\Default{false}
+    If set to true the width of the next chord set with \cs{chord} is set to
+    zero.
+\end{options}
+\begin{example}[side-by-side]
+  \setleadsheets{smash-next-chord=true}
+  text \chord{Gbmi7(b5)}text text \par
+  text \chord{Gbmi7(b5)}text text \par
+  \setleadsheets{smash-chords=true}
+  text \chord{Gbmi7(b5)}text text \par
+  text \chord{Gbmi7(b5)}text text
+\end{example}
+
+Before we forget:
+\begin{options}
+  \keyval{empty-chord-dim}{dim}\Default{1em}
+    The horizontal space that is inserted if the \meta{text} argument of
+    \cs{chord} is empty.
+\end{options}
+
+While \cs{chord} is available in the whole document the
+\code{\textasciicircum} syntax is -- as mentioned before -- only available
+inside of the \env{song} environment.
+
+\begin{example}[
+  compile,
+  graphics={trim={2cm 16cm 2cm 4cm},clip},
+  add-sourcecode-options={literate=}]
+  \documentclass{article}
+  \usepackage{leadsheets}
+  \begin{document}
+
+  \begin{song}{title=Layla,composer=Eric Clapton,tags={clapton,unplugged,r&b}}
+  \begin{verse}
+    ^{C#mi7} What will you do when you get ^*{G#7}lone ly? \\
+    ^{C#mi7} Noone ^*{C}wai ting ^{D}by your ^{E}side. ^{E7} \\
+    ^{F#mi} You've been ^*{B}run nin', ^*{E}hid in' much too ^{A}long. \\
+    ^{F#mi} You know it's ^{B}just your foolish ^{E}pride .
+  \end{verse}
+  \begin{chorus}
+    ^*{A}Lay ---^-{Dmi7}la, \quad ^{Bb} ^{C}got me on my knees. \\
+    Lay^-{Dmi7}la, \quad ^{Bb} ^*{C}beg gin' darlin', ^{Dmi7}please, Layla. \\
+    Darlin' won't you ease my worried ^{Dmi7}mind? ^{Bb} ^{C}
+  \end{chorus}
+  \end{song}
+  
+  \end{document}
+\end{example}
+
+\subsection{Transposing}\label{sec:transposing}
+
+Provided a song has the property \property{key} \emph{and} the key is given as
+one of the twelve \enquote{usual} keys, \ie, one of the keys given in
+table~\ref{tab:key-signatures}, the chords of a song can be transposed.
+
+\begin{options}
+  \keyval{transpose}{number}
+    Transposes the chords of a song by \meta{number} of semitones.
+    \meta{nmuber} can be a negative number, then the chords are transposed
+    down.
+  \keychoice{enharmonic}{sharp,flat}
+    Suppose you transpose a song in the key of \chordname{E} down a semitone.
+    \leadsheets{} will then transpose to the key of \chordname{Eb}.  It always
+    chooses the key whose signature has less accidentals.  You can force a
+    variant, though, by using this option.  With \keyis{enharmonic}{sharp}
+    \leadsheets{} would have chosen \chordname{D#} instead of \chordname{Eb}.
+\end{options}
+
+\begin{table}[hbp]
+  \centering
+  \catcode`\#=12
+  \catcode`\!=6
+  \def\showsignature!1{\chordname{!1}&\code{!1}}%
+  \caption{Allowed keys for the \property{key} property.}
+  \begin{tabular}{*{8}{l}}
+    \toprule
+      \bfseries Key & \bfseries Input &
+      \bfseries Key & \bfseries Input &
+      \bfseries Key & \bfseries Input &
+      \bfseries Key & \bfseries Input \\
+    \midrule
+      \showsignature{C}  && & \showsignature{Ami} \\
+    \cmidrule(lr){1-4} \cmidrule(lr){5-8}
+      \showsignature{G}  & \showsignature{F}  & \showsignature{Emi}  & \showsignature{Dmi} \\
+      \showsignature{D}  & \showsignature{Bb} & \showsignature{Bmi}  & \showsignature{Gmi} \\
+      \showsignature{A}  & \showsignature{Eb} & \showsignature{F#mi} & \showsignature{Cmi} \\
+      \showsignature{E}  & \showsignature{Ab} & \showsignature{C#mi} & \showsignature{Fmi} \\
+      \showsignature{B}  & \showsignature{Db} & \showsignature{G#mi} & \showsignature{Fbmi} \\
+      \showsignature{F#} & \showsignature{Gb} & \showsignature{D#mi} & \showsignature{Ebmi} \\
+    \bottomrule
+  \end{tabular}
+  \label{tab:key-signatures}
+\end{table}
+
+\begin{example}[
+  compile,
+  graphics={trim={2cm 16cm 2cm 4cm},clip},
+  add-sourcecode-options={literate=}]
+  \documentclass{article}
+  \usepackage{leadsheets}
+  \begin{document}
+
+  \begin{song}[transpose=2]{
+      title=Layla,
+      composer=Eric Clapton,
+      tags={clapton,unplugged,r&b},
+      key = Dmi
+    }
+  \begin{verse}
+    ^{C#mi7} What will you do when you get ^*{G#7}lone ly? \\
+    ^{C#mi7} Noone ^*{C}wai ting ^{D}by your ^{E}side. ^{E7} \\
+    ^{F#mi} You've been ^*{B}run nin', ^*{E}hid in' much too ^{A}long. \\
+    ^{F#mi} You know it's ^{B}just your foolish ^{E}pride .
+  \end{verse}
+  \begin{chorus}
+    ^*{A}Lay ---^-{Dmi7}la, \quad ^{Bb} ^{C}got me on my knees. \\
+    Lay^-{Dmi7}la, \quad ^{Bb} ^*{C}beg gin' darlin', ^{Dmi7}please, Layla. \\
+    Darlin' won't you ease my worried ^{Dmi7}mind? ^{Bb} ^{C}
+  \end{chorus}
+  \end{song}
+  
+  \end{document}
+\end{example}
+
+\section{Other \env*{verse}-like Environments}\label{sec:other-envverse-like}
+Songs can have lots of different kinds of parts: verses, choruses, bridges,
+intros, outros, and so on.  Typographically they're all more or less the same,
+at least for the purpose of this package.  This means we'd ideally have
+environments for all of these parts with a distinct name in order to get a
+clean source.  At the same time these environments should all behave basically
+the same.  This is what the environments described in the following sections
+are for.
+
+\subsection{Available Environments}\label{sec:avail-envir}
+
+\begin{environments}
+  \environment{chorus}[\oarg{options}]
+    An environment for specifying the chorus of a song.\\
+    This is the same
+    as \beginenv*\Marg{verse}\Oarg{type=chorus,\meta{options}}.
+  \environment{chorus*}[\oarg{options}]
+    An environment for specifying the chorus of a song.\\
+    This is the same as \beginenv*\Marg{verse}\Oarg{type=chorus*,\meta{options}}.
+    It does not display an introductory title to the left of the environment
+    text.
+  \environment{intro}[\oarg{options}]
+    An environment for specifying the intro of a song.\\
+    This is the same as \beginenv*\Marg{verse}\Oarg{type=intro,\meta{options}}.
+  \environment{intro*}[\oarg{options}]
+    An environment for specifying the intro of a song.\\
+    This is the same as \beginenv*\Marg{verse}\Oarg{type=intro*,\meta{options}}.
+    It does not display an introductory title to the left of the environment
+    text.
+  \environment{interlude}[\oarg{options}]
+    An environment for specifying an interlude of a song.\\
+    This is the same as \beginenv*\Marg{verse}\Oarg{type=interlude,\meta{options}}.
+  \environment{bridge}[\oarg{bridge}]
+    An environment for specifying a bridge of a song.\\
+    This is the same as \beginenv*\Marg{verse}\Oarg{type=bridge,\meta{options}}.
+  \environment{info}[\oarg{options}]
+    An environment for specifying arbitrary information.\\
+    This is the same as \beginenv*\Marg{verse}\Oarg{type=info,\meta{options}}.
+    It does not display an introductory title to the left of the environment
+    text.
+  \environment{solo}[\oarg{options}]
+    An environment for specifying a solo to a song.\\
+    This is the same as \beginenv*\Marg{verse}\Oarg{type=solo,\meta{options}}.
+  \environment{solo*}[\oarg{options}]
+    An environment for specifying a solo to a song.\\
+    This is the same as \beginenv*\Marg{verse}\Oarg{type=solo*,\meta{options}}.
+    It does not display an introductory title to the left of the environment
+    text.
+\end{environments}
+
+\subsection{Own \env*{verse}-like Environments}
+All environments mentioned in the previous section were defined with this
+command:
+\begin{commands}
+  \command{newversetype}[\sarg\marg{environment name}\marg{displayed name}]
+    This defines an environment \meta{environment name} with the text
+    \meta{displayed name} at the start of the environment left to the text.
+    The starred version defines an environment which hides the displayed
+    name.  The environment also defines a translation string (see
+    section~\ref{sec:internationalization}) \code{leadsheets/\meta{environment
+      name}} with \meta{displayed name} both as translation fallback and as
+    English translation.
+\end{commands}
+
+
+
+\section{Title Templates}\label{sec:title-templates}
+
+\subsection{Existing Templates}
+
+\subsection{Own Templates}
+\subsubsection{An Example}
+\begin{example}[
+  compile,
+  graphics={trim={2cm 18cm 2cm 2cm},clip},
+  add-sourcecode-options={literate=}]
+  \documentclass{article}
+  \usepackage{leadsheets}
+  \definesongtitletemplate{custom}{
+    \section{%
+      \songproperty{title}%
+      \ifsongproperty{composer}
+        { (by \songproperty{composer})}
+        {}%
+    }
+  }
+  \setleadsheets{title-template = custom}
+  \begin{document}
+
+  \begin{song}{title=Layla,composer=Eric Clapton,tags={clapton,unplugged,r&b}}
+  \begin{verse}
+    What will you do when you get lonely? \\
+    Noone waiting by your side. \\
+    You've been runnin', hidin' much too long. \\
+    You know it's just your foolish pride .
+  \end{verse}
+  \begin{chorus}
+    Layla, got me on my knees. \\
+    Layla, beggin' darlin', please! \\
+    Layla, darlin' won't you ease my worried mind? 
+  \end{chorus}
+  \end{song}
+  
+  \end{document}
+\end{example}
+
+\subsubsection{Available Commands}\label{sec:available-commands}
+First there are two commands related to defining new properties:
+\begin{commands}
+  \command{definesongproperty}[\marg{property}]
+    Defines a new property \meta{property}.  All existing properties have been
+    defined this way.  The command can only be used in the preamble.
+  \command{copysongproperty}[\marg{from}\marg{to}]
+    Copies the values of property \meta{from} to property \meta{to} if
+    property \meta{to} has not been set but property \meta{from} has been.
+    All \code{sort-\meta{property}} properties have been treated this way.
+    The command can only be used in the preamble.
+\end{commands}
+
+Then there are a number of commands related to retrieving and using the values
+of properties.  All these commands only make sense inside a template
+definition.  Some of the commands are expandable which means they can be used
+in an \cs*{edef} like context, \ie, there are also suitable for writing the
+property values to the table of contents or other auxiliary files.
+\begin{commands}
+  \expandable\command{songproperty}[\marg{property}]
+    Retrieves property \meta{property}.
+  \command{printsongpropertylist}[\oarg{code}\marg{property}\marg{between
+    two}\marg{between more}\marg{between last two}]\Default{\cs*{@firstofone}}
+    Prints a property list \meta{property} separated with \meta{between two}
+    if the list contains only two items and separated with \meta{between more}
+    and \meta{between last two} if the list contains more than two items.
+    \meta{code} is placed directly in front of each item and items are
+    surrounded with braces which means that the last token in \meta{code} may
+    be a macro with a mandatory argument.
+  \command{usesongpropertylist}[\oarg{code}\marg{property}\marg{between}]%
+    \Default{\cs*{@firstofone}}
+    Like \cs{printsongpropertylist} but separates items with \meta{between}
+    regardless of the length of the list.
+  \expandable\command{forsongpropertylist}[\marg{property}\marg{code}]
+    Places all items of the property list \meta{property} in the input stream,
+    each item preceded with \meta{code}.  Items are surrounded with braces
+    which means that the last token in \meta{code} may be a macro with a
+    mandatory argument.
+  \expandable\command{ifsongproperty}[\marg{property}\marg{true}\marg{false}]
+    Checks if property \meta{property} has been set.
+  \command{ifsongpropertiesequal}[\marg{property 1}\marg{property
+    2}\marg{true}\marg{false}]
+    Checks if properties \meta{property 1} and \meta{property 2} have been set
+    to the same value.
+  \command{expandsongpropertycode}[\marg{code}]
+    Exhaustively expands \meta{code}.  Experienced user won't need this.  It
+    is essentially
+    
+    \cs*{begingroup}\cs*{edef}\cs*{x}\Marg{\cs*{endgroup}\meta{code}}\cs*{x}.
+
+    (More precisely it is a wrapper for the expl3 function \cs*{use:x}.)  This
+    means that any \code{\#} needs to doubled.
+\end{commands}
+
+\section{Internationalization}\label{sec:internationalization}
+
+\part{Appendix}
+\appendix
+
+% \section{Future Plans}\label{sec:future-plans}
+
+% This very early draft of \leadsheets{} lacks a number of features I have
+% planned to implement:
+
+% \begin{itemize}
+%   \item Transposing.  The idea is the following: provided the property
+%     \code{key} is given to a song an option \option*{transpose} will recieve a
+%     positive or negative integer that determines how many half tones a song
+%     will be transposed up or down.  Since in equal temperament notes have
+%     enharmonic equivalents a further option \option*{enharmonic} will
+%     determine if a song with \keyis{key}{E} and \keyis*{transpose}{2} will be
+%     transposed to \chordname{F#} or \chordname{Gb}.
+%   \item Indexing.  A hopefully flexible indexing mechanism will allow to index
+%     songs by title, composers, and interprets.  This will require for a user
+%     to be able to set which indexing commands are used for each of those song
+%     properties.
+% \end{itemize}
+
+\end{document}

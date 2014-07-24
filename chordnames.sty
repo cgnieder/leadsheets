@@ -1,0 +1,144 @@
+\RequirePackage{expl3,xparse}
+\ProvidesExplPackage{chordnames}
+  {2014/07/16}
+  {v0.0}
+  {typesetting chord names with easy syntax}
+
+\RequirePackage{musicsymbols}
+
+\tl_new:N \l__chordnames_chord_tl
+\tl_new:N \l__chordnames_tension_tl
+\tl_new:N \l__chordnames_format_tl
+
+\cs_new_protected:Npn \chordnames_tension_sym:Nn #1#2
+  { \tl_replace_all:Nnn #1 {#2} { \textsuperscript{#2} } }
+
+\cs_new_protected:Npn \chordnames_chord_sym:Nnn #1#2#3
+  { \tl_replace_all:Nnn #1 {#2} {#3} }
+
+\tl_new:N \l__chordnames_sharp_tl
+\tl_new:N \l__chordnames_flat_tl
+\tl_new:N \l__chordnames_doublesharp_tl
+\tl_new:N \l__chordnames_doubleflat_tl
+\tl_new:N \l__chordnames_full_dim_tl
+\tl_new:N \l__chordnames_half_dim_tl
+\tl_new:N \l__chordnames_aug_tl
+\tl_new:N \l__chordnames_major_tl
+\tl_new:N \l__chordnames_minor_tl
+\tl_new:N \l__chordnames_sus_tl
+\tl_new:N \l__chordnames_dim_tl
+\tl_new:N \l__chordnames_add_tl
+\tl_new:N \l__chordnames_major_seven_tl
+
+\tl_set:Nn \l__chordnames_sharp_tl       {\sharp}
+\tl_set:Nn \l__chordnames_flat_tl        {\flat}
+\tl_set:Nn \l__chordnames_doublesharp_tl {\doublesharp}
+\tl_set:Nn \l__chordnames_doubleflat_tl  {\doubleflat}
+\tl_set:Nn \l__chordnames_half_dim_tl    {\o{}}
+\tl_set:Nn \l__chordnames_full_dim_tl    {o}
+\tl_set:Nn \l__chordnames_aug_tl         {+}
+\tl_set:Nn \l__chordnames_major_tl       {}
+\tl_set:Nn \l__chordnames_minor_tl       {m}
+\tl_set:Nn \l__chordnames_sus_tl         {\textsuperscript{sus}}
+\tl_set:Nn \l__chordnames_dim_tl         {\textsuperscript{dim}}
+\tl_set:Nn \l__chordnames_add_tl         {\textsuperscript{add}}
+\tl_set:Nn \l__chordnames_major_seven_tl {\textsuperscript{maj7}}
+\tl_set:Nn \l__chordnames_major_nine_tl  {\textsuperscript{maj9}}
+
+\group_begin:
+\char_set_catcode_other:N \#
+\char_set_catcode_parameter:N \!
+
+\cs_gset_protected:Npn \chordnames_chord:
+  {
+    \group_begin:
+      \tl_use:N \l__chordnames_format_tl
+      \char_set_catcode_other:N \#
+      \chordnames_chord_aux:n
+  }
+
+\cs_gset_protected:Npn \chordnames_chord_aux:n !1
+ {
+    \tl_set:Nn \l__chordnames_chord_tl {!1}
+    \chordnames_chord_sym:Nnn  \l__chordnames_chord_tl {maj7}
+      {\l__chordnames_major_seven_tl}
+    \chordnames_chord_sym:Nnn  \l__chordnames_chord_tl {maj9}
+      {\l__chordnames_major_nine_tl}
+    \chordnames_chord_sym:Nnn  \l__chordnames_chord_tl {sus} {\l__chordnames_sus_tl}
+    \chordnames_chord_sym:Nnn  \l__chordnames_chord_tl {^} {\textsuperscript}
+    \chordnames_chord_sym:Nnn  \l__chordnames_chord_tl {##}
+      {\l__chordnames_doublesharp_tl}
+    \chordnames_chord_sym:Nnn  \l__chordnames_chord_tl {bb}
+      {\l__chordnames_doubleflat_tl}
+    \chordnames_chord_sym:Nnn  \l__chordnames_chord_tl {#b} {}
+    \chordnames_chord_sym:Nnn  \l__chordnames_chord_tl {b#} {}
+    \chordnames_chord_sym:Nnn  \l__chordnames_chord_tl {#} {\l__chordnames_sharp_tl}
+    \chordnames_chord_sym:Nnn  \l__chordnames_chord_tl {b} {\l__chordnames_flat_tl}
+    \chordnames_chord_sym:Nnn  \l__chordnames_chord_tl {dim} {\l__chordnames_dim_tl}
+    \chordnames_chord_sym:Nnn  \l__chordnames_chord_tl {add} {\l__chordnames_add_tl}
+    \chordnames_tension_sym:Nn \l__chordnames_chord_tl {0}
+    \chordnames_tension_sym:Nn \l__chordnames_chord_tl {1}
+    \chordnames_tension_sym:Nn \l__chordnames_chord_tl {2}
+    \chordnames_tension_sym:Nn \l__chordnames_chord_tl {3}
+    \chordnames_tension_sym:Nn \l__chordnames_chord_tl {4}
+    \chordnames_tension_sym:Nn \l__chordnames_chord_tl {5}
+    \chordnames_tension_sym:Nn \l__chordnames_chord_tl {6}
+    \chordnames_tension_sym:Nn \l__chordnames_chord_tl {7}
+    \chordnames_tension_sym:Nn \l__chordnames_chord_tl {8}
+    \chordnames_tension_sym:Nn \l__chordnames_chord_tl {9}
+    \chordnames_chord_sym:Nnn  \l__chordnames_chord_tl {/o}
+      {\textsuperscript{\l__chordnames_half_dim_tl}}
+    \chordnames_chord_sym:Nnn  \l__chordnames_chord_tl {o}
+      {\textsuperscript{\l__chordnames_full_dim_tl}}
+    \chordnames_chord_sym:Nnn  \l__chordnames_chord_tl {+}
+      {\textsuperscript{\l__chordnames_aug_tl}}
+    \chordnames_chord_sym:Nnn \l__chordnames_chord_tl  {(}
+      { \chordnames_tension:w( }
+    \chordnames_chord_sym:Nnn \l__chordnames_chord_tl  {mi}
+      {\l__chordnames_minor_tl}
+    \chordnames_chord_sym:Nnn \l__chordnames_chord_tl  {ma}
+      {\l__chordnames_major_tl}
+    \tl_replace_all:Nnn \l__chordnames_chord_tl
+      {\textsuperscript\textsuperscript}
+      {\textsuperscript}
+    \tl_use:N \l__chordnames_chord_tl
+    \group_end:
+  }
+
+\group_end:
+
+\cs_new_protected:Npn \chordnames_tension:w (#1)
+  {
+    \group_begin:
+      \tl_set:Nn \l__chordnames_tension_tl {#1}
+      \chordnames_chord_sym:Nnn \l__chordnames_tension_tl
+        {\textsuperscript}
+        {\use:n}
+      \textsuperscript { ( \tl_use:N \l__chordnames_tension_tl ) }
+    \group_end:
+  }
+
+\keys_define:nn {chordnames}
+  {
+    format       .tl_set:N = \l__chordnames_format_tl ,
+    sharp        .tl_set:N = \l__chordnames_sharp_tl ,
+    flat         .tl_set:N = \l__chordnames_flat_tl ,
+    double-sharp .tl_set:N = \l__chordnames_doublesharp_tl ,
+    double-flat  .tl_set:N = \l__chordnames_doubleflat_tl ,
+    half-dim     .tl_set:N = \l__chordnames_half_dim_tl ,
+    full-dim     .tl_set:N = \l__chordnames_full_dim_tl ,
+    aug          .tl_set:N = \l__chordnames_aug_tl ,
+    major        .tl_set:N = \l__chordnames_major_tl ,
+    minor        .tl_set:N = \l__chordnames_minor_tl ,
+    sus          .tl_set:N = \l__chordnames_sus_tl ,
+    add          .tl_set:N = \l__chordnames_add_tl ,
+    dim          .tl_set:N = \l__chordnames_dim_tl ,
+    major-seven  .tl_set:N = \l__chordnames_major_seven_tl ,
+    major-nine   .tl_set:N = \l__chordnames_major_nine_tl
+  }
+
+\NewDocumentCommand \setchordnames {m}
+  { \keys_set:nn {chordnames} {#1} }
+
+\NewDocumentCommand \chordname {} { \chordnames_chord: }
+

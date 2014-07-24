@@ -1,0 +1,42 @@
+\ProvidesPackage{musicsymbols}[2014/07/23 v0.1 musical symbols]
+\RequirePackage{etoolbox}
+
+% define a LaTeX font that uses the `musix' font from MusiXTeX:
+\DeclareFontFamily{U}{musix}{}%
+\DeclareFontShape{U}{musix}{m}{n}{%
+  <-12>   musix11
+  <12-15> musix13
+  <15-18> musix16
+  <18-23> musix20
+  <23->   musix29
+}{}%
+
+% a font switch command:
+\newrobustcmd*\musix{\usefont{U}{musix}{m}{n}\selectfont}
+% a text font command:
+\DeclareTextFontCommand{\textmusix}{\musix}
+
+% the `symbol' command: raises the symnol since most symbols are too low for
+% use in normal text:
+\newrobustcmd*\musicsymbol[2][0pt]{%
+  \raisebox{\dimexpr.5ex+(#1)\relax}{\textmusix{#2}}%
+}
+
+% define the symbol
+\renewrobustcmd*\sharp       {\musicsymbol[.2ex]{4}\kern-.06em}
+\renewrobustcmd*\flat        {\kern-.05em\musicsymbol{2}\kern-.06em}
+\renewrobustcmd*\natural     {\musicsymbol{6}\kern-.06em}
+\newrobustcmd*\doublesharp   {\musicsymbol{5}\kern-.05em}
+\newrobustcmd*\doubleflat    {\kern-.05em\musicsymbol{3}\kern-.06em}
+\newrobustcmd*\trebleclef    {\musicsymbol{H}}
+\newrobustcmd*\bassclef      {\musicsymbol{J}}
+\newrobustcmd*\altoclef      {\musicsymbol{K}}
+\newrobustcmd*\meterC        {\kern-.15em\musicsymbol{R}}
+\newrobustcmd*\allabreve     {\kern-.15em\musicsymbol{S}}
+\newrobustcmd*\wholerest     {\musicsymbol{<}}
+\newrobustcmd*\halfrest      {\musicsymbol{=}}
+\newrobustcmd*\quarterrest   {\musicsymbol[-1ex]{>}\kern.25em}
+\newrobustcmd*\eighthrest    {\musicsymbol[-1ex]{?}\kern.33em}
+\newrobustcmd*\sixteenthrest {\musicsymbol[-1ex]{@}\kern.33em}
+
+\endinput
