@@ -1,0 +1,34 @@
+--------------------------------------------------------------------------
+the LEADSHEETS bundle 2014/07/24
+ - musicsymbols package v0.1 -> musical symbols
+ - chordnames package v0.1   -> typesetting chord names
+ - leadsheets package v0.1   -> typesetting leadsheets
+--------------------------------------------------------------------------
+Clemens Niederberger
+Web:    https://github.com/cgnieder/leadsheets/
+E-Mail: contact@mychemistry.eu
+--------------------------------------------------------------------------
+Copyright 2014 Clemens Niederberger
+
+This work may be distributed and/or modified under the
+conditions of the LaTeX Project Public License, either version 1.3
+of this license or (at your option) any later version.
+The latest version of this license is in
+  http://www.latex-project.org/lppl.txt
+and version 1.3 or later is part of all distributions of LaTeX
+version 2005/12/01 or later.
+
+This work has the LPPL maintenance status `maintained'.
+
+The Current Maintainer of this work is Clemens Niederberger.
+--------------------------------------------------------------------------
+The leadsheets bundle consists of the following files
+ - leadsheets.sty
+ - chordnames.sty
+ - musicsymbols.sty
+ - leadsheets_en.tex
+ - leadsheets_en.pdf
+--------------------------------------------------------------------------
+If you have any ideas, questions, suggestions or bugs to report, please
+feel free to contact me.
+-------------------------------------------------------------------------- 
