@@ -1,7 +1,7 @@
 % --------------------------------------------------------------------------
 \RequirePackage{expl3}
 \ProvidesExplPackage{leadsheets}
-  {2014/07/12}
+  {2014/07/24}
   {0.0}
   {songbook~ (draft)~ (CN)}
 
@@ -49,6 +49,11 @@
 \tl_new:N    \l__leadsheets_verse_type_tl
 \tl_set:Nn   \l__leadsheets_verse_type_tl {verse}
 \tl_new:N    \l__leadsheets_verse_format_tl
+\tl_new:N    \l__leadsheets_verses_format_tl
+\tl_new:N    \l__leadsheets_verse_label_format_tl
+\tl_new:N    \l__leadsheets_verses_label_format_tl
+\tl_new:N    \l__leadsheets_verses_after_label_tl
+\tl_set:Nn   \l__leadsheets_verses_after_label_tl {:}
 \tl_new:N    \l__leadsheets_transpose_steps_tl
 \tl_new:N    \l__leadsheets_enharmonic_tl
 
@@ -723,7 +728,7 @@
 \cs_generate_variant:Nn \leadsheets_transpose:nnN { xV }
 
 % --------------------------------------------------------------------------
-\cs_new:Npn \leadsheets_verse_begin:
+\cs_new_protected:Npn \leadsheets_verse_begin:n #1
   {
     \itemize
     \tl_if_eq:VnTF \l__leadsheets_verse_type_tl {verse}
@@ -731,22 +736,28 @@
         \bool_if:NTF \l__leadsheets_verse_numbered_bool
           {
             \refstepcounter{verse}
-            \item[\theverse]
+            \item[{\tl_use:N \l__leadsheets_verse_label_format_tl \theverse}]
           }
           { \item[] }
       }
-      { \item[\leadsheets_translation:V \l__leadsheets_verse_type_tl :] }
-    \tl_use:N \l__leadsheets_verse_format_tl
+      {
+        \item[{
+          \tl_use:c {l__leadsheets_#1_label_format_tl}
+          \leadsheets_translation:V \l__leadsheets_verse_type_tl
+          \tl_use:c {l__leadsheets_#1_after_label_tl}
+        }]
+      }
+    \int_zero:N \@itemdepth
   }
 
-\cs_new:Npn \leadsheets_verse_begin_starred:
+\cs_new_protected:Npn \leadsheets_verse_begin_starred:
   {
     \itemize
     \item[]
-    \tl_use:N \l__leadsheets_verse_format_tl
+    \int_zero:N \@itemdepth
   }
 
-\cs_new:Npn \leadsheets_verse_end: { \enditemize }
+\cs_new_protected:Npn \leadsheets_verse_end: { \enditemize }
 
 \newcounter{verse}
 \tl_set:Nn \theverse { \arabic {verse} . }
@@ -755,7 +766,8 @@
   {
     \par
     \keys_set:nn {leadsheets/verse} {#1}
-    \leadsheets_verse_begin:
+    \leadsheets_verse_begin:n {}
+    \tl_use:N \l__leadsheets_verse_format_tl
   }
   { \leadsheets_verse_end: \par }
 
@@ -764,26 +776,51 @@
     \par
     \keys_set:nn {leadsheets/verse} {#1}
     \leadsheets_verse_begin_starred:
+    \tl_use:N \l__leadsheets_verse_format_tl
   }
   { \leadsheets_verse_end: \par }
 
 \cs_new_protected:Npn \leadsheets_new_verse_type:Nnn #1#2#3
   {
-     \keys_define:nn {leadsheets}
-       { verse/type/#2 .code:n = \tl_set:Nn \l__leadsheets_verse_type_tl {#2} }
-     \bool_if:NTF #1
-       {
-         \NewDocumentEnvironment {#2} {O{}}
-           { \use:c {verse*} [type={#2},##1] }
-           { \use:c {endverse*} }
-       }
-       {
-         \NewDocumentEnvironment {#2} {O{}}
-           { \verse[type={#2},##1] }
-           { \endverse }
-       }
-     \DeclareTranslationFallback   {leadsheets/#2} {#3}
-     \DeclareTranslation {English} {leadsheets/#2} {#3}
+    \tl_new:c {l__leadsheets_#2_format_tl}
+    \tl_new:c {l__leadsheets_#2_label_format_tl}
+    \tl_new:c {l__leadsheets_#2_after_label_tl}
+    \keys_define:nn {leadsheets/#2}
+      {
+        format      .code:n = \tl_set:cn {l__leadsheets_#2_format_tl} {##1} ,
+        format      .initial:n = \l__leadsheets_verses_format_tl ,
+        label-format .code:n =
+          \tl_set:cn {l__leadsheets_#2_label_format_tl} {##1} ,
+        label-format .initial:n = \l__leadsheets_verses_label_format_tl ,
+        after-label  .code:n =
+          \tl_set:cn {l__leadsheets_#2_after_label_tl} {##1} ,
+        after-label  .initial:n = \l__leadsheets_verses_after_label_tl
+      }
+    \bool_if:NTF #1
+      {
+        \NewDocumentEnvironment {#2} {O{}}
+          {
+            \par
+            \keys_set:nn {leadsheets/#2} {##1}
+            \tl_set:Nn \l__leadsheets_verse_type_tl {#2}
+            \leadsheets_verse_begin_starred:
+            \tl_use:c {l__leadsheets_#2_format_tl}
+          }
+          { \leadsheets_verse_end: \par }
+      }
+      {
+        \NewDocumentEnvironment {#2} {O{}}
+          {
+            \par
+            \keys_set:nn {leadsheets/#2} {##1}
+            \tl_set:Nn \l__leadsheets_verse_type_tl {#2}
+            \leadsheets_verse_begin:n {#2}
+            \tl_use:c {l__leadsheets_#2_format_tl}
+          }
+          { \leadsheets_verse_end: \par }
+      }
+    \@trnslt@declare@translation {leadsheets/#2} {fallback} {#3}
+    \@trnslt@declare@translation {leadsheets/#2} {English} {#3}
   }
 
 \NewDocumentCommand \newversetype {smm}
@@ -818,6 +855,12 @@
       \msg_warning:nnn {leadsheets} {unknown-verse-type} {#1}
       \tl_set:Nn \l__leadsheets_verse_type_tl {verse} ,
     verse/format    .tl_set:N   = \l__leadsheets_verse_format_tl ,
+    verse/format    .initial:n  = \l__leadsheets_verses_format_tl ,
+    verse/label-format  .tl_set:N   = \l__leadsheets_verse_label_format_tl ,
+    verse/label-format  .initial:n  = \l__leadsheets_verses_label_format_tl ,
+    verses-format   .tl_set:N   = \l__leadsheets_verses_format_tl ,
+    verses-label-format .tl_set:N   = \l__leadsheets_verses_label_format_tl ,
+    verses-after-label  .tl_set:N   = \l__leadsheets_verses_after_label_tl ,
     numbered        .bool_set:N = \l__leadsheets_verse_numbered_bool ,
     remember-chords .bool_set:N = \l__leadsheets_verse_remember_bool ,
     transpose       .code:n     =

@@ -1,8 +1,8 @@
 --------------------------------------------------------------------------
 the LEADSHEETS bundle 2014/07/24
- - musicsymbols package v0.1 -> musical symbols
- - chordnames package v0.1   -> typesetting chord names
- - leadsheets package v0.1   -> typesetting leadsheets
+ - musicsymbols package v0.0 -> musical symbols
+ - chordnames package v0.0   -> typesetting chord names
+ - leadsheets package v0.0   -> typesetting leadsheets
 --------------------------------------------------------------------------
 Clemens Niederberger
 Web:    https://github.com/cgnieder/leadsheets/

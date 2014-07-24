@@ -17,15 +17,20 @@
     chord , chordname ,
     definesongtitletemplate ,
     ifsongproperty ,
+    newversetype ,
     setchordnames ,
     setleadsheets ,
     songproperty
   } ,
   add-envs = {
-    chorus,
-    interlude,
-    intro,
-    song,
+    bridge ,
+    chorus , chorus* ,
+    info ,
+    interlude ,
+    intro , intro* ,
+    outro , outro *
+    solo , solo* ,
+    song ,
     verse
   } ,
   index-setup = { othercode=\footnotesize, level=\section} ,
@@ -80,6 +85,7 @@
 }}
 
 \renewcommand*\dictumauthorformat[1]{#1}
+\renewcommand*\raggeddictumtext{}
 
 \begin{document}
 
@@ -169,8 +175,8 @@ they're not explained here.
 typesetting of chords:
 
 \begin{example}[side-by-side]
-  \chordname{Bb7(#9)} \chordname{Bbb9}
-  \chordname{C#7(#9)} \chordname{C##9}
+  \chordname{Bb7(#9)} \chordname{Bbb6}
+  \chordname{C#7(b9)} \chordname{C##13}
 \end{example}
 
 \begin{commands}
@@ -198,6 +204,16 @@ There are several token lists that are treated specially inside \cs{chordname}:
   \item \code{/o} -- The symbol for half diminished chords.  Per default
     this is \code{\cs*{textsuperscript}\Marg{\cs*{o}\Marg{}}}.
     \verbcode+\chordname{G/o}+ \chordname{G/o}.
+  \item \code{\#} -- The \enquote{sharp} symbol.  Per default this is
+    \cs{sharp}.  \verbcode+\chordname{F#}+ \chordname{F#}.
+  \item \code{\#\#} -- The \enquote{double sharp} symbol.  Per default this is
+    \cs{doublesharp}.  \verbcode+\chordname{F##}+ \chordname{F##}.
+  \item \code{b} -- The \enquote{flat} symbol.  Per default this is
+    \cs{flat}.  \verbcode+\chordname{Eb}+ \chordname{Eb}.
+  \item \code{bb} -- The \enquote{double flat} symbol.  Per default this is
+    \cs{doubleflat}.  \verbcode+\chordname{Ebb}+ \chordname{Ebb}.
+  \item \code{b\#} -- Cancelling flat/sharp combination: this is removed.
+  \item \code{\#b} -- Cancelling sharp/flat combination: this is removed.
   \item \code{add} -- This is superscripted: \verbcode+\chordname{Gadd9}+
     \chordname{Gadd9}.
   \item \code{sus} -- This is superscripted: \verbcode+\chordname{Gsus4}+
@@ -229,6 +245,10 @@ Options are set with the command
   \command{setchordnames}[\marg{options}]
     where \meta{options} is a comma separated list of keyval options.
 \end{commands}
+
+The options allow detailed customization of how chords are printed.  It
+doesn't change the input syntax.
+
 \begin{options}
   \keyval{format}{code}\Default
     Code inserted before a chord within the same group. Can be used for
@@ -265,8 +285,8 @@ Options are set with the command
 
 \part{The \leadsheets{} Package}
 \dictum[Jeff Beck]{%
-  I don’t care about the rules. If I don’t break the rules at least ten
-  times every song then I’m not doing my job.%
+  I don't care about the rules. If I don't break the rules at least ten
+  times every song then I'm not doing my job.%
 }
 
 \section{Background}
@@ -508,25 +528,52 @@ section~\ref{sec:available-commands}.
   \end{document}
 \end{example}
 
-\subsection{Options}
+\subsection{Options}\label{sec:verses-options}
 
-Currently the \env{verse} environment and all related environments only have
-one option:
+The \env{verse} environment and all related environments have the following
+option:
 
 \begin{options}
-  \keyval{type}{type}
-    The option determines what type of verse is to be typeset. For instance
-    \keyis{type}{chorus} will typeset a chorus.  Which types are available
-    will become clear in section~\ref{sec:other-envverse-like}.
+  \keyval{format}{code}\Default
+    \meta{code} is inserted at the beginning of the environment and can thus
+    be used to add formatting, \eg, \keyis{format}{\cs*{itshape}}.
+  \keyval{label-format}{code}\Default
+    The same for the environment labels.
 \end{options}
 
+This can be used either locally, \ie, as option to the corresponding
+environment, or for all environments of the same type using the setup command
+using the following syntax:
+
+\begin{center}
+  \cs{setleadsheets}\Marg{\meta{env name}/format = \meta{code}}
+\end{center}
+
 \begin{example}
-  \begin{verse}[type=chorus]
+  \begin{verse}[format=\itshape]
     Lorem ipsum dolor sit amet, consetetur sadipscing elitr,\\
     sed diam nonumy eirmod tempor invidunt ut labore et dolore\\
     magna aliquyam erat, sed diam voluptua.
   \end{verse}
 \end{example}
+
+It is also possible so set the formatting for all related environments at
+once:
+\begin{options}
+  \keyval{verses-format}{code}\Default
+    Sets the format for all \env{verse} like environments.
+  \keyval{verses-label-format}{code}\Default
+    Sets the label format for all \env{verse} like environments.
+\end{options}
+Both options are overwritten if the options for a specific environment are
+set.  That is, if you want all environments to have italic shape except for
+choruses, then you could do
+\begin{sourcecode}
+  \setleadsheets{
+    verses-format = \itshape ,
+    chorus/format =
+  }
+\end{sourcecode}
 
 \subsection{Placing Chords}\label{sec:placing-chords}
 
@@ -607,6 +654,10 @@ inside of the \env{song} environment.
   \end{document}
 \end{example}
 
+You've probably noticed: chords are printed with \cs{chordname} in the default
+setting.  You can change this with the option \option{chord-cs}.  If you do
+then keep in mind that the input syntax will also change.
+
 \subsection{Transposing}\label{sec:transposing}
 
 Provided a song has the property \property{key} \emph{and} the key is given as
@@ -616,7 +667,7 @@ table~\ref{tab:key-signatures}, the chords of a song can be transposed.
 \begin{options}
   \keyval{transpose}{number}
     Transposes the chords of a song by \meta{number} of semitones.
-    \meta{nmuber} can be a negative number, then the chords are transposed
+    \meta{number} can be a negative number, then the chords are transposed
     down.
   \keychoice{enharmonic}{sharp,flat}
     Suppose you transpose a song in the key of \chordname{E} down a semitone.
@@ -625,6 +676,10 @@ table~\ref{tab:key-signatures}, the chords of a song can be transposed.
     variant, though, by using this option.  With \keyis{enharmonic}{sharp}
     \leadsheets{} would have chosen \chordname{D#} instead of \chordname{Eb}.
 \end{options}
+
+The transposing mechanism relies on the \chordnames{} input syntax which means
+that if you change \option{chord-cs} horrible things may happen.  \emph{So
+  don't change \option{chord-cs} and use \option{transpose} at the same time!}
 
 \begin{table}[hbp]
   \centering
@@ -641,12 +696,18 @@ table~\ref{tab:key-signatures}, the chords of a song can be transposed.
     \midrule
       \showsignature{C}  && & \showsignature{Ami} \\
     \cmidrule(lr){1-4} \cmidrule(lr){5-8}
-      \showsignature{G}  & \showsignature{F}  & \showsignature{Emi}  & \showsignature{Dmi} \\
-      \showsignature{D}  & \showsignature{Bb} & \showsignature{Bmi}  & \showsignature{Gmi} \\
-      \showsignature{A}  & \showsignature{Eb} & \showsignature{F#mi} & \showsignature{Cmi} \\
-      \showsignature{E}  & \showsignature{Ab} & \showsignature{C#mi} & \showsignature{Fmi} \\
-      \showsignature{B}  & \showsignature{Db} & \showsignature{G#mi} & \showsignature{Fbmi} \\
-      \showsignature{F#} & \showsignature{Gb} & \showsignature{D#mi} & \showsignature{Ebmi} \\
+      \showsignature{G}    & \showsignature{F}  &
+      \showsignature{Emi}  & \showsignature{Dmi} \\
+      \showsignature{D}    & \showsignature{Bb} &
+      \showsignature{Bmi}  & \showsignature{Gmi} \\
+      \showsignature{A}    & \showsignature{Eb} &
+      \showsignature{F#mi} & \showsignature{Cmi} \\
+      \showsignature{E}    & \showsignature{Ab} &
+      \showsignature{C#mi} & \showsignature{Fmi} \\
+      \showsignature{B}    & \showsignature{Db} &
+      \showsignature{G#mi} & \showsignature{Fbmi} \\
+      \showsignature{F#}   & \showsignature{Gb} &
+      \showsignature{D#mi} & \showsignature{Ebmi} \\
     \bottomrule
   \end{tabular}
   \label{tab:key-signatures}
@@ -695,41 +756,24 @@ are for.
 
 \begin{environments}
   \environment{chorus}[\oarg{options}]
-    An environment for specifying the chorus of a song.\\
-    This is the same
-    as \beginenv*\Marg{verse}\Oarg{type=chorus,\meta{options}}.
+    An environment for specifying the chorus of a song.
   \environment{chorus*}[\oarg{options}]
-    An environment for specifying the chorus of a song.\\
-    This is the same as \beginenv*\Marg{verse}\Oarg{type=chorus*,\meta{options}}.
-    It does not display an introductory title to the left of the environment
-    text.
+    The same as \env{chorus} but does not display the label.
   \environment{intro}[\oarg{options}]
-    An environment for specifying the intro of a song.\\
-    This is the same as \beginenv*\Marg{verse}\Oarg{type=intro,\meta{options}}.
+    An environment for specifying the intro of a song.
   \environment{intro*}[\oarg{options}]
-    An environment for specifying the intro of a song.\\
-    This is the same as \beginenv*\Marg{verse}\Oarg{type=intro*,\meta{options}}.
-    It does not display an introductory title to the left of the environment
-    text.
+    The same as \env{intro} but does not display the label.
   \environment{interlude}[\oarg{options}]
-    An environment for specifying an interlude of a song.\\
-    This is the same as \beginenv*\Marg{verse}\Oarg{type=interlude,\meta{options}}.
+    An environment for specifying an interlude of a song.
   \environment{bridge}[\oarg{bridge}]
-    An environment for specifying a bridge of a song.\\
-    This is the same as \beginenv*\Marg{verse}\Oarg{type=bridge,\meta{options}}.
+    An environment for specifying a bridge of a song.
   \environment{info}[\oarg{options}]
-    An environment for specifying arbitrary information.\\
-    This is the same as \beginenv*\Marg{verse}\Oarg{type=info,\meta{options}}.
-    It does not display an introductory title to the left of the environment
-    text.
+    An environment for specifying arbitrary information.  This environment has
+    no label.
   \environment{solo}[\oarg{options}]
-    An environment for specifying a solo to a song.\\
-    This is the same as \beginenv*\Marg{verse}\Oarg{type=solo,\meta{options}}.
+    An environment for specifying a solo to a song.
   \environment{solo*}[\oarg{options}]
-    An environment for specifying a solo to a song.\\
-    This is the same as \beginenv*\Marg{verse}\Oarg{type=solo*,\meta{options}}.
-    It does not display an introductory title to the left of the environment
-    text.
+    The same as \env{solo} but does not display the label.
 \end{environments}
 
 \subsection{Own \env*{verse}-like Environments}
@@ -746,7 +790,43 @@ command:
     English translation.
 \end{commands}
 
+As mentioned before in section~\ref{sec:verses-options} all environments
+defined this way have the options \option{format} and \option{label-format}.
+They also have another option:
+\begin{options}
+  \keyval{after-label}{code}\Default{:}
+    \meta{code} is inserted in the label after the label text.
+\end{options}
 
+There's also a general option for setting the default of the
+\option{after-label} for all environments:
+\begin{options}
+  \keyval{verses-after-label}{code}\Default{:}
+    Defeault \meta{code} that is inserted in the label after the label text of
+    \env{verse} like environments.
+\end{options}
+
+Let's summarize: the label text of these environments is built of three items
+in the following order:
+\begin{enumerate}
+  \item The \meta{code} set with the corresponding \option{label-format} option.
+  \item The label text as defined as second argument to \cs{newversetype} or
+    as declared through the corresponding translation.
+  \item The \meta{code} set with the corresponding \option{after-label} option.
+\end{enumerate}
+
+\begin{example}
+  \newversetype{foo}{Foo}
+  \setleadsheets{
+    foo/label-format = \bfseries ,
+    foo/after-label  = ~$\Rightarrow$
+  }
+  \begin{foo}
+    Lorem ipsum dolor sit amet, consetetur sadipscing elitr,\\
+    sed diam nonumy eirmod tempor invidunt ut labore et dolore\\
+    magna aliquyam erat, sed diam voluptua.
+  \end{foo}
+\end{example}
 
 \section{Title Templates}\label{sec:title-templates}
 
