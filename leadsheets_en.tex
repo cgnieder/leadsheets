@@ -79,9 +79,14 @@
   \def\property#1{#1}%
 }}
 
+\renewcommand*\dictumauthorformat[1]{#1}
+
 \begin{document}
 
 \part{About the Bundle}
+\dictum[Tom Waits]{%
+  I like beautiful melodies telling me terrible things.%
+}
 
 \section{License and Requirements}
 
@@ -107,7 +112,13 @@ hard drive with various attempts of typesetting leadsheets.  This bundle of
 packages is now the attempt to have a clean, documented and customisable
 version of my code.
 
+
 \part{The \musicsymbols{} Package}
+\dictum[Victor Hugo]{%
+  Music expresses that which cannot be said and on which it is impossible to
+  be silent.%
+}
+\vspace*{\baselineskip}\csname @afterheading\endcsname
 
 The \musicsymbols{} package is a very small package that makes the music
 symbol font provided by MusiX\TeX{} available as text font and then uses it to
@@ -147,6 +158,11 @@ they're not explained here.
 \end{table}
 
 \part{The \chordnames{} Package}
+\dictum[Wes Montgomery]{%
+  I never practice my guitar -- from time to time I just open the case and
+  throw in a piece of raw meat.%
+}
+
 \section{The \cs*{chordname} Command}
 
 \chordnames{} provides the command \cs{chordname}\marg{chord} for convenient
@@ -248,6 +264,12 @@ Options are set with the command
 \end{options}
 
 \part{The \leadsheets{} Package}
+\dictum[Jeff Beck]{%
+  I don’t care about the rules. If I don’t break the rules at least ten
+  times every song then I’m not doing my job.%
+}
+
+\section{Background}
 
 The \leadsheets{} package allows for easy creation of leadsheets but it also
 can be used to create complete songbooks. The basic idea is that songs are
@@ -823,6 +845,9 @@ property values to the table of contents or other auxiliary files.
 \section{Internationalization}\label{sec:internationalization}
 
 \part{Appendix}
+\dictum[Thelonious Monk]{%
+  Talking about music is like dancing about architecture.%
+}
 \appendix
 
 % \section{Future Plans}\label{sec:future-plans}
