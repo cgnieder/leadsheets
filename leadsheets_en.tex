@@ -403,6 +403,11 @@ Although I used the word \enquote{global} above \emph{all options are local to
   \keyval{print-tags}{list of tags}
     A comma separated list of tags. When specified a song will only be printed
     if it is tagged with at least one of the tags in \meta{list of tags}.
+  \keybool{obey-lines}\Default{false}
+    An experimental option.  Use at your own risk!  If set to \code{true} then
+    inside the \env{verse} like environments end-of-lines will be obeyed and
+    start a new line.  This comes with a price when using chords, see
+    section~\ref{sec:placing-chords:caveat}.
 \end{options}
 
 \subsection{Song Properties}\label{sec:song-properties}
@@ -577,6 +582,7 @@ choruses, then you could do
 
 \subsection{Placing Chords}\label{sec:placing-chords}
 
+\subsubsection{The Commands}
 Inside the \env{song} environment the character \code{\textasciicircum} is an
 active character which is defined to place a chord above words.  More
 precisely is is equal to the following command:
@@ -590,12 +596,18 @@ precisely is is equal to the following command:
     \emph{must} be there.  If \meta{text} is empty then the chord is place
     above some horizontal space which can be set with the option
     \option{empty-chord-dim}.
+  \command{writechord}[\marg{chord}]
+    This command transforms the chord according to the options
+    \option{transpose} and \option{enharmonic} befor printing it.  This
+    command can/should be used for placing chords inline or for typesetting
+    the \property{key} property in a template.
 \end{commands}
 
 \begin{example}[side-by-side]
   Text \chord{E7}text \chord*{B7}lon ger text 
 \end{example}
 
+\subsubsection{Usage}
 Note that per default the width of a chord is not ignored:
 \begin{example}[side-by-side]
   text \chord{Gbmi7(b5)}text text
@@ -657,6 +669,25 @@ inside of the \env{song} environment.
 You've probably noticed: chords are printed with \cs{chordname} in the default
 setting.  You can change this with the option \option{chord-cs}.  If you do
 then keep in mind that the input syntax will also change.
+
+\subsubsection{Caveat}\label{sec:placing-chords:caveat}
+
+If you use \keyis{obey-lines}{true} you have to be careful when you place
+chords.  If you place a chord over the last word in a line
+\begin{sourcecode}
+  ^{F#mi} You've been ^*{B}run nin', ^*{E}hid in' much too ^{A}long.
+\end{sourcecode}
+then the end of line that is used as the mandatory space argument for
+\cs{chord} won't be recognized as an end of line.  Even worse: at the end of a
+\env{verse} like environment this may cause non-obvious errors.  So in these
+cases you should always insert an explicit space by one of the following
+methods:
+\begin{sourcecode}
+  ^{F#mi} You've been ^*{B}run nin', ^*{E}hid in' much too ^{A}long. {}
+  ^{F#mi} You've been ^*{B}run nin', ^*{E}hid in' much too ^{A}long. \empty
+  ^{F#mi} You've been ^*{B}run nin', ^*{E}hid in' much too ^{A}long. \relax
+\end{sourcecode}
+
 
 \subsection{Transposing}\label{sec:transposing}
 
@@ -830,6 +861,13 @@ in the following order:
 
 \section{Title Templates}\label{sec:title-templates}
 
+\subsection{Background}
+The titles of songs set with the \env{song} environment are displayed
+according to the chosen title template.  It is chosen through the option
+\option{title-template} which can be set with \cs{setleadsheets} or as option
+to a specific \env{song} environment.  \leadsheets{} provides few predefined
+templates and an easy mechansim to define own templates.
+
 \subsection{Existing Templates}
 
 \subsection{Own Templates}
@@ -877,15 +915,17 @@ First there are two commands related to defining new properties:
   \command{copysongproperty}[\marg{from}\marg{to}]
     Copies the values of property \meta{from} to property \meta{to} if
     property \meta{to} has not been set but property \meta{from} has been.
-    All \code{sort-\meta{property}} properties have been treated this way.
+    For example all \code{sort-\meta{property}} properties have been treated
+    this way so they have the \meta{property} value as fallback.
     The command can only be used in the preamble.
 \end{commands}
 
 Then there are a number of commands related to retrieving and using the values
 of properties.  All these commands only make sense inside a template
-definition.  Some of the commands are expandable which means they can be used
-in an \cs*{edef} like context, \ie, there are also suitable for writing the
-property values to the table of contents or other auxiliary files.
+definition (see section~\ref{sec:title-templates}).  Some of the commands are
+expandable which means they can be used in an \cs*{edef} like context, \ie,
+they are also suitable for writing the property values to the table of
+contents or other auxiliary files.
 \begin{commands}
   \expandable\command{songproperty}[\marg{property}]
     Retrieves property \meta{property}.
@@ -919,10 +959,65 @@ property values to the table of contents or other auxiliary files.
     \cs*{begingroup}\cs*{edef}\cs*{x}\Marg{\cs*{endgroup}\meta{code}}\cs*{x}.
 
     (More precisely it is a wrapper for the expl3 function \cs*{use:x}.)  This
-    means that any \code{\#} needs to doubled.
+    means that any \code{\#} needs to doubled.  Inside the argument of this
+    commands non-robust macros that should not be expanded need to be prefixed
+    with \cs*{noexpand}.
 \end{commands}
 
 \section{Internationalization}\label{sec:internationalization}
+
+Th environments described in sections~\ref{sec:envverse-environment}
+and~\ref{sec:other-envverse-like} as well as a few other words used in
+\leadsheets{} are translated with the help of the
+\pkg{translations}~\cite{pkg:translations} package.  All predefined and
+available translation strings are listed in table~\ref{tab:translations}. You
+can change those translations or add translations for other languages with this
+command:
+\begin{commands}
+  \command*{DeclareTranslation}[\marg{language}\marg{string}\marg{translation}]
+    The command provided by the \pkg{translations} package for translating
+    strings.
+\end{commands}
+Those translations can be used for example in song title templates (see
+section~\ref{sec:title-templates}).  One of the strings listed in
+table~\ref{tab:translations} is a little different: the string
+\code{leadsheets/interpret} is declared as
+\begin{sourcecode}
+  \DeclareTranslation{English}{leadsheets/interpret}
+    {as interpreted by \songproperty{interpret}}
+  \DeclareTranslation{German}{leadsheets/interpret}
+    {wie von \songproperty{interpret} interpretiert}
+\end{sourcecode}
+which means it uses the song property \property{interpret}.  As a consequence
+it only really can be used inside a \env{song} environment.  In other cases as
+for example in table~\ref{tab:translations} the property part expands to
+nothing (but the spaces around it are of course there).
+
+\begin{table}
+  \centering
+  \caption{Predefined translation strings.}
+  \newcommand*\showtranslation[1]{%
+    \texttt{leadsheets/#1} &
+    \GetTranslationForWarn{English}{leadsheets/#1} &
+    \GetTranslationForWarn{German}{leadsheets/#1}
+  }
+  \begin{tabular}{lll}
+    \toprule
+      \bfseries String & \bfseries English & \bfseries German \\
+    \midrule
+      \showtranslation{chorus} \\
+      \showtranslation{composer} \\
+      \showtranslation{lyrics} \\
+      \showtranslation{key} \\
+      \showtranslation{interpret} \\
+      \showtranslation{intro} \\
+      \showtranslation{interlude} \\
+      \showtranslation{bridge} \\
+      \showtranslation{solo} \\
+    \bottomrule
+  \end{tabular}
+  \label{tab:translations}
+\end{table}
 
 \part{Appendix}
 \dictum[Thelonious Monk]{%

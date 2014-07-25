@@ -65,6 +65,7 @@
 \bool_new:N  \g__leadsheets_smash_next_chord_bool
 \bool_new:N  \l__leadsheets_transpose_bool
 \bool_new:N  \l__leadsheets_enharmonic_bool
+\bool_new:N  \l__leadsheets_obey_lines_bool
 
 \clist_new:N \l__leadsheets_print_tags_clist
 
@@ -96,6 +97,34 @@
   {}
 
 \group_begin:
+\ExplSyntaxOff
+\catcode`\:=11
+\catcode`\_=11
+\cs_new:Npn \leadsheets_active_eol: {%
+  \catcode`\^^M=\active %
+}
+\begingroup
+  \leadsheets_active_eol: %
+  \tl_const:Nn \c__leadsheets_eol_tl {^^M}%
+  \gdef\leadsheets_obey_lines: {%
+    \cs_set:Npn ^^M{%
+      \peek_meaning:NTF ^^M%
+        {\par \skip_vertical:N \parsep}%
+        {\par}%
+    }%
+  }%
+  \gdef\leadsheets_ignore_lines:{%
+    \cs_set:Npn ^^M{%
+      \peek_meaning:NTF^^M%
+        {\par}%
+        {\c_space_tl}%
+    }%
+  }%
+\endgroup
+
+\group_end:
+
+\group_begin:
 % for the \chord shortcut:
 \char_set_catcode_active:N \^
 
@@ -118,6 +147,7 @@
       \leadsheets_activate_chords:
       \cs_gset_eq:NN ^ \chord
       \tl_use:N \l__leadsheets_song_format_tl
+      \leadsheets_ignore_lines:
       \leadsheets_print_song:nwn {#2}
   }
 \group_end:
@@ -477,7 +507,10 @@
         {& Tempo:~ \songproperty{tempo} \\}
         {}
       \ifsongproperty{key}
-        {& \GetTranslation{leadsheets/key}:~ \songproperty{key} \\}
+        {
+          & \GetTranslation{leadsheets/key}:~
+          \expandsongpropertycode{\writechord{\songproperty{key}}} \\
+        }
         {}
     \end{tabular}
     \par\endgroup
@@ -499,6 +532,20 @@
 
 \cs_new:Npn \__leadsheets_chord:nwn #1#2~#3
   {
+    \leadsheets_place_above:nn
+      { \leadsheets_chord_write:n {#1} }
+      {
+        \tl_if_blank:nTF {#2}
+          {\skip_horizontal:N \l__leadsheets_empty_chord_dim}
+          {#2}
+      }
+    \tl_if_blank:nF {#3}
+      { \bool_if:NF \l__leadsheets_chord_gobble_after_bool {\c_space_tl} }
+    #3
+  }
+
+\cs_new_protected:Npn \leadsheets_chord_write:n #1
+  {
     \tl_set:Nn \l__leadsheets_current_chord {#1}
     \bool_if:nT
       {
@@ -512,21 +559,13 @@
           \l__leadsheets_transpose_steps_tl
           \l__leadsheets_current_chord
       }
-    \leadsheets_place_above:nn
-      { \leadsheets_chord_print:V \l__leadsheets_current_chord }
-      {
-        \tl_if_blank:nTF {#2}
-          {\skip_horizontal:N \l__leadsheets_empty_chord_dim}
-          {#2}
-      }
-    \tl_if_blank:nF {#3}
-      { \bool_if:NF \l__leadsheets_chord_gobble_after_bool {\c_space_tl} }
-    #3
+    \leadsheets_chord_print:V \l__leadsheets_current_chord
   }
 
 \cs_new:Npn \leadsheets_place_above:nn #1#2
   {
     \group_begin:
+      \leadsheets_ignore_lines:
       \bool_if:NT \g__leadsheets_smash_next_chord_bool
         {
           \bool_set_true:N \l__leadsheets_smash_chords_bool
@@ -553,9 +592,14 @@
   {
     \char_set_catcode_active:N \^
     \char_set_catcode_other:N  \#
+    \bool_if:NT \l__leadsheets_obey_lines_bool
+      { \leadsheets_active_eol: }
   }
 
 \NewDocumentCommand \chord {st-m} { \leadsheets_chord:nnn {#1} {#2} {#3} }
+
+\NewDocumentCommand \writechord {m}
+  { \leadsheets_chord_write:n {#1} }
 
 % --------------------------------------------------------------------------
 % transposing mechanism:
@@ -748,6 +792,8 @@
         }]
       }
     \int_zero:N \@itemdepth
+    \dim_zero:N \parskip
+    \leadsheets_obey_lines:
   }
 
 \cs_new_protected:Npn \leadsheets_verse_begin_starred:
@@ -755,9 +801,16 @@
     \itemize
     \item[]
     \int_zero:N \@itemdepth
+    \dim_zero:N \parskip
+    \leadsheets_obey_lines:
   }
 
-\cs_new_protected:Npn \leadsheets_verse_end: { \enditemize }
+\cs_new_protected:Npn \leadsheets_verse_end:
+  {
+    \leadsheets_ignore_lines:
+    \enditemize
+    \ignorespacesafterend
+  }
 
 \newcounter{verse}
 \tl_set:Nn \theverse { \arabic {verse} . }
@@ -861,6 +914,7 @@
     verses-format   .tl_set:N   = \l__leadsheets_verses_format_tl ,
     verses-label-format .tl_set:N   = \l__leadsheets_verses_label_format_tl ,
     verses-after-label  .tl_set:N   = \l__leadsheets_verses_after_label_tl ,
+    obey-lines      .bool_set:N = \l__leadsheets_obey_lines_bool ,
     numbered        .bool_set:N = \l__leadsheets_verse_numbered_bool ,
     remember-chords .bool_set:N = \l__leadsheets_verse_remember_bool ,
     transpose       .code:n     =
