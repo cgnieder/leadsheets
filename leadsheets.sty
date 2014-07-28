@@ -66,6 +66,7 @@
 \bool_new:N  \l__leadsheets_transpose_bool
 \bool_new:N  \l__leadsheets_enharmonic_bool
 \bool_new:N  \l__leadsheets_obey_lines_bool
+\bool_new:N  \l__leadsheets_bar_shorthands_bool
 
 \clist_new:N \l__leadsheets_print_tags_clist
 
@@ -79,11 +80,83 @@
 \seq_new:N   \l__leadsheets_song_properties_seq
 \seq_new:N   \l__leadsheets_sharps_seq
 \seq_new:N   \l__leadsheets_flats_seq
+\seq_new:N   \l__leadsheets_shorthands_seq
 
 \int_new:N   \g__leadsheets_song_id_int
 
 \dim_new:N   \l__leadsheets_empty_chord_dim
 \dim_set:Nn  \l__leadsheets_empty_chord_dim {1em}
+
+% --------------------------------------------------------------------------
+% shorthand mechanism:
+\group_begin:
+\char_set_catcode_active:N \~
+
+\cs_new_protected:Npn \leadsheets_define_shorthand:Npn #1
+  {
+    \seq_if_in:NnF \l__leadsheets_shorthands_seq {#1}
+      { \seq_put_right:Nn \l__leadsheets_shorthands_seq {#1} }
+    \group_begin:
+    \__leadsheets_define_shorthand_aux_i:np {#1}
+  }
+
+\cs_new_protected:Npn \__leadsheets_define_shorthand_aux_i:np #1#2#{
+    \char_set_lccode:nn {`~} {`#1}
+    \__leadsheets_define_shorthand_aux_ii:nn {#2}
+  }
+
+\cs_new_protected:Npn \__leadsheets_define_shorthand_aux_ii:nn #1#2
+  { \tl_to_lowercase:n { \group_end: \cs_set:Npn ~ } #1 {#2} }
+\group_end:
+
+\cs_new_protected:Npn \leadsheets_activate_shorthands:n #1
+  {
+    \tl_map_inline:nn {#1}
+      {
+        \seq_if_in:NnT \l__leadsheets_shorthands_seq {##1}
+          { \char_set_catcode_active:N ##1 }
+      }
+  }
+\cs_new_protected:Npn \leadsheets_activate_all_shorthands:
+  {
+    \seq_map_inline:Nn \l__leadsheets_shorthands_seq
+     { \char_set_catcode_active:N ##1 }
+  }
+  
+\leadsheets_define_shorthand:Npn ^ {\chord}
+
+\leadsheets_define_shorthand:Npn _ {\writechord}
+
+\leadsheets_define_shorthand:Npn | #1
+  {
+    \str_case:nnF {#1}
+      {
+        {:} {\leftrepeat}
+        {|} {\leadsheets_checkbartype:}
+      }
+      {\normalbar\space #1}
+  }
+
+\cs_new:Npn \leadsheets_checkbartype:
+  {
+    \peek_charcode_remove:NTF |
+      {\stopbar}
+      {\doublebar}
+  }
+
+\leadsheets_define_shorthand:Npn :
+  {
+    \peek_charcode_remove:NTF |
+      {\leadsheets_checkrepeat:}
+      {\token_to_str:N :}
+  }
+
+\cs_new:Npn \leadsheets_checkrepeat:
+  {
+    \peek_charcode_remove:NTF :
+      {\leftrightrepeat}
+      {\rightrepeat}
+  }
 
 % --------------------------------------------------------------------------
 % the `song' environment:
@@ -96,37 +169,30 @@
   }
   {}
 
+% some hacks for the `obey-lines' option:
 \group_begin:
 \ExplSyntaxOff
 \catcode`\:=11
 \catcode`\_=11
-\cs_new:Npn \leadsheets_active_eol: {%
-  \catcode`\^^M=\active %
-}
-\begingroup
-  \leadsheets_active_eol: %
-  \tl_const:Nn \c__leadsheets_eol_tl {^^M}%
-  \gdef\leadsheets_obey_lines: {%
-    \cs_set:Npn ^^M{%
-      \peek_meaning:NTF ^^M%
-        {\par \skip_vertical:N \parsep}%
-        {\par}%
-    }%
-  }%
-  \gdef\leadsheets_ignore_lines:{%
-    \cs_set:Npn ^^M{%
-      \peek_meaning:NTF^^M%
-        {\par}%
-        {\c_space_tl}%
-    }%
-  }%
-\endgroup
+\cs_new:Npn \leadsheets_active_eol: { \catcode`\^^M=\active }
 
+\leadsheets_active_eol: %
+\tl_const:Nn \c__leadsheets_eol_tl {^^M}%
+\cs_new:Npn \leadsheets_obey_lines: {%
+  \cs_set:Npn ^^M{%
+    \peek_meaning:NTF ^^M%
+      {\par \skip_vertical:N \parsep}%
+      {\par}%
+  }%
+}%
+\cs_new:Npn \leadsheets_ignore_lines:{%
+  \cs_set:Npn ^^M{%
+    \peek_meaning:NTF^^M%
+      {\par}%
+      {\c_space_tl}%
+  }%
+}%
 \group_end:
-
-\group_begin:
-% for the \chord shortcut:
-\char_set_catcode_active:N \^
 
 % #1: options
 % #2: ID
@@ -137,20 +203,13 @@
     \leadsheets_set_duplicate_properties:n {#2}
     \leadsheets_check_print:n {#2}
     \setcounter {verse} {0}
-    % \cs_if_exist:NF \chord
-    %   {
-    %     \DeclareDocumentCommand \chord {sm}
-    %       { \leadsheets_chord:nn {##1} {##2} }
-    %   }
     \group_begin:
       \keys_set:nn {leadsheets} {#1}
-      \leadsheets_activate_chords:
-      \cs_gset_eq:NN ^ \chord
+      \leadsheets_specials:
       \tl_use:N \l__leadsheets_song_format_tl
       \leadsheets_ignore_lines:
       \leadsheets_print_song:nwn {#2}
   }
-\group_end:
 \cs_generate_variant:Nn \leadsheets_startsong:nnn { nV }
 
 % --------------------------------------------------------------------------
@@ -317,7 +376,6 @@
 % properties that should take the value of another property if they're not set
 % explicitly:
 \copysongproperty {composer} {sort-composer}
-% \copysongproperty {composer} {lyrics}
 \copysongproperty {lyrics} {sort-lyrics}
 \copysongproperty {title} {sort-title}
 \copysongproperty {short-title} {sort-short-title}
@@ -432,7 +490,7 @@
 \NewDocumentCommand \songtitle {} { \leadsheets_songtitle: }
 
 % the following is shamelessly adapted from the `needspace' package by
-% Peter Wilson and Herries Press
+% Peter Wilson and Herries Press:
 \cs_new:Npn \leadsheets_needspace:n #1
   {
     \group_begin:
@@ -493,10 +551,13 @@
         {}
       \ifsongproperty{composer}
         {
-          & \GetTranslation{leadsheets/composer}:~ \songproperty{composer}
-          \ifsongpropertiesequal{composer}{lyrics}
+          & \GetTranslation{leadsheets/composer}:~
+          \printsongpropertylist{composer}{~\&~}{,~}{~\&~}
+          \ifsongproperty{lyrics}
+            {\\ & \GetTranslation{leadsheets/lyrics}:~
+              \printsongpropertylist{lyrics}{~\&~}{,~}{~\&~}
+            }
             {}
-            {\\ & \GetTranslation{leadsheets/lyrics}:~ \songproperty{lyrics}}
         }
         {}
       \ifsongproperty{interpret}{\\}{\ifsongproperty{composer}{\\}{}}
@@ -508,7 +569,12 @@
         {}
       \ifsongproperty{key}
         {
-          & \GetTranslation{leadsheets/key}:~
+          &
+          \setchordnames{
+            major = -\GetTranslation{leadsheets/major} ,
+            minor = -\GetTranslation{leadsheets/minor}
+          }
+          \GetTranslation{leadsheets/key}:~
           \expandsongpropertycode{\writechord{\songproperty{key}}} \\
         }
         {}
@@ -588,9 +654,11 @@
     empty-chord-dim  .dim_set:N  = \l__leadsheets_empty_chord_dim
   }
 
-\cs_new_protected:Npn \leadsheets_activate_chords:
+\cs_new_protected:Npn \leadsheets_specials:
   {
-    \char_set_catcode_active:N \^
+    \leadsheets_activate_shorthands:n {^_}
+    \bool_if:NT \l__leadsheets_bar_shorthands_bool
+      { \leadsheets_activate_shorthands:n {:|} }
     \char_set_catcode_other:N  \#
     \bool_if:NT \l__leadsheets_obey_lines_bool
       { \leadsheets_active_eol: }
@@ -608,50 +676,59 @@
     \seq_new:c  {g__leadsheets_key_#1_#2_seq}
     \prop_new:c {g__leadsheets_key_#1_#2_prop}
     \seq_gset_from_clist:cn {g__leadsheets_key_#1_#2_seq} {#3}
-    % \int_zero:N \l__leadsheets_tmpa_int
-    % \seq_map_inline:cn {g__leadsheets_key_#1_#2_seq}
-    %   {
-    %     \prop_gput:cxx {g__leadsheets_key_#1_#2_prop}
-    %       {\int_to_arabic:n {\l__leadsheets_tmpa_int}}
-    %       {##1}
-    %     \int_incr:N \l__leadsheets_tmpa_int
-    %   }
   }
 
 % pitches:
 \prop_put:Nnn \l__leadsheets_pitches_prop {C}     {0}
+\prop_put:Nnn \l__leadsheets_pitches_prop {Cma}   {0}
 \prop_put:Nnn \l__leadsheets_pitches_prop {Ami}   {0}
 \prop_put:Nnn \l__leadsheets_pitches_prop {C#}    {1}
+\prop_put:Nnn \l__leadsheets_pitches_prop {C#ma}  {1}
 \prop_put:Nnn \l__leadsheets_pitches_prop {A#mi}  {1}
 \prop_put:Nnn \l__leadsheets_pitches_prop {Db}    {1}
+\prop_put:Nnn \l__leadsheets_pitches_prop {Dbma}  {1}
 \prop_put:Nnn \l__leadsheets_pitches_prop {Bbmi}  {1}
 \prop_put:Nnn \l__leadsheets_pitches_prop {D}     {2}
+\prop_put:Nnn \l__leadsheets_pitches_prop {Dma}   {2}
 \prop_put:Nnn \l__leadsheets_pitches_prop {Bmi}   {2}
 \prop_put:Nnn \l__leadsheets_pitches_prop {D#}    {3}
+\prop_put:Nnn \l__leadsheets_pitches_prop {D#ma}  {3}
 \prop_put:Nnn \l__leadsheets_pitches_prop {F#mi}  {3}
 \prop_put:Nnn \l__leadsheets_pitches_prop {Eb}    {3}
+\prop_put:Nnn \l__leadsheets_pitches_prop {Ebma}  {3}
 \prop_put:Nnn \l__leadsheets_pitches_prop {Cmi}   {3}
 \prop_put:Nnn \l__leadsheets_pitches_prop {E}     {4}
+\prop_put:Nnn \l__leadsheets_pitches_prop {Ema}   {4}
 \prop_put:Nnn \l__leadsheets_pitches_prop {C#mi}  {4}
 \prop_put:Nnn \l__leadsheets_pitches_prop {F}     {5}
+\prop_put:Nnn \l__leadsheets_pitches_prop {Fma}   {5}
 \prop_put:Nnn \l__leadsheets_pitches_prop {Dmi}   {5}
 \prop_put:Nnn \l__leadsheets_pitches_prop {F#}    {6}
+\prop_put:Nnn \l__leadsheets_pitches_prop {F#ma}  {6}
 \prop_put:Nnn \l__leadsheets_pitches_prop {D#mi}  {6}
 \prop_put:Nnn \l__leadsheets_pitches_prop {Gb}    {6}
+\prop_put:Nnn \l__leadsheets_pitches_prop {Gbma}  {6}
 \prop_put:Nnn \l__leadsheets_pitches_prop {Ebmi}  {6}
 \prop_put:Nnn \l__leadsheets_pitches_prop {G}     {7}
+\prop_put:Nnn \l__leadsheets_pitches_prop {Gma}   {7}
 \prop_put:Nnn \l__leadsheets_pitches_prop {Emi}   {7}
 \prop_put:Nnn \l__leadsheets_pitches_prop {G#}    {8}
+\prop_put:Nnn \l__leadsheets_pitches_prop {G#ma}  {8}
 \prop_put:Nnn \l__leadsheets_pitches_prop {E#mi}  {8}
 \prop_put:Nnn \l__leadsheets_pitches_prop {Ab}    {8}
+\prop_put:Nnn \l__leadsheets_pitches_prop {Abma}  {8}
 \prop_put:Nnn \l__leadsheets_pitches_prop {Fmi}   {8}
 \prop_put:Nnn \l__leadsheets_pitches_prop {A}     {9}
+\prop_put:Nnn \l__leadsheets_pitches_prop {Ama}   {9}
 \prop_put:Nnn \l__leadsheets_pitches_prop {F#mi}  {9}
 \prop_put:Nnn \l__leadsheets_pitches_prop {A#}    {10}
+\prop_put:Nnn \l__leadsheets_pitches_prop {A#ma}  {10}
 \prop_put:Nnn \l__leadsheets_pitches_prop {F##mi} {10}
 \prop_put:Nnn \l__leadsheets_pitches_prop {Bb}    {10}
+\prop_put:Nnn \l__leadsheets_pitches_prop {Bbma}  {10}
 \prop_put:Nnn \l__leadsheets_pitches_prop {Gmi}   {10}
 \prop_put:Nnn \l__leadsheets_pitches_prop {B}     {11}
+\prop_put:Nnn \l__leadsheets_pitches_prop {Bma}   {11}
 \prop_put:Nnn \l__leadsheets_pitches_prop {G#mi}  {11}
 
 \seq_set_from_clist:Nn \l__leadsheets_sharps_seq
@@ -915,6 +992,7 @@
     verses-label-format .tl_set:N   = \l__leadsheets_verses_label_format_tl ,
     verses-after-label  .tl_set:N   = \l__leadsheets_verses_after_label_tl ,
     obey-lines      .bool_set:N = \l__leadsheets_obey_lines_bool ,
+    bar-shortcuts   .bool_set:N = \l__leadsheets_bar_shorthands_bool ,
     numbered        .bool_set:N = \l__leadsheets_verse_numbered_bool ,
     remember-chords .bool_set:N = \l__leadsheets_verse_remember_bool ,
     transpose       .code:n     =
@@ -952,11 +1030,19 @@
 \DeclareTranslation {German}  {leadsheets/key} {Tonart}
 
 \DeclareTranslationFallback   {leadsheets/interpret}
-  {as~ interpreted~ by~ \songproperty{interpret}}
+  {as~ interpreted~ by~ \printsongpropertylist{interpret}{~\&~}{,~}{~\&~}}
 \DeclareTranslation {English} {leadsheets/interpret}
-  {as~ interpreted~ by~ \songproperty{interpret}}
+  {as~ interpreted~ by~ \printsongpropertylist{interpret}{~\&~}{,~}{~\&~}}
 \DeclareTranslation {German}  {leadsheets/interpret}
-  {wie~ von~ \songproperty{interpret}~ interpretiert}
+  {wie~ von~ \printsongpropertylist{interpret}{~\&~}{,~}{~\&~}~ interpretiert}
+
+\DeclareTranslationFallback   {leadsheets/major} {major}
+\DeclareTranslation {English} {leadsheets/major} {major}
+\DeclareTranslation {German}  {leadsheets/major} {Dur}
+
+\DeclareTranslationFallback   {leadsheets/minor} {minor}
+\DeclareTranslation {English} {leadsheets/minor} {minor}
+\DeclareTranslation {German}  {leadsheets/minor} {Moll}
 
 % --------------------------------------------------------------------------
 

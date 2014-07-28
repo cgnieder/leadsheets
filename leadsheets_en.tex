@@ -1,6 +1,6 @@
 % arara: pdflatex: { shell: on }
 % !arara: biber
-% !arara: pdflatex
+% arara: pdflatex
 \documentclass[load-preamble+]{cnltx-doc}
 \usepackage{leadsheets}
 \setcnltx{
@@ -8,19 +8,23 @@
   authors = Clemens Niederberger ,
   email   = contact@mychemistry.eu ,
   url     = https://github.com/cgnieder/leadsheets/ ,
-  add-frame-options = {
-    skipabove = .5\baselineskip ,
-    skipbelow = .5\baselineskip
-  } ,
+  % add-frame-options = {
+  %   skipabove = \baselineskip ,
+  %   skipbelow = \baselineskip
+  % } ,
 %   info = ,
   add-cmds = {
     chord , chordname ,
     definesongtitletemplate ,
+    expandsongpropertycode ,
+    ifsongpropertiesequal ,
     ifsongproperty ,
     newversetype ,
+    printsongpropertylist ,
     setchordnames ,
     setleadsheets ,
-    songproperty
+    songproperty ,
+    writechord
   } ,
   add-envs = {
     bridge ,
@@ -33,9 +37,14 @@
     song ,
     verse
   } ,
-  index-setup = { othercode=\footnotesize, level=\section} ,
+  index-setup = { othercode=\footnotesize, level=\section , noclearpage } ,
   makeindex-setup = {  columns=3, columnsep=1em }
 }
+
+\BeforeBeginEnvironment{example}{\vspace{\baselineskip}}
+\AfterEndEnvironment{example}{\vspace{\baselineskip}}
+\BeforeBeginEnvironment{sourcecode}{\vspace{\baselineskip}}
+\AfterEndEnvironment{sourcecode}{\vspace{\baselineskip}}
 
 \defbibheading{bibliography}{\section{References}}
 \addbibresource{\jobname.bib}
@@ -118,7 +127,7 @@ hard drive with various attempts of typesetting leadsheets.  This bundle of
 packages is now the attempt to have a clean, documented and customisable
 version of my code.
 
-
+\clearpage
 \part{The \musicsymbols{} Package}
 \dictum[Victor Hugo]{%
   Music expresses that which cannot be said and on which it is impossible to
@@ -137,14 +146,14 @@ table~\ref{tab:musicsymbols}.
 \cs{musicsymbol}.  Those commands are meant for internal use only which is why
 they're not explained here.
 
-\begin{table}
+\begin{table}[htbp]
   \centering
   \newcommand*\showsymbol[1]{\cs{#1}&\csuse{#1}}
   \caption{Symbols defined by \musicsymbols.}
   \begin{tabular}{llll}
     \toprule
-      \bfseries command & \bfseries symbol &
-      \bfseries command & \bfseries symbol \\
+      \bfseries Command & \bfseries Symbol &
+      \bfseries Command & \bfseries Symbol \\
     \midrule
       \showsymbol{sharp}       & \showsymbol{flat} \\
       \showsymbol{doublesharp} & \showsymbol{doubleflat} \\
@@ -163,6 +172,27 @@ they're not explained here.
   \label{tab:musicsymbols}
 \end{table}
 
+\musicsymbols{} also defines a number of macros for denoting bars.  Those
+macros are listed in table~\ref{tab:bar-symbols}.
+
+\begin{table}[htbp]
+  \centering
+  \newcommand*\showsymbol[1]{\cs{#1}&\csuse{#1}}
+  \caption{Bar symbols.}
+  \begin{tabular}{llll}
+    \toprule
+      \bfseries Macro & \bfseries Symbol &
+      \bfseries Macro & \bfseries Symbol \\
+    \midrule
+      \showsymbol{normalbar}   & \showsymbol{leftrepeat} \\
+      \showsymbol{rightrepeat} & \showsymbol{leftrightrepeat} \\
+      \showsymbol{doublebar}   & \showsymbol{stopbar} \\
+    \bottomrule
+  \end{tabular}
+  \label{tab:bar-symbols}
+\end{table}
+
+\clearpage
 \part{The \chordnames{} Package}
 \dictum[Wes Montgomery]{%
   I never practice my guitar -- from time to time I just open the case and
@@ -189,42 +219,42 @@ typesetting of chords:
 \end{commands}
 
 There are several token lists that are treated specially inside \cs{chordname}:
-\begin{itemize}
-  \item \code{\^{}} -- This token is replaced by \cs*{textsuperscript}.
-  \item \code{ma} -- The symbol for major chords.  Per default this is
+\begin{labeling}[--]{xxxxx}
+  \item[\code{\^{}}] This token is replaced by \cs*{textsuperscript}.
+  \item[\code{ma}] The symbol for major chords.  Per default this is
     empty. \verbcode+\chordname{Gma}+ \chordname{Gma}.
-  \item \code{mi} -- The symbol for minor chords.  Per default this is
+  \item[\code{mi}] The symbol for minor chords.  Per default this is
     \code{m}.  \verbcode+\chordname{Gmi}+ \chordname{Gmi}.
-  \item \code{o} -- The symbol for diminished chords.  Per default this is
+  \item[\code{o}] The symbol for diminished chords.  Per default this is
     \code{\cs*{textsuperscript}\Marg{o}}.  \verbcode+\chordname{Go}+
     \chordname{Go}.
-  \item \code{+} -- The symbol for augmented chords.  Per default this is
+  \item[\code{+}] The symbol for augmented chords.  Per default this is
     \code{\cs*{textsuperscript}\Marg{+}}.  \verbcode!\chordname{G+}!
     \chordname{G+}.
-  \item \code{/o} -- The symbol for half diminished chords.  Per default
+  \item[\code{/o}] The symbol for half diminished chords.  Per default
     this is \code{\cs*{textsuperscript}\Marg{\cs*{o}\Marg{}}}.
     \verbcode+\chordname{G/o}+ \chordname{G/o}.
-  \item \code{\#} -- The \enquote{sharp} symbol.  Per default this is
+  \item[\code{\#}] The \enquote{sharp} symbol.  Per default this is
     \cs{sharp}.  \verbcode+\chordname{F#}+ \chordname{F#}.
-  \item \code{\#\#} -- The \enquote{double sharp} symbol.  Per default this is
+  \item[\code{\#\#}] The \enquote{double sharp} symbol.  Per default this is
     \cs{doublesharp}.  \verbcode+\chordname{F##}+ \chordname{F##}.
-  \item \code{b} -- The \enquote{flat} symbol.  Per default this is
+  \item[\code{b}] The \enquote{flat} symbol.  Per default this is
     \cs{flat}.  \verbcode+\chordname{Eb}+ \chordname{Eb}.
-  \item \code{bb} -- The \enquote{double flat} symbol.  Per default this is
+  \item[\code{bb}] The \enquote{double flat} symbol.  Per default this is
     \cs{doubleflat}.  \verbcode+\chordname{Ebb}+ \chordname{Ebb}.
-  \item \code{b\#} -- Cancelling flat/sharp combination: this is removed.
-  \item \code{\#b} -- Cancelling sharp/flat combination: this is removed.
-  \item \code{add} -- This is superscripted: \verbcode+\chordname{Gadd9}+
+  \item[\code{b\#}] Cancelling flat/sharp combination: this is removed.
+  \item[\code{\#b}] Cancelling sharp/flat combination: this is removed.
+  \item[\code{add}] This is superscripted: \verbcode+\chordname{Gadd9}+
     \chordname{Gadd9}.
-  \item \code{sus} -- This is superscripted: \verbcode+\chordname{Gsus4}+
+  \item[\code{sus}] This is superscripted: \verbcode+\chordname{Gsus4}+
     \chordname{Gsus4}.
-  \item \code{dim} -- This is superscripted: \verbcode+\chordname{Gdim5}+
+  \item[\code{dim}] This is superscripted: \verbcode+\chordname{Gdim5}+
     \chordname{Gdim5}.
-  \item \code{maj7} -- This is superscripted: \verbcode+\chordname{Gmaj7}+
+  \item[\code{maj7}] This is superscripted: \verbcode+\chordname{Gmaj7}+
     \chordname{Gmaj7}.
-  \item \code{maj9} -- This is superscripted: \verbcode+\chordname{Gmaj9}+
+  \item[\code{maj9}] This is superscripted: \verbcode+\chordname{Gmaj9}+
     \chordname{Gmaj9}.
-\end{itemize}
+\end{labeling}
 
 How these token lists are treated depends on optional settings:
 
@@ -283,6 +313,7 @@ doesn't change the input syntax.
     The token list \code{maj9}.
 \end{options}
 
+\clearpage
 \part{The \leadsheets{} Package}
 \dictum[Jeff Beck]{%
   I don't care about the rules. If I don't break the rules at least ten
@@ -318,7 +349,8 @@ First let's take a look at an example:
   \usepackage{leadsheets}
   \begin{document}
 
-  \begin{song}{title=Layla,composer=Eric Clapton,tags={clapton,unplugged,r&b}}
+  \begin{song}{title=Layla,composer={Eric Clapton and Jim
+        Gordon},tags={clapton,unplugged,r&b}}
   \begin{verse}
     What will you do when you get lonely? \\
     Noone waiting by your side. \\
@@ -408,6 +440,10 @@ Although I used the word \enquote{global} above \emph{all options are local to
     inside the \env{verse} like environments end-of-lines will be obeyed and
     start a new line.  This comes with a price when using chords, see
     section~\ref{sec:placing-chords:caveat}.
+  \keybool{bar-shortcuts}\Default{false}
+    Makes the characters \code{:} and \code{|} active inside the \env{song}
+    environment.  See sections~\ref{sec:special-characters}
+    and~\ref{sec:typesetting-bars} for more details.
 \end{options}
 
 \subsection{Song Properties}\label{sec:song-properties}
@@ -493,6 +529,27 @@ by Paul McCartney and John Lennon\footnote{This is not quite true: most songs
 
 It is possibly to define further such properties.  For details see
 section~\ref{sec:available-commands}.
+
+\subsection{Special Characters}\label{sec:special-characters}
+Inside the \env{song} environment several characters don't have their usual
+catecory codes:
+\begin{labeling}[--]{xxxxx}
+  \item[\code{\textasciicircum}] category code 13 (active). It is a
+    shortcut for the \cs{chord} command.
+  \item[\code{\_}] category code 13 (active). It is a shortcut for the
+    \cs{writechord} command.
+  \item[\code{|}] category code 13 (active).  Used for typesetting bars.
+  \item[\code{:}] category code 13 (active).  Used for typesetting bars.
+  \item[\code{\#}] category code 12 (other).  Used fo chord names.
+\end{labeling}
+
+Actually the characters \code{|} and \code{:} are \emph{not} changed per
+default.  In order to do that you have to use the option
+\option{bar-shortcuts}.
+
+For details on the usage of the characters \code{|} and \code{:} see
+section~\ref{sec:typesetting-bars}.  The usage of chords is explained in
+section~\ref{sec:placing-chords}.
 
 \section{The \env*{verse} Environment}\label{sec:envverse-environment}
 
@@ -580,12 +637,15 @@ choruses, then you could do
   }
 \end{sourcecode}
 
-\subsection{Placing Chords}\label{sec:placing-chords}
+\section{Placing Chords}\label{sec:placing-chords}
 
-\subsubsection{The Commands}
-Inside the \env{song} environment the character \code{\textasciicircum} is an
-active character which is defined to place a chord above words.  More
-precisely is is equal to the following command:
+\subsection{The Commands}
+Inside the \env{song} environment the characters \code{\textasciicircum} and
+\code{\_} are active characters\footnote{There are more characters with a
+  special function, see
+  section~\ref{sec:special-characters}}. \code{\textasciicircum} is a shortcut
+for the command \cs{chord}, \code{\_} is a shortcut for \cs{writechord}.
+Those commands have the following functions:
 
 \begin{commands}
   \command{chord}[\sarg\symarg{-}\marg{chord}\meta{text}\visiblespace]
@@ -598,16 +658,17 @@ precisely is is equal to the following command:
     \option{empty-chord-dim}.
   \command{writechord}[\marg{chord}]
     This command transforms the chord according to the options
-    \option{transpose} and \option{enharmonic} befor printing it.  This
+    \option{transpose} and \option{enharmonic} before printing it.  This
     command can/should be used for placing chords inline or for typesetting
-    the \property{key} property in a template.
+    the \property{key} property in a template.  The command is used by
+    \cs{chord} for the actual printing.
 \end{commands}
 
 \begin{example}[side-by-side]
   Text \chord{E7}text \chord*{B7}lon ger text 
 \end{example}
 
-\subsubsection{Usage}
+\subsection{Usage}
 Note that per default the width of a chord is not ignored:
 \begin{example}[side-by-side]
   text \chord{Gbmi7(b5)}text text
@@ -649,7 +710,8 @@ inside of the \env{song} environment.
   \usepackage{leadsheets}
   \begin{document}
 
-  \begin{song}{title=Layla,composer=Eric Clapton,tags={clapton,unplugged,r&b}}
+  \begin{song}{title=Layla,composer={Eric Clapton and Jim
+        Gordon},tags={clapton,unplugged,r&b}}
   \begin{verse}
     ^{C#mi7} What will you do when you get ^*{G#7}lone ly? \\
     ^{C#mi7} Noone ^*{C}wai ting ^{D}by your ^{E}side. ^{E7} \\
@@ -670,7 +732,7 @@ You've probably noticed: chords are printed with \cs{chordname} in the default
 setting.  You can change this with the option \option{chord-cs}.  If you do
 then keep in mind that the input syntax will also change.
 
-\subsubsection{Caveat}\label{sec:placing-chords:caveat}
+\subsection{Caveat}\label{sec:placing-chords:caveat}
 
 If you use \keyis{obey-lines}{true} you have to be careful when you place
 chords.  If you place a chord over the last word in a line
@@ -689,7 +751,7 @@ methods:
 \end{sourcecode}
 
 
-\subsection{Transposing}\label{sec:transposing}
+\section{Transposing}\label{sec:transposing}
 
 Provided a song has the property \property{key} \emph{and} the key is given as
 one of the twelve \enquote{usual} keys, \ie, one of the keys given in
@@ -712,32 +774,42 @@ The transposing mechanism relies on the \chordnames{} input syntax which means
 that if you change \option{chord-cs} horrible things may happen.  \emph{So
   don't change \option{chord-cs} and use \option{transpose} at the same time!}
 
-\begin{table}[hbp]
+\begin{table}[htbp]
   \centering
   \catcode`\#=12
   \catcode`\!=6
   \def\showsignature!1{\chordname{!1}&\code{!1}}%
   \caption{Allowed keys for the \property{key} property.}
-  \begin{tabular}{*{8}{l}}
+  \begin{tabular}{*{12}{l}}
     \toprule
+      \bfseries Key & \bfseries Input &
+      \bfseries Key & \bfseries Input &
       \bfseries Key & \bfseries Input &
       \bfseries Key & \bfseries Input &
       \bfseries Key & \bfseries Input &
       \bfseries Key & \bfseries Input \\
     \midrule
-      \showsignature{C}  && & \showsignature{Ami} \\
-    \cmidrule(lr){1-4} \cmidrule(lr){5-8}
-      \showsignature{G}    & \showsignature{F}  &
+      \showsignature{C}   && &
+      \showsignature{Cma} && &
+      \showsignature{Ami} \\
+    \cmidrule(lr){1-4} \cmidrule(lr){5-8} \cmidrule(lr){9-12}
+      \showsignature{G}    & \showsignature{F} &
+      \showsignature{Gma}  & \showsignature{Fma} &
       \showsignature{Emi}  & \showsignature{Dmi} \\
       \showsignature{D}    & \showsignature{Bb} &
+      \showsignature{Dma}  & \showsignature{Bbma} &
       \showsignature{Bmi}  & \showsignature{Gmi} \\
       \showsignature{A}    & \showsignature{Eb} &
+      \showsignature{Ama}  & \showsignature{Ebma} &
       \showsignature{F#mi} & \showsignature{Cmi} \\
       \showsignature{E}    & \showsignature{Ab} &
+      \showsignature{Ema}  & \showsignature{Abma} &
       \showsignature{C#mi} & \showsignature{Fmi} \\
       \showsignature{B}    & \showsignature{Db} &
+      \showsignature{Bma}  & \showsignature{Dbma} &
       \showsignature{G#mi} & \showsignature{Fbmi} \\
       \showsignature{F#}   & \showsignature{Gb} &
+      \showsignature{F#ma} & \showsignature{Gbma} &
       \showsignature{D#mi} & \showsignature{Ebmi} \\
     \bottomrule
   \end{tabular}
@@ -754,7 +826,7 @@ that if you change \option{chord-cs} horrible things may happen.  \emph{So
 
   \begin{song}[transpose=2]{
       title=Layla,
-      composer=Eric Clapton,
+      composer={Eric Clapton and Jim Gordon},
       tags={clapton,unplugged,r&b},
       key = Dmi
     }
@@ -859,6 +931,40 @@ in the following order:
   \end{foo}
 \end{example}
 
+\section{Typesetting Bars}\label{sec:typesetting-bars}
+
+Sometimes it can be useful to typeset the chord scheme of a song.  Then one
+should be able to indicate start and beginnings of bars, maybe indicate
+repeats and so on.  While this is obviously possible with the macros provided
+by the \musicsymbols{} package listed in table~\ref{tab:bar-symbols} it may be
+more convenient to have a shorter syntax.  This is why inside the \env{song}
+environment some characters can be made (or are) active (see
+section~\ref{sec:special-characters}).  For the typesetting of bars this are
+the characters \code{:} nor \code{|}. Per default they are not active, though.
+If you want to use the shortcut syntax you have to use the option
+\option{bar-shortcuts}.  Here's a short example that emulates the behaviour by
+setting the characters active explicitly:
+
+\begin{example}[add-sourcecode-options={literate=}]
+  \catcode`|=\active
+  \catcode`:=\active
+  |: repeat | this :|: and | this :| \par
+  | this | part | ends | here || \par
+  | the | song | is over | now |||
+\end{example}
+
+All possibly combinations that have a special definition are shown in the
+example above.  The replacements that are done internally are these:
+\begin{labeling}[--]{xxxxx}
+  \item[\code{|}] \cs{normalbar}\cs*{space} (the space is there because
+    otherwise it eats following spaces which would be annoying)
+  \item[\code{|:}] \cs{leftrepeat}
+  \item[\code{:|}] \cs{rightrepeat}
+  \item[\code{:|:}] \cs{leftrightrepeat}
+  \item[\code{||}] \cs{doublebar}
+  \item[\code{|||}] \cs{stopbar}
+\end{labeling}
+
 \section{Title Templates}\label{sec:title-templates}
 
 \subsection{Background}
@@ -870,43 +976,25 @@ templates and an easy mechansim to define own templates.
 
 \subsection{Existing Templates}
 
+Currently \leadsheets{} provides two templates:
+\begin{description}
+  \item[minimal] This only typesettes the song title in a \cs{section}\sarg.
+  \item[tabular] This typesets the song title in a \cs{section} and prints
+    some song properties in a \env{tabular} below it.  This template needs the
+    \pkg{array}~\cite{pkg:array} package loaded.
+\end{description}
+
 \subsection{Own Templates}
-\subsubsection{An Example}
-\begin{example}[
-  compile,
-  graphics={trim={2cm 18cm 2cm 2cm},clip},
-  add-sourcecode-options={literate=}]
-  \documentclass{article}
-  \usepackage{leadsheets}
-  \definesongtitletemplate{custom}{
-    \section{%
-      \songproperty{title}%
-      \ifsongproperty{composer}
-        { (by \songproperty{composer})}
-        {}%
-    }
-  }
-  \setleadsheets{title-template = custom}
-  \begin{document}
+\subsubsection{The Principle and Available Commands}\label{sec:available-commands}
+The principle is pretty straight forward: templates are defined with the
+following command:
+\begin{commands}
+  \command{definesongtitletemplate}[\marg{name}\marg{code}]
+    This defines the template \meta{name}.
+\end{commands}
+Inside of \meta{code} any code can be used.  The idea is that you use the
+commands presented below to insert song properties where you want them.
 
-  \begin{song}{title=Layla,composer=Eric Clapton,tags={clapton,unplugged,r&b}}
-  \begin{verse}
-    What will you do when you get lonely? \\
-    Noone waiting by your side. \\
-    You've been runnin', hidin' much too long. \\
-    You know it's just your foolish pride .
-  \end{verse}
-  \begin{chorus}
-    Layla, got me on my knees. \\
-    Layla, beggin' darlin', please! \\
-    Layla, darlin' won't you ease my worried mind? 
-  \end{chorus}
-  \end{song}
-  
-  \end{document}
-\end{example}
-
-\subsubsection{Available Commands}\label{sec:available-commands}
 First there are two commands related to defining new properties:
 \begin{commands}
   \command{definesongproperty}[\marg{property}]
@@ -953,7 +1041,7 @@ contents or other auxiliary files.
     Checks if properties \meta{property 1} and \meta{property 2} have been set
     to the same value.
   \command{expandsongpropertycode}[\marg{code}]
-    Exhaustively expands \meta{code}.  Experienced user won't need this.  It
+    Exhaustively expands \meta{code}.  Experienced users won't need this.  It
     is essentially
     
     \cs*{begingroup}\cs*{edef}\cs*{x}\Marg{\cs*{endgroup}\meta{code}}\cs*{x}.
@@ -963,6 +1051,149 @@ contents or other auxiliary files.
     commands non-robust macros that should not be expanded need to be prefixed
     with \cs*{noexpand}.
 \end{commands}
+
+With the right template definition you can index composers, interprets, song
+titles, \ldots{}  You can write tables of contents for properties such as song
+titles, and so on, and so on.  \leadsheets{} does not do this for you and it
+may require some experience to create templates which do all this.
+
+\subsubsection{Examples}
+In order to give you an idea on how to use templates I'll show you how the
+existing ones are defined and one new definition.
+
+\paragraph{The \enquote{minimal} template}
+This is quite short and self-explaining.
+
+\begin{sourcecode}
+  \definesongtitletemplate{minimal}{\section*{\songproperty{title}}}
+\end{sourcecode}
+
+\paragraph{A custom template}
+Now let's see an example for a newly defined template.  It's nearly as simple
+as the \enquote{minimal} template.
+
+\begin{example}[
+  compile,
+  graphics={trim={2cm 18cm 2cm 2cm},clip},
+  add-sourcecode-options={literate=}]
+  \documentclass{article}
+  \usepackage{leadsheets}
+  \definesongtitletemplate{custom}{
+    \section{%
+      \songproperty{title}%
+      \ifsongproperty{composer}
+        { (by \printsongpropertylist{composer}{ \& }{, }{ \& })}
+        {}%
+    }
+  }
+  \setleadsheets{title-template = custom}
+  \begin{document}
+
+  \begin{song}{title=Layla,composer={Eric Clapton and Jim
+        Gordon},tags={clapton,unplugged,r&b}}
+  \begin{verse}
+    What will you do when you get lonely? \\
+    Noone waiting by your side. \\
+    You've been runnin', hidin' much too long. \\
+    You know it's just your foolish pride .
+  \end{verse}
+  \begin{chorus}
+    Layla, got me on my knees. \\
+    Layla, beggin' darlin', please! \\
+    Layla, darlin' won't you ease my worried mind? 
+  \end{chorus}
+  \end{song}
+  
+  \end{document}
+\end{example}
+
+\paragraph{The \enquote{tabular} template}
+This one is a lot more advanced and demonstrates various of the available
+commands.
+
+\begin{sourcecode}
+  \definesongtitletemplate{tabular}{
+    \section{\songproperty{title}}
+    \begingroup\footnotesize
+    \begin{tabular}{
+        @{}
+        >{\raggedright\arraybackslash}p{.5\linewidth}
+        @{}
+        >{\raggedleft\arraybackslash}p{.5\linewidth}
+        @{}
+      }
+      \ifsongproperty{interpret}
+        {\GetTranslation{leadsheets/interpret}}
+        {}%
+      \ifsongproperty{composer}
+        {%
+          &
+          \GetTranslation{leadsheets/composer}: %
+          \printsongpropertylist{composer}{ \& }{,~}{ \& }
+          \ifsongproperty{lyrics}
+            {
+              \\ &
+              \GetTranslation{leadsheets/lyrics}: %
+              \printsongpropertylist{lyrics}{ \& }{,~}{ \& }
+            }
+            {}%
+        }
+        {}%
+      \ifsongproperty{interpret}{\\}{\ifsongproperty{composer}{\\}{}}%
+      \ifsongproperty{genre}
+        {& Genre:~ \songproperty{genre} \\}
+        {}%
+      \ifsongproperty{tempo}
+        {& Tempo:~ \songproperty{tempo} \\}
+        {}%
+      \ifsongproperty{key}
+        {%
+          & \setchordnames{
+              major = -\GetTranslation{leadsheets/major} ,
+              minor = -\GetTranslation{leadsheets/minor}
+            }%
+          \GetTranslation{leadsheets/key}: %
+          \expandsongpropertycode{\writechord{\songproperty{key}}} \\%
+        }
+        {}%
+    \end{tabular}
+    \par\endgroup
+  }
+\end{sourcecode}
+
+A song using the \enquote{tabular} template:
+
+\begin{example}[
+  compile,
+  graphics={trim={2cm 18cm 2cm 2cm},clip},
+  add-sourcecode-options={literate=}]
+  \documentclass{article}
+  \usepackage{leadsheets}
+  \usepackage{array}
+  \setleadsheets{title-template = tabular}
+  \begin{document}
+
+  \begin{song}{
+      title = Layla ,
+      composer = {Eric Clapton and Jim Gordon} ,
+      tags = {clapton,unplugged,r&b} ,
+      key = Dmi
+    }
+  \begin{verse}
+    ^{C#mi7} What will you do when you get ^*{G#7}lone ly? \\
+    ^{C#mi7} Noone ^*{C}wai ting ^{D}by your ^{E}side. ^{E7} \\
+    ^{F#mi} You've been ^*{B}run nin', ^*{E}hid in' much too ^{A}long. \\
+    ^{F#mi} You know it's ^{B}just your foolish ^{E}pride .
+  \end{verse}
+  \begin{chorus}
+    ^*{A}Lay ---^-{Dmi7}la, \quad ^{Bb} ^{C}got me on my knees. \\
+    Lay^-{Dmi7}la, \quad ^{Bb} ^*{C}beg gin' darlin', ^{Dmi7}please, Layla. \\
+    Darlin' won't you ease my worried ^{Dmi7}mind? ^{Bb} ^{C}
+  \end{chorus}
+  \end{song}
+  
+  \end{document}
+\end{example}
 
 \section{Internationalization}\label{sec:internationalization}
 
@@ -984,27 +1215,30 @@ table~\ref{tab:translations} is a little different: the string
 \code{leadsheets/interpret} is declared as
 \begin{sourcecode}
   \DeclareTranslation{English}{leadsheets/interpret}
-    {as interpreted by \songproperty{interpret}}
+    {as interpreted by \printsongpropertylist{interpret}{ \& }{,~}{ \& }}
   \DeclareTranslation{German}{leadsheets/interpret}
-    {wie von \songproperty{interpret} interpretiert}
+    {wie von \printsongpropertylist{interpret}{ \& }{,~}{ \& } interpretiert}
 \end{sourcecode}
 which means it uses the song property \property{interpret}.  As a consequence
 it only really can be used inside a \env{song} environment.  In other cases as
 for example in table~\ref{tab:translations} the property part expands to
-nothing (but the spaces around it are of course there).
+nothing (but the spaces around it are of course there).  Also keep in mind
+that \cs{printsongpropertylist} is not expandable.
 
-\begin{table}
+\begin{table}[htbp]
   \centering
   \caption{Predefined translation strings.}
   \newcommand*\showtranslation[1]{%
     \texttt{leadsheets/#1} &
-    \GetTranslationForWarn{English}{leadsheets/#1} &
-    \GetTranslationForWarn{German}{leadsheets/#1}
+    \GetTranslationFor{English}{leadsheets/#1} &
+    \GetTranslationFor{German}{leadsheets/#1}
   }
   \begin{tabular}{lll}
     \toprule
       \bfseries String & \bfseries English & \bfseries German \\
     \midrule
+      \showtranslation{major} \\
+      \showtranslation{minor} \\
       \showtranslation{chorus} \\
       \showtranslation{composer} \\
       \showtranslation{lyrics} \\
@@ -1019,6 +1253,7 @@ nothing (but the spaces around it are of course there).
   \label{tab:translations}
 \end{table}
 
+\clearpage
 \part{Appendix}
 \dictum[Thelonious Monk]{%
   Talking about music is like dancing about architecture.%

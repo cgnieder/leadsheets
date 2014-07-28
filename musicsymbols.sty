@@ -31,12 +31,74 @@
 \newrobustcmd*\trebleclef    {\musicsymbol{H}}
 \newrobustcmd*\bassclef      {\musicsymbol{J}}
 \newrobustcmd*\altoclef      {\musicsymbol{K}}
-\newrobustcmd*\meterC        {\kern-.15em\musicsymbol{R}}
-\newrobustcmd*\allabreve     {\kern-.15em\musicsymbol{S}}
+\newrobustcmd*\allabreve     {\kern-.15em\musicsymbol{R}}
+\newrobustcmd*\meterC        {\kern-.15em\musicsymbol{S}}
 \newrobustcmd*\wholerest     {\musicsymbol{<}}
 \newrobustcmd*\halfrest      {\musicsymbol{=}}
 \newrobustcmd*\quarterrest   {\musicsymbol[-1ex]{>}\kern.25em}
 \newrobustcmd*\eighthrest    {\musicsymbol[-1ex]{?}\kern.33em}
 \newrobustcmd*\sixteenthrest {\musicsymbol[-1ex]{@}\kern.33em}
+
+\newcommand*\mscsym@size{\f@size pt}
+\newlength\mscsym@barheight
+
+\newrobustcmd*\mscsym@genericbar[1]{%
+  \setlength\mscsym@barheight\mscsym@size
+  \rule[-.2\mscsym@barheight]{#1}{\mscsym@barheight}%
+}
+
+\newcommand*\mscsym@normalbarwidth{.02em}
+\newcommand*\mscsym@thickbarwidth{.15em}
+\newcommand*\mscsym@interbarwidth{.1em}
+
+\newrobustcmd*\mscsym@thickbar{%
+  \mscsym@genericbar{\mscsym@thickbarwidth}%
+}
+
+\newrobustcmd*\mscsym@repeatcolon{%
+  \leavevmode
+  \setlength\mscsym@barheight\mscsym@size
+  \raise.1\mscsym@barheight\hbox{:}%
+}
+
+\newrobustcmd*\mscsym@interbar{\kern\mscsym@interbarwidth\relax}
+
+\newrobustcmd*\normalbar{%
+  \mscsym@genericbar{\mscsym@normalbarwidth}%
+}
+
+\newrobustcmd*\leftrepeat{%
+  \mscsym@thickbar
+  \mscsym@interbar
+  \normalbar
+  \mscsym@repeatcolon
+}
+
+\newrobustcmd*\rightrepeat{%
+  \mscsym@repeatcolon
+  \normalbar
+  \mscsym@interbar
+  \mscsym@thickbar
+}
+
+\newrobustcmd*\leftrightrepeat{%
+  \mscsym@repeatcolon
+  \mscsym@thickbar
+  \mscsym@interbar
+  \mscsym@thickbar
+  \mscsym@repeatcolon
+}
+
+\newrobustcmd*\doublebar{%
+  \normalbar
+  \mscsym@interbar
+  \normalbar
+}
+
+\newrobustcmd*\stopbar{%
+  \normalbar
+  \mscsym@interbar
+  \mscsym@thickbar
+}
 
 \endinput
