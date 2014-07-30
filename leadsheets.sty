@@ -17,6 +17,15 @@
     \msg_line_context:
   }
 
+\msg_new:nnn {leadsheets} {song-defined}
+  {
+    A~ song~ with~ the~ ID~ `#1'~ has~ already~ been~ defined! Check~ your~
+    source~ \msg_line_context:
+  }
+
+\msg_new:nnn {leadsheets} {unknown-template}
+  { Unknown~ #1~ template~ `#2'~ \msg_line_context: }
+
 % --------------------------------------------------------------------------
 % variants of kernel functions:
 \cs_generate_variant:Nn \tl_if_eq:nnTF       { xx , V }
@@ -48,22 +57,23 @@
 \tl_new:N    \l__leadsheets_songtitle_template_tl
 \tl_new:N    \l__leadsheets_verse_type_tl
 \tl_set:Nn   \l__leadsheets_verse_type_tl {verse}
-\tl_new:N    \l__leadsheets_verse_format_tl
+% \tl_new:N    \l__leadsheets_verse_format_tl
 \tl_new:N    \l__leadsheets_verses_format_tl
-\tl_new:N    \l__leadsheets_verse_label_format_tl
+% \tl_new:N    \l__leadsheets_verse_label_format_tl
 \tl_new:N    \l__leadsheets_verses_label_format_tl
 \tl_new:N    \l__leadsheets_verses_after_label_tl
 \tl_set:Nn   \l__leadsheets_verses_after_label_tl {:}
-\tl_new:N    \l__leadsheets_transpose_steps_tl
 \tl_new:N    \l__leadsheets_enharmonic_tl
+\tl_new:N    \l__leadsheets_capo_format_tl
 
 \bool_new:N  \l__leadsheets_print_selected_bool
 \bool_new:N  \l__leadsheets_chord_gobble_after_bool
-\bool_new:N  \l__leadsheets_verse_numbered_bool
+% \bool_new:N  \l__leadsheets_verse_numbered_bool
 \bool_new:N  \l__leadsheets_verse_remember_bool
 \bool_new:N  \l__leadsheets_smash_chords_bool
 \bool_new:N  \g__leadsheets_smash_next_chord_bool
 \bool_new:N  \l__leadsheets_transpose_bool
+\bool_new:N  \l__leadsheets_transpose_capo_bool
 \bool_new:N  \l__leadsheets_enharmonic_bool
 \bool_new:N  \l__leadsheets_obey_lines_bool
 \bool_new:N  \l__leadsheets_bar_shorthands_bool
@@ -82,10 +92,14 @@
 \seq_new:N   \l__leadsheets_flats_seq
 \seq_new:N   \l__leadsheets_shorthands_seq
 
+\int_new:N   \l__leadsheets_transpose_steps_int
+\int_new:N   \l__leadsheets_capo_int
 \int_new:N   \g__leadsheets_song_id_int
 
 \dim_new:N   \l__leadsheets_empty_chord_dim
 \dim_set:Nn  \l__leadsheets_empty_chord_dim {1em}
+
+\skip_new:N  \l__leadsheets_obey_parskip_skip
 
 % --------------------------------------------------------------------------
 % shorthand mechanism:
@@ -178,14 +192,15 @@
 
 \leadsheets_active_eol: %
 \tl_const:Nn \c__leadsheets_eol_tl {^^M}%
-\cs_new:Npn \leadsheets_obey_lines: {%
+\cs_new_protected:Npn \leadsheets_obey_lines: {%
+  \skip_set_eq:NN \l__leadsheets_obey_parskip_skip \parskip
   \cs_set:Npn ^^M{%
     \peek_meaning:NTF ^^M%
-      {\par \skip_vertical:N \parsep}%
+      {\par \skip_vertical:N \l__leadsheets_obey_parskip_skip}%
       {\par}%
   }%
 }%
-\cs_new:Npn \leadsheets_ignore_lines:{%
+\cs_new_protected:Npn \leadsheets_ignore_lines:{%
   \cs_set:Npn ^^M{%
     \peek_meaning:NTF^^M%
       {\par}%
@@ -235,6 +250,7 @@
       { \prg_return_false: }
   }
 \cs_generate_variant:Nn \leadsheets_if_property:nnTF { V }
+\cs_generate_variant:Nn \leadsheets_if_property:nnT  { V }
 \cs_generate_variant:Nn \leadsheets_if_property_p:nn { V }
 
 \prg_new_protected_conditional:Npnn \leadsheets_if_properties_eq:nnn #1#2#3 {T,F,TF}
@@ -368,6 +384,7 @@
 \definesongproperty {interpret}
 \definesongproperty {sort-interpret}
 \definesongproperty {key}
+\definesongproperty {capo}
 \definesongproperty {tempo}
 \definesongproperty {tags}
 \definesongproperty {counter}
@@ -387,7 +404,7 @@
 \cs_new_protected:Npn \leadsheets_song_define:nn #1#2
   {
     \seq_if_in:NnTF \l__leadsheets_defined_songs_seq {#1}
-      { \ERROR }
+      { \msg_error:nnn {leadsheets} {song-defined} {#1} }
       { \seq_put_right:Nn \l__leadsheets_defined_songs_seq {#1} }
     \leadsheets_define_song_properties:n {#1}
     \keys_set:nn {leadsheets/song/#1} {#2}
@@ -412,6 +429,7 @@
       {
           \tl_set:Nn \l__leadsheets_current_song_tl {#1}
           \leadsheets_songtitle:
+          \leadsheets_check_capo:
           \tl_use:N \l__leadsheets_songtext_format_tl
           #2
       }
@@ -517,7 +535,7 @@
       {#1}
       \l__leadsheets_tmpa_tl
       { \l__leadsheets_tmpa_tl }
-      { \ERROR }
+      { \msg_error:nnnn {leadsheets} {unknown-template} {songtitle} {#1} }
   }
 \cs_generate_variant:Nn \leadsheets_use_songtitle_template:n { V }
 
@@ -528,7 +546,7 @@
 \NewDocumentCommand \definesongtitletemplate {m+m}
   { \leadsheets_define_songtitle_template:nn {#1} {#2} }
 
-\NewDocumentCommand \expandsongpropertycode {+m} { \use:x {#1} }
+\NewDocumentCommand \expandcode {+m} { \use:x {#1} }
 
 % --------------------------------------------------------------------------
 % predefined templates
@@ -575,7 +593,7 @@
             minor = -\GetTranslation{leadsheets/minor}
           }
           \GetTranslation{leadsheets/key}:~
-          \expandsongpropertycode{\writechord{\songproperty{key}}} \\
+          \expandcode{\writechord{\songproperty{key}}} \\
         }
         {}
     \end{tabular}
@@ -617,12 +635,12 @@
       {
         \leadsheets_if_property_p:Vn \l__leadsheets_current_song_tl {key}
         &&
-        \l__leadsheets_transpose_bool
+        ( \l__leadsheets_transpose_bool || \l__leadsheets_transpose_capo_bool )
       }
       {
         \leadsheets_transpose:xVN
           { \leadsheets_get_property:Vn \l__leadsheets_current_song_tl {key} }
-          \l__leadsheets_transpose_steps_tl
+          \l__leadsheets_transpose_steps_int
           \l__leadsheets_current_chord
       }
     \leadsheets_chord_print:V \l__leadsheets_current_chord
@@ -668,6 +686,39 @@
 
 \NewDocumentCommand \writechord {m}
   { \leadsheets_chord_write:n {#1} }
+
+% --------------------------------------------------------------------------
+% capo settings:
+\cs_new_protected:Npn \leadsheets_check_capo:
+  {
+    \leadsheets_if_property:VnTF \l__leadsheets_current_song_tl {capo}
+      {
+        \int_set:Nn \l__leadsheets_capo_int
+          { \leadsheets_get_property:Vn \l__leadsheets_current_song_tl {capo} }
+      }
+      { \int_zero:N \l__leadsheets_capo_int }
+    \int_set:Nn \l__leadsheets_transpose_steps_int
+      {
+        \bool_if:NTF \l__leadsheets_transpose_bool
+          { \l__leadsheets_transpose_steps_int }
+          {12}
+        - \l__leadsheets_capo_int
+      }
+  }
+
+\cs_new_protected:Npn \leadsheets_capo:
+  {
+    \leadsheets_if_property:VnT \l__leadsheets_current_song_tl {capo}
+      {
+        \leadsheets_translation:n {capo} :~
+        \use:c {int_to_ \l__leadsheets_capo_format_tl :n}
+          { \l__leadsheets_capo_int }
+        \nobreakspace
+        \leadsheets_translation:n {fret}
+      }
+  }
+
+\NewDocumentCommand \capo {} { \leadsheets_capo: }
 
 % --------------------------------------------------------------------------
 % transposing mechanism:
@@ -849,123 +900,161 @@
 \cs_generate_variant:Nn \leadsheets_transpose:nnN { xV }
 
 % --------------------------------------------------------------------------
+\cs_new_protected:Npn \leadsheets_verse_label:n #1
+  {
+    \bool_if:cF {l__leadsheets_#1_empty_bool}
+      {
+        \tl_use:c {l__leadsheets_#1_label_format_tl}
+        \bool_if:cT {l__leadsheets_#1_named_bool}
+          {
+            \leadsheets_translation:n {#1}
+            \bool_if:cT {l__leadsheets_#1_numbered_bool} { ~ }
+          }
+        \bool_if:cT {l__leadsheets_#1_numbered_bool}
+          { \use:c {the#1} }
+        \tl_use:c {l__leadsheets_#1_after_label_tl}
+      }
+  }
+
 \cs_new_protected:Npn \leadsheets_verse_begin:n #1
   {
-    \itemize
-    \tl_if_eq:VnTF \l__leadsheets_verse_type_tl {verse}
-      {
-        \bool_if:NTF \l__leadsheets_verse_numbered_bool
-          {
-            \refstepcounter{verse}
-            \item[{\tl_use:N \l__leadsheets_verse_label_format_tl \theverse}]
-          }
-          { \item[] }
-      }
-      {
-        \item[{
-          \tl_use:c {l__leadsheets_#1_label_format_tl}
-          \leadsheets_translation:V \l__leadsheets_verse_type_tl
-          \tl_use:c {l__leadsheets_#1_after_label_tl}
-        }]
-      }
-    \int_zero:N \@itemdepth
-    \dim_zero:N \parskip
+    \refstepcounter {#1}
+    \tl_set:Nn \verselabel { \leadsheets_verse_label:n {#1} }
+    \tl_set:Nn \verselabelformat
+      { \tl_use:c {l__leadsheets_#1_label_format_tl} }
+    \tl_set:Nn \versenumber { \use:c {the#1} }
+    \tl_set:Nn \verseafterlabel { \tl_use:c {l__leadsheets_#1_after_label_tl} }
+    \tl_set:Nn \versename { \leadsheets_translation:n {#1} }
+    \tl_set:Nn \ifversestarred { \bool_if:cTF {l__leadsheets_#1_empty_bool} }
+    \tl_set:Nn \ifversenamed { \bool_if:cTF {l__leadsheets_#1_named_bool} }
+    \tl_set:Nn \ifversenumbered
+      { \bool_if:cTF {l__leadsheets_#1_numbered_bool} }
     \leadsheets_obey_lines:
+    \leadsheets_use_verse_template:nn {begin} {#1}
   }
 
-\cs_new_protected:Npn \leadsheets_verse_begin_starred:
-  {
-    \itemize
-    \item[]
-    \int_zero:N \@itemdepth
-    \dim_zero:N \parskip
-    \leadsheets_obey_lines:
-  }
-
-\cs_new_protected:Npn \leadsheets_verse_end:
+\cs_new_protected:Npn \leadsheets_verse_end:n #1
   {
     \leadsheets_ignore_lines:
-    \enditemize
+    \leadsheets_use_verse_template:nn {end} {#1}
     \ignorespacesafterend
   }
 
-\newcounter{verse}
-\tl_set:Nn \theverse { \arabic {verse} . }
-
-\RenewDocumentEnvironment {verse} {O{}}
-  {
-    \par
-    \keys_set:nn {leadsheets/verse} {#1}
-    \leadsheets_verse_begin:n {}
-    \tl_use:N \l__leadsheets_verse_format_tl
-  }
-  { \leadsheets_verse_end: \par }
-
-\NewDocumentEnvironment {verse*} {O{}}
-  {
-    \par
-    \keys_set:nn {leadsheets/verse} {#1}
-    \leadsheets_verse_begin_starred:
-    \tl_use:N \l__leadsheets_verse_format_tl
-  }
-  { \leadsheets_verse_end: \par }
-
 \cs_new_protected:Npn \leadsheets_new_verse_type:Nnn #1#2#3
   {
+    \bool_new:c {l__leadsheets_#2_empty_bool}
+    \bool_new:c {l__leadsheets_#2_numbered_bool}
+    \bool_new:c {l__leadsheets_#2_named_bool}
+    \bool_set_true:c {l__leadsheets_#2_named_bool}
+    \bool_if:NTF #1
+      { \bool_set_true:c {l__leadsheets_#2_empty_bool} }
+      { \bool_set_false:c {l__leadsheets_#2_empty_bool} }
     \tl_new:c {l__leadsheets_#2_format_tl}
+    \tl_new:c {l__leadsheets_#2_template_tl}
     \tl_new:c {l__leadsheets_#2_label_format_tl}
     \tl_new:c {l__leadsheets_#2_after_label_tl}
+    \newcounter {#2}
+    \tl_set:cn {the#2} { \arabic {#2} . }
     \keys_define:nn {leadsheets/#2}
       {
-        format      .code:n = \tl_set:cn {l__leadsheets_#2_format_tl} {##1} ,
-        format      .initial:n = \l__leadsheets_verses_format_tl ,
-        label-format .code:n =
+        numbered     .bool_set:c = {l__leadsheets_#2_numbered_bool} ,
+        named        .bool_set:c = {l__leadsheets_#2_named_bool} ,
+        format       .code:n     =
+          \tl_set:cn {l__leadsheets_#2_format_tl} {##1} ,
+        format       .initial:n  = \l__leadsheets_verses_format_tl ,
+        label-format .code:n     =
           \tl_set:cn {l__leadsheets_#2_label_format_tl} {##1} ,
-        label-format .initial:n = \l__leadsheets_verses_label_format_tl ,
-        after-label  .code:n =
+        label-format .initial:n  = \l__leadsheets_verses_label_format_tl ,
+        after-label  .code:n     =
           \tl_set:cn {l__leadsheets_#2_after_label_tl} {##1} ,
-        after-label  .initial:n = \l__leadsheets_verses_after_label_tl
+        after-label  .initial:n  = \l__leadsheets_verses_after_label_tl ,
+        template     .code:n     =
+          \tl_set:cn {l__leadsheets_#2_template_tl} {##1} ,
+        template     .initial:n  = itemize ,
+        name         .code:n     =
+         \@trnslt@declare@translation {leadsheets/#2} {fallback} {##1}
+         \@trnslt@declare@translation {leadsheets/#2} {English} {##1}
       }
-    \bool_if:NTF #1
+    \NewDocumentEnvironment {#2} {O{}}
       {
-        \NewDocumentEnvironment {#2} {O{}}
-          {
-            \par
-            \keys_set:nn {leadsheets/#2} {##1}
-            \tl_set:Nn \l__leadsheets_verse_type_tl {#2}
-            \leadsheets_verse_begin_starred:
-            \tl_use:c {l__leadsheets_#2_format_tl}
-          }
-          { \leadsheets_verse_end: \par }
+        \par
+        \keys_set:nn {leadsheets/#2} {##1}
+        \tl_set:Nn \l__leadsheets_verse_type_tl {#2}
+        \leadsheets_verse_begin:n {#2}
+        \tl_use:c {l__leadsheets_#2_format_tl}
       }
-      {
-        \NewDocumentEnvironment {#2} {O{}}
-          {
-            \par
-            \keys_set:nn {leadsheets/#2} {##1}
-            \tl_set:Nn \l__leadsheets_verse_type_tl {#2}
-            \leadsheets_verse_begin:n {#2}
-            \tl_use:c {l__leadsheets_#2_format_tl}
-          }
-          { \leadsheets_verse_end: \par }
-      }
-    \@trnslt@declare@translation {leadsheets/#2} {fallback} {#3}
-    \@trnslt@declare@translation {leadsheets/#2} {English} {#3}
+      { \leadsheets_verse_end:n {#2} \par }
+    \@trnslt@declare@translation {leadsheets/#2} {fallback} {}
+    \@trnslt@declare@translation {leadsheets/#2} {English} {}
+    \keys_set:nn {leadsheets/#2} {#3}
   }
 
-\NewDocumentCommand \newversetype {smm}
+\NewDocumentCommand \newversetype {smO{}}
   { \leadsheets_new_verse_type:Nnn #1 {#2} {#3} }
 
-\newversetype {chorus}    {Chorus}
-\newversetype*{chorus*}   {}
-\newversetype {intro}     {Intro}
-\newversetype*{intro*}    {Intro}
-\newversetype {outro}     {Outro}
-\newversetype {interlude} {Interlude}
-\newversetype {bridge}    {Bridge}
-\newversetype*{info}      {}
-\newversetype*{solo*}     {}
-\newversetype {solo}      {Solo}
+\cs_undefine:N \verse
+\cs_undefine:N \endverse
+
+\newversetype {verse}     [ name=Verse, named=false, after-label= ]
+\newversetype*{verse*}
+\newversetype {chorus}    [ name=Chorus ]
+\newversetype*{chorus*}
+\newversetype {intro}     [ name=Intro ]
+\newversetype*{intro*}    [ name=Intro ]
+\newversetype {outro}     [ name=Outro ]
+\newversetype {interlude} [ name=Interlude ]
+\newversetype {bridge}    [ name=Bridge ]
+\newversetype*{info}
+\newversetype*{solo*}
+\newversetype {solo}      [ name=Solo ]
+
+% --------------------------------------------------------------------------
+% verse-type templates
+\prop_new:N \l__leadsheets_verse_begin_template_prop
+\prop_new:N \l__leadsheets_verse_end_template_prop
+
+% #1: template name
+% #2: begin code
+% #3: end code
+\cs_new_protected:Npn \leadsheets_define_verse_template:nnn #1#2#3
+  {
+    \prop_put:Nnn \l__leadsheets_verse_begin_template_prop {#1} {#2}
+    \prop_put:Nnn \l__leadsheets_verse_end_template_prop {#1} {#3}
+  }
+
+\cs_new_protected:Npn \leadsheets_use_verse_template:nn #1#2
+  {
+    \exp_args:Nnc
+    \prop_get:cVNTF {l__leadsheets_verse_#1_template_prop}
+      {l__leadsheets_#2_template_tl}
+      \l__leadsheets_tmpa_tl
+      { \tl_use:N \l__leadsheets_tmpa_tl }
+      {
+        \msg_error:nnxx {leadsheets} {unknown-template}
+          {verse-type}
+          {\use:c{l__leadsheets_#2_template_tl}}
+      }
+  }
+
+\DeclareExpandableDocumentCommand \ifobeylines {}
+  { \bool_if:NTF \l__leadsheets_obey_lines_bool }
+
+\NewDocumentCommand \defineversetypetemplate {m+m+m}
+  { \leadsheets_define_verse_template:nnn {#1} {#2} {#3} }
+
+\defineversetypetemplate {itemize}
+  {
+    \itemize
+    \int_zero:N \@itemdepth
+    \bool_if:NT \l__leadsheets_obey_lines_bool
+      {
+        \dim_zero:N \parskip
+        \keys_set:nn {leadsheets}
+          { obey-lines-parskip = \parsep }
+      }
+    \item[{\verselabel}]
+  }
+  { \enditemize }
 
 % --------------------------------------------------------------------------
 
@@ -992,12 +1081,18 @@
     verses-label-format .tl_set:N   = \l__leadsheets_verses_label_format_tl ,
     verses-after-label  .tl_set:N   = \l__leadsheets_verses_after_label_tl ,
     obey-lines      .bool_set:N = \l__leadsheets_obey_lines_bool ,
+    obey-lines-parskip .skip_set:N = \l__leadsheets_obey_parskip_skip ,
     bar-shortcuts   .bool_set:N = \l__leadsheets_bar_shorthands_bool ,
-    numbered        .bool_set:N = \l__leadsheets_verse_numbered_bool ,
-    remember-chords .bool_set:N = \l__leadsheets_verse_remember_bool ,
+    % numbered        .bool_set:N = \l__leadsheets_verse_numbered_bool ,
+    % remember-chords .bool_set:N = \l__leadsheets_verse_remember_bool ,
     transpose       .code:n     =
       \bool_set_true:N \l__leadsheets_transpose_bool
-      \tl_set:Nn \l__leadsheets_transpose_steps_tl {#1} ,
+      \int_set:Nn \l__leadsheets_transpose_steps_int {#1} ,
+    transpose-capo  .bool_set:N = \l__leadsheets_transpose_capo_bool ,
+    capo-format     .choices:nn =
+      { arabic , roman , Roman }
+      { \tl_set:NV \l__leadsheets_capo_format_tl \l_keys_choice_tl } ,
+    capo-format     .initial:n  = {Roman} ,
     enharmonic      .choices:nn =
       { sharp , flat }
       {
@@ -1016,6 +1111,7 @@
 \cs_generate_variant:Nn \leadsheets_translation:n { V }
 
 \DeclareTranslation {German}  {leadsheets/chorus} {Refrain}
+\DeclareTranslation {German}  {leadsheets/verse}  {Strophe}
 
 \DeclareTranslationFallback   {leadsheets/composer} {Composer}
 \DeclareTranslation {English} {leadsheets/composer} {Composer}
@@ -1043,6 +1139,14 @@
 \DeclareTranslationFallback   {leadsheets/minor} {minor}
 \DeclareTranslation {English} {leadsheets/minor} {minor}
 \DeclareTranslation {German}  {leadsheets/minor} {Moll}
+
+\DeclareTranslationFallback   {leadsheets/capo} {Capo}
+\DeclareTranslation {English} {leadsheets/capo} {Capo}
+\DeclareTranslation {German}  {leadsheets/capo} {Kapo}
+
+\DeclareTranslationFallback   {leadsheets/fret} {fret}
+\DeclareTranslation {English} {leadsheets/fret} {fret}
+\DeclareTranslation {German}  {leadsheets/fret} {Bund}
 
 % --------------------------------------------------------------------------
 

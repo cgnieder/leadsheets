@@ -16,15 +16,30 @@
   add-cmds = {
     chord , chordname ,
     definesongtitletemplate ,
-    expandsongpropertycode ,
+    defineversetypetemplate , 
+    expandcode ,
+    ifobeylines ,
     ifsongpropertiesequal ,
     ifsongproperty ,
+    ifversenamed ,
+    ifversenumbered ,
+    ifversestarred ,
     newversetype ,
     printsongpropertylist ,
     setchordnames ,
     setleadsheets ,
     songproperty ,
+    verseafterlabel ,
+    verselabel ,
+    verselabelformat ,
+    versename ,
+    versenumber ,
     writechord
+  } ,
+  add-silent-cmds = {
+    @itemdepth ,
+    endmdframed ,
+    mdframed
   } ,
   add-envs = {
     bridge ,
@@ -88,6 +103,9 @@
 \newrobustcmd*\property[1]{{\colorlet{option}{property}\option*{#1}}}
 \newrobustcmd*\symarg[1]{\textcolor{argument}{\code{#1}}}
 
+\newidxcmd\titletemplate{\textit{\sffamily#1}}[\ (songtitle template)]
+\newidxcmd\versetemplate{\textit{\sffamily#1}}[\ (verse-type template)]
+
 \AfterPackage{hyperref}{%
 \pdfstringdefDisableCommands{%
   \def\property#1{#1}%
@@ -114,18 +132,19 @@ package \pkg{translations}~\cite{pkg:translations}.
 \section{Background}
 
 Over the years I repeatedly wanted to typeset simple leadsheets of songs, \ie,
-song lyrics and the corresponding chords\footnote{I also have had the need to
-  typeset leadsheets in the style of the \citetitle{book:realbook} -- but this
-  is a task where other software than \LaTeX{} is far easier.}.  This is not
-too hard with standard \LaTeX{} commands and environments but it is not very
-convenient\ldots{} so looking for existing packages is the logical next step
-and I found two very promising packages: \pkg{songs}~\cite{pkg:songs} and
-\pkg{songbook}~\cite{pkg:songbook}.  However, both were note \emph{quite} what
-I wanted.  Just a bit to inflexible in the wrong places, needing tweaking here
-and there, and so one.  On the other hand I had quite some code lying on my
-hard drive with various attempts of typesetting leadsheets.  This bundle of
-packages is now the attempt to have a clean, documented and customisable
-version of my code.
+song lyrics and the corresponding chords\footnote{I also have had the need (or
+  let's say:wish) to typeset leadsheets in the style of the
+  \citetitle{book:realbook} -- but this is a task where other software than
+  \LaTeX{} is far easier.}.  This is not too hard with standard \LaTeX{}
+commands and environments but it is not very convenient\ldots{} so looking for
+existing packages is the logical next step and I found two very promising
+packages: \pkg{songs}~\cite{pkg:songs} and \pkg{songbook}~\cite{pkg:songbook}.
+However, both were note \emph{quite} what I wanted.  Just a bit to inflexible
+in the wrong places, needing tweaking here and there, and so one.  On the
+other hand I had quite some code lying on my hard drive with various attempts
+of typesetting leadsheets.  This bundle of packages is now the attempt to have
+a clean, documented and customisable version of my code\footnote{Plus new
+  things!}.
 
 \clearpage
 \part{The \musicsymbols{} Package}
@@ -368,7 +387,7 @@ First let's take a look at an example:
 \end{example}
 
 Per default the songtitle simply is a \cs{section}\sarg{} without any other
-additions.  This is the songtitle template \enquote{minimal}, see
+additions.  This is the songtitle template \titletemplate{minimal}, see
 section~\ref{sec:title-templates} for more details on those templates and how
 to create your own.
 
@@ -430,8 +449,8 @@ Although I used the word \enquote{global} above \emph{all options are local to
   \keyval{text-format}{\TeX{} code}\Default
     \meta{\TeX{} code} is inserted \emph{after} the song title at the
     beginning of the \env{song} environment.
-  \keybool{numbered}\Default{false}
-    Determines wether verses are numbered or not.
+  % \keybool{numbered}\Default{false}
+  %   Determines wether verses are numbered or not.
   \keyval{print-tags}{list of tags}
     A comma separated list of tags. When specified a song will only be printed
     if it is tagged with at least one of the tags in \meta{list of tags}.
@@ -502,8 +521,11 @@ templates (see section~\ref{sec:title-templates}).  One specific property,
   \keyval*{genre}{genre}
     The genre of the song.
   \keyval*{key}{key}
-    The key of the song.  This property will be used when transposing will be
-    implemented, see section~\ref{sec:transposing}.
+    The key of the song.  This property is used for transposing and must have
+    a specific format then, see section~\ref{sec:transposing}.
+  \keyval*{capo}{fret}
+    This property is used for transposing and for the \cs{capo} macro, see
+    sections~\ref{sec:capo-information} and~\ref{sec:transposing} .
   \keyval*{tempo}{tempo}
     The tempo of the song.
   \keyval*{tags}{tags}
@@ -528,7 +550,7 @@ by Paul McCartney and John Lennon\footnote{This is not quite true: most songs
   composers.}.
 
 It is possibly to define further such properties.  For details see
-section~\ref{sec:available-commands}.
+section~\ref{sec:own-templates}.
 
 \subsection{Special Characters}\label{sec:special-characters}
 Inside the \env{song} environment several characters don't have their usual
@@ -551,6 +573,21 @@ For details on the usage of the characters \code{|} and \code{:} see
 section~\ref{sec:typesetting-bars}.  The usage of chords is explained in
 section~\ref{sec:placing-chords}.
 
+\subsection{Capo Information}\label{sec:capo-information}
+When you set the \property{capo} property the macro \cs{capo} writes
+\begin{center}
+  \GetTranslation{leadsheets/capo}: IV~\GetTranslation{leadsheets/fret}
+\end{center}
+What it writes \emph{exactly} depends on a few settings: the \property{capo}
+obviously, which determines the number that is printed.  The translations for
+the \enquote{capo} and \enquote{fret} strings (see
+section~\ref{sec:internationalization} for details) and the setting of the
+following option:
+\begin{options}
+  \keychoice{capo-format}{arabic,roman,Roman}\Default{Roman}
+    The format of the number printed by the \cs{capo} macro.
+\end{options}
+
 \section{The \env*{verse} Environment}\label{sec:envverse-environment}
 
 \begin{environments}
@@ -567,9 +604,10 @@ section~\ref{sec:placing-chords}.
   add-sourcecode-options={literate=}]
   \documentclass{article}
   \usepackage{leadsheets}
+  \setleadsheets{verse/numbered=true}
   \begin{document}
 
-  \begin{song}[numbered]{title=Foo}
+  \begin{song}{title=Foo}
   \begin{verse}
     Lorem ipsum dolor sit amet, consetetur sadipscing elitr,\\
     sed diam nonumy eirmod tempor invidunt ut labore et dolore\\
@@ -750,9 +788,7 @@ methods:
   ^{F#mi} You've been ^*{B}run nin', ^*{E}hid in' much too ^{A}long. \relax
 \end{sourcecode}
 
-
 \section{Transposing}\label{sec:transposing}
-
 Provided a song has the property \property{key} \emph{and} the key is given as
 one of the twelve \enquote{usual} keys, \ie, one of the keys given in
 table~\ref{tab:key-signatures}, the chords of a song can be transposed.
@@ -768,6 +804,9 @@ table~\ref{tab:key-signatures}, the chords of a song can be transposed.
     chooses the key whose signature has less accidentals.  You can force a
     variant, though, by using this option.  With \keyis{enharmonic}{sharp}
     \leadsheets{} would have chosen \chordname{D#} instead of \chordname{Eb}.
+  \keybool{transpose-capo}
+    When this is set to true chords are transposed down on semitone per capo
+    fret.
 \end{options}
 
 The transposing mechanism relies on the \chordnames{} input syntax which means
@@ -883,31 +922,67 @@ are for.
 All environments mentioned in the previous section were defined with this
 command:
 \begin{commands}
-  \command{newversetype}[\sarg\marg{environment name}\marg{displayed name}]
-    This defines an environment \meta{environment name} with the text
-    \meta{displayed name} at the start of the environment left to the text.
-    The starred version defines an environment which hides the displayed
-    name.  The environment also defines a translation string (see
+  \command{newversetype}[\sarg\marg{environment name}\oarg{default options}]
+    This defines an environment \meta{environment name}.  This environment
+    uses the verse-type template \versetemplate{itemize} (see
+    section~\ref{sec:verse-type-templates}) unless specified differently in
+    the \meta{default options}.  The starred version defines an environment
+    which hides the displayed name.  More precisely: the macro \cs{verselabel}
+    that is used in verse-type template definitions prints nothing in an
+    environment defined with \cs{newversetype}\sarg.
+    
+    This also defines a translation string (see
     section~\ref{sec:internationalization}) \code{leadsheets/\meta{environment
-      name}} with \meta{displayed name} both as translation fallback and as
-    English translation.
+        name}} with both an empty translation fallback and English translation
+    unless specified differently with the \option{name} option.
+
+    At last this defines a new counter \meta{environment name} and sets
+    \cs*{the\meta{environment name}} to \code{\cs*{arabic}\Marg{environment
+        name}.}.
 \end{commands}
 
 As mentioned before in section~\ref{sec:verses-options} all environments
 defined this way have the options \option{format} and \option{label-format}.
-They also have another option:
+They have more options.  Here's a complete list:
 \begin{options}
+  \keyval{format}{code}\Default
+    \meta{code} is inserted at the beginning of the environment and can thus
+    be used to add formatting, \eg, \keyis{format}{\cs*{itshape}}.
+  \keyval{label-format}{code}\Default
+    The same for the environment labels.
   \keyval{after-label}{code}\Default{:}
     \meta{code} is inserted in the label after the label text.
+  \keyval{name}{name}\Default
+    The translation fallback and English translation of the environment.  This
+    should only be used with \cs{newversetype}.  Later changes should be made
+    with \cs{DeclareTranslation} (see section~\ref{sec:internationalization}).
+  \keyval{template}{template}\Default{itemize}
+    The verse-type template used for the environment, see
+    section~\ref{sec:verse-type-templates} for details.
+  \keybool{numbered}\Default{false}
+    If set to \code{true} \cs{verselabel} (used in verse-type template
+    definitions, see section~\ref{sec:verse-type-templates}) adds a number
+    after the name.
+  \keybool{named}\Default{true}
+    If set to \code{true} \cs{verselabel} (used in verse-type template
+    definitions, see section~\ref{sec:verse-type-templates}) prints the name
+    of the current environment (as determined by the translation of the
+    corresponding string, see also section~\ref{sec:internationalization}).
 \end{options}
 
-There's also a general option for setting the default of the
-\option{after-label} for all environments:
+There are also a number of general options for setting the defaults of some
+options for all environments:
 \begin{options}
+  \keyval{verses-format}{code}\Default
+    Sets the format for all \env{verse} like environments.
+  \keyval{verses-label-format}{code}\Default
+    Sets the label format for all \env{verse} like environments.
   \keyval{verses-after-label}{code}\Default{:}
     Defeault \meta{code} that is inserted in the label after the label text of
     \env{verse} like environments.
 \end{options}
+This options only determine the formatting of an environment if the
+corresponding options of the environment hasn't been set.
 
 Let's summarize: the label text of these environments is built of three items
 in the following order:
@@ -930,6 +1005,15 @@ in the following order:
     magna aliquyam erat, sed diam voluptua.
   \end{foo}
 \end{example}
+
+And just to give you some more examples here is how some of the existing
+environments are defined:
+\begin{sourcecode}
+  \newversetype{verse}[ name=Verse, named=false, after-label= ]
+  \newversetype*{verse*}
+  \newversetype{chorus}[ name=Chorus ]
+  \newversetype*{chorus*}
+\end{sourcecode}
 
 \section{Typesetting Bars}\label{sec:typesetting-bars}
 
@@ -965,27 +1049,28 @@ example above.  The replacements that are done internally are these:
   \item[\code{|||}] \cs{stopbar}
 \end{labeling}
 
-\section{Title Templates}\label{sec:title-templates}
+\section{Templates}\label{sec:templates}
+\subsection{Title Templates}\label{sec:title-templates}
 
-\subsection{Background}
+\subsubsection{Background}
 The titles of songs set with the \env{song} environment are displayed
 according to the chosen title template.  It is chosen through the option
 \option{title-template} which can be set with \cs{setleadsheets} or as option
 to a specific \env{song} environment.  \leadsheets{} provides few predefined
 templates and an easy mechansim to define own templates.
 
-\subsection{Existing Templates}
+\subsubsection{Existing Templates}
 
 Currently \leadsheets{} provides two templates:
 \begin{description}
-  \item[minimal] This only typesettes the song title in a \cs{section}\sarg.
-  \item[tabular] This typesets the song title in a \cs{section} and prints
-    some song properties in a \env{tabular} below it.  This template needs the
-    \pkg{array}~\cite{pkg:array} package loaded.
+  \item[\titletemplate{minimal}] This only typesettes the song title in a
+    \cs{section}\sarg.
+  \item[\titletemplate{tabular}] This typesets the song title in a
+  \cs{section} and prints some song properties in a \env*{tabular} below it.
+  This template needs the \pkg{array}~\cite{pkg:array} package loaded.
 \end{description}
 
-\subsection{Own Templates}
-\subsubsection{The Principle and Available Commands}\label{sec:available-commands}
+\subsubsection{Own Templates}\label{sec:own-templates}
 The principle is pretty straight forward: templates are defined with the
 following command:
 \begin{commands}
@@ -1009,7 +1094,7 @@ First there are two commands related to defining new properties:
 \end{commands}
 
 Then there are a number of commands related to retrieving and using the values
-of properties.  All these commands only make sense inside a template
+of properties.  All these commands only make sense inside a title template
 definition (see section~\ref{sec:title-templates}).  Some of the commands are
 expandable which means they can be used in an \cs*{edef} like context, \ie,
 they are also suitable for writing the property values to the table of
@@ -1040,7 +1125,7 @@ contents or other auxiliary files.
     2}\marg{true}\marg{false}]
     Checks if properties \meta{property 1} and \meta{property 2} have been set
     to the same value.
-  \command{expandsongpropertycode}[\marg{code}]
+  \command{expandcode}[\marg{code}]
     Exhaustively expands \meta{code}.  Experienced users won't need this.  It
     is essentially
     
@@ -1058,10 +1143,10 @@ titles, and so on, and so on.  \leadsheets{} does not do this for you and it
 may require some experience to create templates which do all this.
 
 \subsubsection{Examples}
-In order to give you an idea on how to use templates I'll show you how the
-existing ones are defined and one new definition.
+In order to give you an idea on how to use songtitle templates I'll show you
+how the existing ones are defined and one new definition.
 
-\paragraph{The \enquote{minimal} template}
+\paragraph{The \titletemplate*{minimal} template}
 This is quite short and self-explaining.
 
 \begin{sourcecode}
@@ -1070,7 +1155,7 @@ This is quite short and self-explaining.
 
 \paragraph{A custom template}
 Now let's see an example for a newly defined template.  It's nearly as simple
-as the \enquote{minimal} template.
+as the \titletemplate{minimal} template.
 
 \begin{example}[
   compile,
@@ -1107,7 +1192,7 @@ as the \enquote{minimal} template.
   \end{document}
 \end{example}
 
-\paragraph{The \enquote{tabular} template}
+\paragraph{The \titletemplate*{tabular} template}
 This one is a lot more advanced and demonstrates various of the available
 commands.
 
@@ -1153,7 +1238,7 @@ commands.
               minor = -\GetTranslation{leadsheets/minor}
             }%
           \GetTranslation{leadsheets/key}: %
-          \expandsongpropertycode{\writechord{\songproperty{key}}} \\%
+          \expandcode{\writechord{\songproperty{key}}} \\%
         }
         {}%
     \end{tabular}
@@ -1161,7 +1246,7 @@ commands.
   }
 \end{sourcecode}
 
-A song using the \enquote{tabular} template:
+A song using the \titletemplate{tabular} template:
 
 \begin{example}[
   compile,
@@ -1193,6 +1278,203 @@ A song using the \enquote{tabular} template:
   \end{song}
   
   \end{document}
+\end{example}
+
+\subsection{Verse-type Templates}\label{sec:verse-type-templates}
+\subsubsection{Background}
+Similar to the songtitles also the \env{verse} like environments are typeset
+using templates.  Defining them is just as easy as for the song titles.
+
+\subsubsection{Existing Templates}
+Currently \leadsheets{} provides only one template:
+\begin{description}
+  \item[\versetemplate{itemize}] Uses an \env*{itemize} environment for
+    typesetting the corresponding environment.
+\end{description}
+
+\subsubsection{Own Templates}
+Own templates can be defined using these commands:
+\begin{commands}
+  \command{defineversetypetemplate}[\marg{name}\marg{begin code}\marg{end code}]
+    This defines the template \meta{name}.
+  \command{verselabel}
+    Used inside \cs{defineversetypetemplate}.  This determines where the label
+    of the environment using the template will be displayed.
+  \command{verselabelformat}
+    Used inside \cs{defineversetypetemplate}.  The format of the current
+    environment as set with the corresponding \option{format} option.
+  \command{verseafterlabel}
+    Used inside \cs{defineversetypetemplate}.  The format of the current
+    environment as set with the corresponding \option{after-label} option.
+  \command{versename}
+    Used inside \cs{defineversetypetemplate}.  This prints the name of the
+    current environment.
+  \command{versenumber}
+    Used inside \cs{defineversetypetemplate}.  Expands to the
+    \cs*{the\meta{environment}} command for the current environment.
+  \command{ifversestarred}[\marg{true}\marg{false}]
+    Can be used inside \cs{defineversetypetemplate} for checking if the
+    current environment was defined by the starred version of
+    \cs{newversetype}.
+  \command{ifversenumbered}[\marg{true}\marg{false}]
+    Can be used inside \cs{defineversetypetemplate} for checking if for the
+    current environment the option \option{numbered} is true or false.
+  \command{ifversenamed}[\marg{true}\marg{false}]
+    Can be used inside \cs{defineversetypetemplate} for checking if for the
+    current environment the option \option{named} is true or false.
+  \command{ifobeylines}[\marg{true}\marg{false}]
+    Checks if for the current song the option \option{obey-lines} is true or
+    false.
+\end{commands}
+Since with \cs{defineversetypetemplate} you define a template for an
+environment it has two argument for code: one for code at the beginning of the
+environment and one for code at the end.  The command \cs{verselabel}
+internally uses the conditionals.  Its definition is equivalent to the
+following:
+
+\begin{sourcecode}
+  \newcommand*\verselabel{%
+    \ifversestarred
+      {}
+      {%
+        \verselabelformat
+        \ifversenamed
+          {%
+            \versename
+            \ifversenumbered{ }{}%
+          }
+          {}%
+        \ifversenumbered
+          {\versenumber}
+          {}%
+        \verseafterlabel
+      }%
+  }
+\end{sourcecode}
+
+\subsubsection{Examples}
+In order to give you an idea on how to use verse-type templates I'll show you
+how the existing ones are defined and a few new definitions.
+
+\paragraph{The \versetemplate*{itemize} template}
+This is how the \versetemplate{itemize} is defined.
+\begin{sourcecode}
+  \makeatletter
+  \defineversetypetemplate{itemize}
+    {%
+      \itemize
+        \@itemdepth=0
+        \ifobeylines
+          {%
+            \setlength{\parskip}{0pt}%
+            \setleadsheets{ obey-lines-parskip = \parsep }%
+          }
+          {}%
+        \item[{\verselabel}]%
+    }
+    {\enditemize}
+  \makeatother
+\end{sourcecode}
+The most interesting part is probably the \cs{ifobeylines} part.  When the
+option \option{obey-lines} is set to true an end of a line inserts a \cs*{par}
+token.  So in order not to get a vertical skip after every line the template
+sets \cs*{parskip} to zero.  With \keyis{obey-lines}{true} an empty line also
+inserts a \cs*{par} token but it also inserts a vertical space according to
+the value set with \option{obey-lines-parskip}.  This option can only be set
+in a verse-type template definition (which is why it isn't documented
+elsewhere).  All \env{verse} like environments initialize the length to the
+current value of \cs*{parskip} \emph{before} the template code is inserted.
+
+\paragraph{A \versetemplate*{flushleft} template}
+An example for a template \versetemplate*{flushleft} that typesets the label
+in the margin:
+\begin{example}
+  \defineversetypetemplate{flushleft}
+    {%
+      \noindent\llap{\verselabel\space}%
+      \flushleft
+      \unskip
+      \vspace*{-\baselineskip}
+      \ifobeylines{\setlength\parskip{0pt}}{\vspace*{-\parskip}}%
+    }
+    {\endflushleft}
+  \begin{chorus}[template=flushleft]
+    Lorem ipsum dolor sit amet, consetetur sadipscing elitr, \\
+    sed diam nonumy eirmod tempor invidunt ut labore et dolore \\
+    magna aliquyam erat, sed diam voluptua.
+
+    Lorem ipsum dolor sit amet, consetetur sadipscing elitr, \\
+    sed diam nonumy eirmod tempor invidunt ut labore et dolore \\
+    magna aliquyam erat, sed diam voluptua.
+  \end{chorus}
+\end{example}
+
+\paragraph{A \versetemplate*{flushright} template}
+An example for a template \versetemplate*{flushright} that typesets the label
+in the margin:
+\begin{example}
+  \defineversetypetemplate{flushright}
+    {%
+      \noindent\llap{\verselabel\space}%
+      \flushright
+      \unskip
+      \vspace*{-\baselineskip}
+      \ifobeylines{\setlength\parskip{0pt}}{\vspace*{-\parskip}}%
+    }
+    {\endflushright}
+  \begin{chorus}[template=flushright]
+    Lorem ipsum dolor sit amet, consetetur sadipscing elitr, \\
+    sed diam nonumy eirmod tempor invidunt ut labore et dolore \\
+    magna aliquyam erat, sed diam voluptua.
+
+    Lorem ipsum dolor sit amet, consetetur sadipscing elitr, \\
+    sed diam nonumy eirmod tempor invidunt ut labore et dolore \\
+    magna aliquyam erat, sed diam voluptua.
+  \end{chorus}
+\end{example}
+
+As you can see it's not entirely easy to define a template that suits both
+songs with and without \keyis{obey-lines}{true}.  Personally I would forget
+about that option and not care about it at all in my templates.
+
+\paragraph{A \versetemplate*{framed} template}
+Last but not least an example using the \pkg{mdframed}
+package~\cite{pkg:mdframed} -- just to show you that everything is possible.
+The example adapts one of the examples of \pkg{mdframed}'s manual.
+\begin{example}
+  \defineversetypetemplate{framed}
+    {%
+      \expandcode{%
+        \noexpand\mdframed[
+          \ifversestarred{}{%
+            frametitle={%
+              \noexpand\tikz[baseline=(current bounding box.east),outer sep=0pt]
+                \noexpand\node[anchor=east,rectangle,fill=blue!20]
+                {\noexpand\strut\noexpand\verselabel};
+            }%
+          },
+          roundcorner = 5pt ,
+          linecolor = blue!20 ,
+          linewidth = 2pt,
+          topline = true,
+          frametitleaboveskip = \dimexpr-\ht\strutbox\relax ,
+        ]%
+      }%
+      \ifobeylines{\setlength\parskip{0pt}}{}%
+    }
+    {%
+      \endmdframed
+      \addvspace{\baselineskip}%
+    }
+  \begin{chorus}[template=framed]
+    Lorem ipsum dolor sit amet, consetetur sadipscing elitr, \\
+    sed diam nonumy eirmod tempor invidunt ut labore et dolore \\
+    magna aliquyam erat, sed diam voluptua.
+
+    Lorem ipsum dolor sit amet, consetetur sadipscing elitr, \\
+    sed diam nonumy eirmod tempor invidunt ut labore et dolore \\
+    magna aliquyam erat, sed diam voluptua.
+  \end{chorus}
 \end{example}
 
 \section{Internationalization}\label{sec:internationalization}
@@ -1240,9 +1522,12 @@ that \cs{printsongpropertylist} is not expandable.
       \showtranslation{major} \\
       \showtranslation{minor} \\
       \showtranslation{chorus} \\
+      \showtranslation{verse} \\
       \showtranslation{composer} \\
       \showtranslation{lyrics} \\
       \showtranslation{key} \\
+      \showtranslation{capo} \\
+      \showtranslation{fret} \\
       \showtranslation{interpret} \\
       \showtranslation{intro} \\
       \showtranslation{interlude} \\
@@ -1259,24 +1544,5 @@ that \cs{printsongpropertylist} is not expandable.
   Talking about music is like dancing about architecture.%
 }
 \appendix
-
-% \section{Future Plans}\label{sec:future-plans}
-
-% This very early draft of \leadsheets{} lacks a number of features I have
-% planned to implement:
-
-% \begin{itemize}
-%   \item Transposing.  The idea is the following: provided the property
-%     \code{key} is given to a song an option \option*{transpose} will recieve a
-%     positive or negative integer that determines how many half tones a song
-%     will be transposed up or down.  Since in equal temperament notes have
-%     enharmonic equivalents a further option \option*{enharmonic} will
-%     determine if a song with \keyis{key}{E} and \keyis*{transpose}{2} will be
-%     transposed to \chordname{F#} or \chordname{Gb}.
-%   \item Indexing.  A hopefully flexible indexing mechanism will allow to index
-%     songs by title, composers, and interprets.  This will require for a user
-%     to be able to set which indexing commands are used for each of those song
-%     properties.
-% \end{itemize}
 
 \end{document}
