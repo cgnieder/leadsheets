@@ -105,6 +105,9 @@
 
 \newidxcmd\titletemplate{\textit{\sffamily#1}}[\ (songtitle template)]
 \newidxcmd\versetemplate{\textit{\sffamily#1}}[\ (verse-type template)]
+\newidxcmd\shortcut{\code{#1}}[ (shortcut)]
+
+\newrobustcmd*\barsymbol{|}
 
 \AfterPackage{hyperref}{%
 \pdfstringdefDisableCommands{%
@@ -460,8 +463,8 @@ Although I used the word \enquote{global} above \emph{all options are local to
     start a new line.  This comes with a price when using chords, see
     section~\ref{sec:placing-chords:caveat}.
   \keybool{bar-shortcuts}\Default{false}
-    Makes the characters \code{:} and \code{|} active inside the \env{song}
-    environment.  See sections~\ref{sec:special-characters}
+    Makes the characters \shortcut{:} and \shortcut{\barsymbol} active inside
+    the \env{song} environment.  See sections~\ref{sec:special-characters}
     and~\ref{sec:typesetting-bars} for more details.
 \end{options}
 
@@ -556,22 +559,23 @@ section~\ref{sec:own-templates}.
 Inside the \env{song} environment several characters don't have their usual
 catecory codes:
 \begin{labeling}[--]{xxxxx}
-  \item[\code{\textasciicircum}] category code 13 (active). It is a
+  \item[\shortcut{\textasciicircum}] category code 13 (active). It is a
     shortcut for the \cs{chord} command.
-  \item[\code{\_}] category code 13 (active). It is a shortcut for the
+  \item[\shortcut{\_}] category code 13 (active). It is a shortcut for the
     \cs{writechord} command.
-  \item[\code{|}] category code 13 (active).  Used for typesetting bars.
-  \item[\code{:}] category code 13 (active).  Used for typesetting bars.
+  \item[\shortcut{\barsymbol}] category code 13 (active).  Used for
+    typesetting bars.
+  \item[\shortcut{:}] category code 13 (active).  Used for typesetting bars.
   \item[\code{\#}] category code 12 (other).  Used fo chord names.
 \end{labeling}
 
-Actually the characters \code{|} and \code{:} are \emph{not} changed per
-default.  In order to do that you have to use the option
+Actually the characters \shortcut{\barsymbol} and \shortcut{:} are \emph{not}
+changed per default.  In order to do that you have to use the option
 \option{bar-shortcuts}.
 
-For details on the usage of the characters \code{|} and \code{:} see
-section~\ref{sec:typesetting-bars}.  The usage of chords is explained in
-section~\ref{sec:placing-chords}.
+For details on the usage of the characters \shortcut{\barsymbol} and
+\shortcut{:} see section~\ref{sec:typesetting-bars}.  The usage of chords is
+explained in section~\ref{sec:placing-chords}.
 
 \subsection{Capo Information}\label{sec:capo-information}
 When you set the \property{capo} property the macro \cs{capo} writes
@@ -678,12 +682,12 @@ choruses, then you could do
 \section{Placing Chords}\label{sec:placing-chords}
 
 \subsection{The Commands}
-Inside the \env{song} environment the characters \code{\textasciicircum} and
-\code{\_} are active characters\footnote{There are more characters with a
+Inside the \env{song} environment the characters \shortcut{\textasciicircum}
+and \code{\_} are active characters\footnote{There are more characters with a
   special function, see
-  section~\ref{sec:special-characters}}. \code{\textasciicircum} is a shortcut
-for the command \cs{chord}, \code{\_} is a shortcut for \cs{writechord}.
-Those commands have the following functions:
+  section~\ref{sec:special-characters}}. \shortcut{\textasciicircum} is a
+shortcut for the command \cs{chord}, \shortcut{\_} is a shortcut for
+\cs{writechord}.  Those commands have the following functions:
 
 \begin{commands}
   \command{chord}[\sarg\symarg{-}\marg{chord}\meta{text}\visiblespace]
@@ -787,6 +791,85 @@ methods:
   ^{F#mi} You've been ^*{B}run nin', ^*{E}hid in' much too ^{A}long. \empty
   ^{F#mi} You've been ^*{B}run nin', ^*{E}hid in' much too ^{A}long. \relax
 \end{sourcecode}
+
+\subsection{Remembering Chords}\label{sec:remembering-chords}
+\leadsheets{} has the option
+\begin{options}
+  \keybool{remember-chords}\Default{false}
+    If set to \code{true} the chords in the \emph{first} appearance of a
+    \env{verse} like environment are remembered.  In the next appearances of
+    said environment the shortcut \shortcut{\textasciicircum} has changed its
+    meaning and inserts a chord automatically.
+\end{options}
+
+Let's take at look at an example to see what this means:
+\begin{example}
+  \definesongtitletemplate{empty}{}
+  \begin{song}[verse/numbered,remember-chords,title-template=empty]{title=foobar}
+  \begin{verse}
+    ^{G}Lorem ipsum ^{C}dolor sit ^{E7}amet, consetetur ^{Bb7(b5)}sadipscing
+  \end{verse}
+  \begin{verse}
+    ^Lorem ipsum ^dolor sit ^amet, consetetur ^sadipscing
+  \end{verse}
+  \end{song}
+\end{example}
+In this example the chords used in the first \env{verse} environment have been
+remembered and in the second \env{verse} environment the
+\shortcut{\textasciicircum} shortcut inserted the corresponding chords in the
+order they had been specified the first time.  It is important when using this
+that you don't use the \shortcut{\textasciicircum} shortcut in subsequent
+environments more often than the first time.  It will produce an error
+otherwise.  You can use it less, of course.
+
+The \shortcut{\textasciicircum} shortcut still has the \emph{the same} syntax
+as \cs{chord} with one exception: it lacks the mandatory argument
+\meta{chord} (since it's obviously not needed).  It has the optional \sarg{}
+and \code{-}, though, as well as the mandatory space (\visiblespace)!
+
+Each \env{verse} like environment (see section~\ref{sec:other-envverse-like}
+for more information) is treated uniquely by this mechansim:
+
+\begin{example}
+  \definesongtitletemplate{empty}{}
+  \begin{song}[verse/numbered,remember-chords,title-template=empty]{title=foobar}
+  \begin{verse}
+    ^{G}Lorem ipsum ^{C}dolor sit ^{E7}amet, consetetur ^{Bb7(b5)}sadipscing
+  \end{verse}
+  \begin{chorus}
+    ^{F}Lorem ipsum ^{Gmi}dolor sit amet, consetetur ^{C7}sadipscing
+  \end{chorus}
+  \begin{verse}
+    ^Lorem ipsum ^dolor sit ^amet, consetetur ^sadipscing
+  \end{verse}
+  \begin{chorus}
+    ^Lorem ipsum ^dolor sit amet, consetetur ^sadipscing
+  \end{chorus}
+  \end{song}
+\end{example}
+
+This is important: \env{verse} and \env{verse*} are treated as two different
+environments, the same holds for all starred \env{verse} like environments!
+If you want to recall the chords of a different type of environment, then you
+can use the option \option{recall-chords}:
+
+\begin{example}
+  \definesongtitletemplate{empty}{}
+  \begin{song}[verse/numbered,remember-chords,title-template=empty]{title=foobar}
+  \begin{verse}
+    ^{G}Lorem ipsum ^{C}dolor sit ^{E7}amet, consetetur ^{Bb7(b5)}sadipscing
+  \end{verse}
+  \begin{chorus}
+    ^{F}Lorem ipsum ^{Gmi}dolor sit amet, consetetur ^{C7}sadipscing
+  \end{chorus}
+  \begin{verse}
+    ^Lorem ipsum ^dolor sit ^amet, consetetur ^sadipscing
+  \end{verse}
+  \begin{chorus}[recall-chords=verse]
+    ^Lorem ipsum ^dolor sit amet, consetetur ^sadipscing
+  \end{chorus}
+  \end{song}
+\end{example}
 
 \section{Transposing}\label{sec:transposing}
 Provided a song has the property \property{key} \emph{and} the key is given as
@@ -968,6 +1051,9 @@ They have more options.  Here's a complete list:
     definitions, see section~\ref{sec:verse-type-templates}) prints the name
     of the current environment (as determined by the translation of the
     corresponding string, see also section~\ref{sec:internationalization}).
+  \keyval{recall-chords}{environment}
+    An option to be used with the \option{remember-chords} mechanism, see
+    section~\ref{sec:remembering-chords} for an example.
 \end{options}
 
 There are also a number of general options for setting the defaults of some
@@ -1024,10 +1110,10 @@ by the \musicsymbols{} package listed in table~\ref{tab:bar-symbols} it may be
 more convenient to have a shorter syntax.  This is why inside the \env{song}
 environment some characters can be made (or are) active (see
 section~\ref{sec:special-characters}).  For the typesetting of bars this are
-the characters \code{:} nor \code{|}. Per default they are not active, though.
-If you want to use the shortcut syntax you have to use the option
-\option{bar-shortcuts}.  Here's a short example that emulates the behaviour by
-setting the characters active explicitly:
+the characters \shortcut{:} nor \shortcut{\barsymbol}. Per default they are
+not active, though.  If you want to use the shortcut syntax you have to use
+the option \option{bar-shortcuts}.  Here's a short example that emulates the
+behaviour by setting the characters active explicitly:
 
 \begin{example}[add-sourcecode-options={literate=}]
   \catcode`|=\active
@@ -1040,8 +1126,8 @@ setting the characters active explicitly:
 All possibly combinations that have a special definition are shown in the
 example above.  The replacements that are done internally are these:
 \begin{labeling}[--]{xxxxx}
-  \item[\code{|}] \cs{normalbar}\cs*{space} (the space is there because
-    otherwise it eats following spaces which would be annoying)
+  \item[\shortcut{\barsymbol}] \cs{normalbar}\cs*{space} (the space is there
+    because otherwise it eats following spaces which would be annoying)
   \item[\code{|:}] \cs{leftrepeat}
   \item[\code{:|}] \cs{rightrepeat}
   \item[\code{:|:}] \cs{leftrightrepeat}

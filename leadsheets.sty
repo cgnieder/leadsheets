@@ -1,7 +1,7 @@
 % --------------------------------------------------------------------------
 \RequirePackage{expl3}
 \ProvidesExplPackage{leadsheets}
-  {2014/07/24}
+  {2014/08/01}
   {0.0}
   {songbook~ (draft)~ (CN)}
 
@@ -34,7 +34,7 @@
 \cs_generate_variant:Nn \seq_item:Nn         { cV }
 \cs_generate_variant:Nn \int_to_arabic:n     { V }
 \cs_generate_variant:Nn \tl_replace_once:Nnn { NnV }
-\cs_generate_variant:Nn \prop_gput:Nnn       { cxx }
+\cs_generate_variant:Nn \prop_gput:Nnn       { cxx , NVf }
 
 % --------------------------------------------------------------------------
 % temporary variables:
@@ -57,19 +57,16 @@
 \tl_new:N    \l__leadsheets_songtitle_template_tl
 \tl_new:N    \l__leadsheets_verse_type_tl
 \tl_set:Nn   \l__leadsheets_verse_type_tl {verse}
-% \tl_new:N    \l__leadsheets_verse_format_tl
 \tl_new:N    \l__leadsheets_verses_format_tl
-% \tl_new:N    \l__leadsheets_verse_label_format_tl
 \tl_new:N    \l__leadsheets_verses_label_format_tl
 \tl_new:N    \l__leadsheets_verses_after_label_tl
 \tl_set:Nn   \l__leadsheets_verses_after_label_tl {:}
 \tl_new:N    \l__leadsheets_enharmonic_tl
 \tl_new:N    \l__leadsheets_capo_format_tl
+\tl_new:N    \l__leadsheets_recall_verse_type_tl
 
 \bool_new:N  \l__leadsheets_print_selected_bool
 \bool_new:N  \l__leadsheets_chord_gobble_after_bool
-% \bool_new:N  \l__leadsheets_verse_numbered_bool
-\bool_new:N  \l__leadsheets_verse_remember_bool
 \bool_new:N  \l__leadsheets_smash_chords_bool
 \bool_new:N  \g__leadsheets_smash_next_chord_bool
 \bool_new:N  \l__leadsheets_transpose_bool
@@ -77,6 +74,7 @@
 \bool_new:N  \l__leadsheets_enharmonic_bool
 \bool_new:N  \l__leadsheets_obey_lines_bool
 \bool_new:N  \l__leadsheets_bar_shorthands_bool
+\bool_new:N  \l__leadsheets_record_chords_bool
 
 \clist_new:N \l__leadsheets_print_tags_clist
 
@@ -84,6 +82,7 @@
 \prop_new:N  \l__leadsheets_duplicate_properties_prop
 \prop_new:N  \l__leadsheets_pitches_prop
 \prop_new:N  \l__leadsheets_prefer_key_prop
+\prop_new:N  \g__leadsheets_chords_sequences_prop
 
 \seq_new:N   \l__leadsheets_defined_songs_seq
 \seq_new:N   \l__leadsheets_songs_print_seq
@@ -91,6 +90,7 @@
 \seq_new:N   \l__leadsheets_sharps_seq
 \seq_new:N   \l__leadsheets_flats_seq
 \seq_new:N   \l__leadsheets_shorthands_seq
+\seq_new:N   \l__leadsheets_chords_sequences_seq
 
 \int_new:N   \l__leadsheets_transpose_steps_int
 \int_new:N   \l__leadsheets_capo_int
@@ -137,7 +137,7 @@
      { \char_set_catcode_active:N ##1 }
   }
   
-\leadsheets_define_shorthand:Npn ^ {\chord}
+\leadsheets_define_shorthand:Npn ^ {\leadsheets_remember_or_recall_chords:w}
 
 \leadsheets_define_shorthand:Npn _ {\writechord}
 
@@ -218,6 +218,7 @@
     \leadsheets_set_duplicate_properties:n {#2}
     \leadsheets_check_print:n {#2}
     \setcounter {verse} {0}
+    \prop_gclear:N \g__leadsheets_chords_sequences_prop
     \group_begin:
       \keys_set:nn {leadsheets} {#1}
       \leadsheets_specials:
@@ -601,6 +602,7 @@
   }
 
 % --------------------------------------------------------------------------
+% printing chords:
 \cs_new:Npn \leadsheets_chord_print:n #1 {#1}
 \cs_generate_variant:Nn \leadsheets_chord_print:n {V}
 
@@ -616,6 +618,8 @@
 
 \cs_new:Npn \__leadsheets_chord:nwn #1#2~#3
   {
+    \leadsheets_if_record_chords:T
+      { \seq_put_right:Nn \l__leadsheets_chords_sequences_seq { {#1} } }
     \leadsheets_place_above:nn
       { \leadsheets_chord_write:n {#1} }
       {
@@ -645,6 +649,7 @@
       }
     \leadsheets_chord_print:V \l__leadsheets_current_chord
   }
+\cs_generate_variant:Nn \leadsheets_chord_write:n { V }
 
 \cs_new:Npn \leadsheets_place_above:nn #1#2
   {
@@ -669,7 +674,8 @@
   {
     smash-chords     .bool_set:N = \l__leadsheets_smash_chords_bool ,
     smash-next-chord .bool_set:N = \g__leadsheets_smash_next_chord_bool ,
-    empty-chord-dim  .dim_set:N  = \l__leadsheets_empty_chord_dim
+    empty-chord-dim  .dim_set:N  = \l__leadsheets_empty_chord_dim ,
+    remember-chords  .bool_set:N = \l__leadsheets_record_chords_bool
   }
 
 \cs_new_protected:Npn \leadsheets_specials:
@@ -686,6 +692,77 @@
 
 \NewDocumentCommand \writechord {m}
   { \leadsheets_chord_write:n {#1} }
+
+% --------------------------------------------------------------------------
+% record changes for a verse and automatically print them in the next:
+\prg_new_conditional:Npnn \leadsheets_if_record_chords: {T,F,TF}
+  {
+    \bool_if:nTF
+      {
+        \l__leadsheets_record_chords_bool &&
+        ! \prop_if_in_p:NV
+            \g__leadsheets_chords_sequences_prop
+            \l__leadsheets_verse_type_tl
+      }
+      { \prg_return_true: }
+      { \prg_return_false: }
+  }
+
+\prg_new_conditional:Npnn \leadsheets_if_recall_chords: {T,F,TF}
+  {
+    \bool_if:nTF
+      {
+        \l__leadsheets_record_chords_bool &&
+        \prop_if_in_p:NV
+          \g__leadsheets_chords_sequences_prop
+          \l__leadsheets_verse_type_tl
+      }
+      { \prg_return_true: }
+      { \prg_return_false: }
+  }
+
+\cs_new:Npn \leadsheets_remember_or_recall_chords:w
+  {
+    \bool_if:NTF \l__leadsheets_record_chords_bool
+      {
+        \prop_if_in:NVTF
+          \g__leadsheets_chords_sequences_prop
+          \l__leadsheets_verse_type_tl
+          { \__leadsheets_recall_chord:w }
+          { \chord }
+      }
+      { \chord }
+  }
+
+\cs_new:Npn \leadsheets_recall_chord:nn #1#2
+  {
+    \bool_if:NTF #1
+      { \bool_set_true:N \l__leadsheets_chord_gobble_after_bool }
+      { \bool_set_false:N \l__leadsheets_chord_gobble_after_bool }
+    \bool_if:NT #2
+      { \bool_set_true:N \g__leadsheets_smash_next_chord_bool }
+    \__leadsheets_recall_chord:wn
+  }
+
+\cs_new:Npn \__leadsheets_recall_chord:wn #1~#2
+  {
+    \seq_pop_left:NNF \l__leadsheets_chords_sequences_seq
+      \l__leadsheets_tmpa_tl
+      { \ERROR } % TODO
+    \leadsheets_place_above:nn
+      { \leadsheets_chord_write:V \l__leadsheets_tmpa_tl }
+      {
+        \tl_if_blank:nTF {#1}
+          {\skip_horizontal:N \l__leadsheets_empty_chord_dim}
+          {#1}
+      }
+    \tl_if_blank:nF {#2}
+      { \bool_if:NF \l__leadsheets_chord_gobble_after_bool {\c_space_tl} }
+    #2
+  }
+
+\NewDocumentCommand \__leadsheets_recall_chord:w {st-}
+  { \leadsheets_recall_chord:nn {#1} {#2} }
 
 % --------------------------------------------------------------------------
 % capo settings:
@@ -957,33 +1034,56 @@
     \tl_set:cn {the#2} { \arabic {#2} . }
     \keys_define:nn {leadsheets/#2}
       {
-        numbered     .bool_set:c = {l__leadsheets_#2_numbered_bool} ,
-        named        .bool_set:c = {l__leadsheets_#2_named_bool} ,
-        format       .code:n     =
+        numbered      .bool_set:c = {l__leadsheets_#2_numbered_bool} ,
+        named         .bool_set:c = {l__leadsheets_#2_named_bool} ,
+        format        .code:n     =
           \tl_set:cn {l__leadsheets_#2_format_tl} {##1} ,
-        format       .initial:n  = \l__leadsheets_verses_format_tl ,
-        label-format .code:n     =
+        format        .initial:n  = \l__leadsheets_verses_format_tl ,
+        label-format  .code:n     =
           \tl_set:cn {l__leadsheets_#2_label_format_tl} {##1} ,
-        label-format .initial:n  = \l__leadsheets_verses_label_format_tl ,
-        after-label  .code:n     =
+        label-format  .initial:n  = \l__leadsheets_verses_label_format_tl ,
+        after-label   .code:n     =
           \tl_set:cn {l__leadsheets_#2_after_label_tl} {##1} ,
-        after-label  .initial:n  = \l__leadsheets_verses_after_label_tl ,
-        template     .code:n     =
+        after-label   .initial:n  = \l__leadsheets_verses_after_label_tl ,
+        template      .code:n     =
           \tl_set:cn {l__leadsheets_#2_template_tl} {##1} ,
-        template     .initial:n  = itemize ,
-        name         .code:n     =
+        template      .initial:n  = itemize ,
+        recall-chords .tl_set:N   = \l__leadsheets_recall_verse_type_tl ,
+        name          .code:n     =
          \@trnslt@declare@translation {leadsheets/#2} {fallback} {##1}
          \@trnslt@declare@translation {leadsheets/#2} {English} {##1}
       }
     \NewDocumentEnvironment {#2} {O{}}
       {
         \par
-        \keys_set:nn {leadsheets/#2} {##1}
         \tl_set:Nn \l__leadsheets_verse_type_tl {#2}
+        \tl_set:Nn \l__leadsheets_recall_verse_type_tl {#2}
+        \keys_set:nn {leadsheets/#2} {##1}
+        \leadsheets_if_record_chords:T
+          { \seq_clear:N \l__leadsheets_chords_sequences_seq }
+        \leadsheets_if_recall_chords:T
+          {
+            \prop_get:NVN
+              \g__leadsheets_chords_sequences_prop
+              \l__leadsheets_recall_verse_type_tl
+              \l__leadsheets_tmpa_tl
+            \seq_clear:N \l__leadsheets_chords_sequences_seq
+            \tl_map_inline:Nn \l__leadsheets_tmpa_tl
+              { \seq_put_right:Nn \l__leadsheets_chords_sequences_seq {####1} }
+          }
         \leadsheets_verse_begin:n {#2}
         \tl_use:c {l__leadsheets_#2_format_tl}
       }
-      { \leadsheets_verse_end:n {#2} \par }
+      {
+        \leadsheets_if_record_chords:T
+          {
+            \prop_gput:NVf \g__leadsheets_chords_sequences_prop
+              \l__leadsheets_verse_type_tl
+              { \seq_use:Nn \l__leadsheets_chords_sequences_seq {} }
+          }
+        \leadsheets_verse_end:n {#2}
+        \par
+      }
     \@trnslt@declare@translation {leadsheets/#2} {fallback} {}
     \@trnslt@declare@translation {leadsheets/#2} {English} {}
     \keys_set:nn {leadsheets/#2} {#3}
@@ -1083,8 +1183,6 @@
     obey-lines      .bool_set:N = \l__leadsheets_obey_lines_bool ,
     obey-lines-parskip .skip_set:N = \l__leadsheets_obey_parskip_skip ,
     bar-shortcuts   .bool_set:N = \l__leadsheets_bar_shorthands_bool ,
-    % numbered        .bool_set:N = \l__leadsheets_verse_numbered_bool ,
-    % remember-chords .bool_set:N = \l__leadsheets_verse_remember_bool ,
     transpose       .code:n     =
       \bool_set_true:N \l__leadsheets_transpose_bool
       \int_set:Nn \l__leadsheets_transpose_steps_int {#1} ,
