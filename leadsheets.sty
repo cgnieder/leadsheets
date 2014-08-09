@@ -113,6 +113,7 @@
 \seq_new:N   \l__leadsheets_flats_seq
 \seq_new:N   \l__leadsheets_shorthands_seq
 \seq_new:N   \l__leadsheets_chords_sequences_seq
+\seq_new:N   \l__leadsheets_reset_counters_seq
 
 \int_new:N   \l__leadsheets_transpose_steps_int
 \int_new:N   \l__leadsheets_capo_int
@@ -239,7 +240,6 @@
     \leadsheets_song_define:nn {#2} {#3}
     \leadsheets_set_duplicate_properties:n {#2}
     \leadsheets_check_print:n {#2}
-    \setcounter {verse} {0}
     \prop_gclear:N \g__leadsheets_chords_sequences_prop
     \group_begin:
       \keys_set:nn {leadsheets} {#1}
@@ -503,6 +503,7 @@
 \cs_new:Npn \leadsheets_end_song:n #1
   {
     \bool_set_true:N \l__leadsheets_measuring_bool
+    \leadsheets_reset_counters:
     \box_clear:N \l__leadsheets_tmpa_box
     \vbox_set:NV \l__leadsheets_tmpa_box \l__leadsheets_song_body_tl
     \leadsheets_set_property:nnx {#1} {height}
@@ -515,7 +516,17 @@
         pt
       }
     \bool_set_false:N \l__leadsheets_measuring_bool
+    \leadsheets_reset_counters:
     \tl_use:N \l__leadsheets_song_body_tl
+  }
+
+\cs_new_protected:Npn \leadsheets_add_to_reset:n #1
+  { \seq_put_right:Nn \l__leadsheets_reset_counters_seq {#1} }
+
+\cs_new_protected:Npn \leadsheets_reset_counters:
+  {
+    \seq_map_inline:Nn \l__leadsheets_reset_counters_seq
+      { \setcounter {##1} {0} }
   }
 
 \prg_new_conditional:Npnn \leadsheets_if_print_song:n #1 {T,F,TF}
@@ -1113,6 +1124,7 @@
     \tl_new:c {l__leadsheets_#2_label_format_tl}
     \tl_new:c {l__leadsheets_#2_after_label_tl}
     \newcounter {#2}
+    \leadsheets_add_to_reset:n {#2}
     \tl_set:cn {the#2} { \arabic {#2} . }
     \keys_define:nn {leadsheets/#2}
       {
