@@ -46,6 +46,7 @@
 \cs_generate_variant:Nn \tl_replace_once:Nnn { NnV }
 \cs_generate_variant:Nn \prop_gput:Nnn       { cxx , NVf }
 \cs_generate_variant:Nn \msg_error:nnn       { nnV }
+\cs_generate_variant:Nn \vbox_set:Nn         { NV }
 
 % --------------------------------------------------------------------------
 % temporary variables:
@@ -60,6 +61,7 @@
 \int_new:N  \l__leadsheets_tmpa_int
 \int_new:N  \l__leadsheets_tmpb_int
 \int_new:N  \l__leadsheets_tmpc_int
+\box_new:N  \l__leadsheets_tmpa_box
 
 % --------------------------------------------------------------------------
 % variables:
@@ -82,6 +84,7 @@
 \tl_new:N    \l__leadsheets_current_chord_tl
 \tl_new:N    \l__leadsheets_chord_stack_alignment_tl
 \tl_set:Nn   \l__leadsheets_chord_stack_alignment_tl {c}
+\tl_new:N    \l__leadsheets_song_body_tl
 
 \bool_new:N  \l__leadsheets_print_selected_bool
 \bool_new:N  \l__leadsheets_chord_gobble_after_bool
@@ -93,6 +96,7 @@
 \bool_new:N  \l__leadsheets_obey_lines_bool
 \bool_new:N  \l__leadsheets_bar_shorthands_bool
 \bool_new:N  \l__leadsheets_record_chords_bool
+\bool_new:N  \l__leadsheets_measuring_bool
 
 \clist_new:N \l__leadsheets_print_tags_clist
 
@@ -272,6 +276,13 @@
 \cs_generate_variant:Nn \leadsheets_if_property:nnT  { V }
 \cs_generate_variant:Nn \leadsheets_if_property_p:nn { V }
 
+\prg_new_conditional:Npnn \leadsheets_if_measuring: {T,F,TF}
+  {
+    \bool_if:NTF \l__leadsheets_measuring_bool
+      { \prg_return_true: }
+      { \prg_return_false: }
+  }
+
 \prg_new_protected_conditional:Npnn \leadsheets_if_properties_eq:nnn #1#2#3 {T,F,TF}
   {
     \tl_if_eq:xxTF
@@ -373,6 +384,9 @@
 \DeclareExpandableDocumentCommand \ifsongproperty {m}
   { \leadsheets_if_property:VnTF \l_leadsheets_current_song_id_tl {#1} }
 
+\DeclareExpandableDocumentCommand \ifsongmeasuring {}
+  { \leadsheets_if_measuring:TF }
+
 \NewDocumentCommand \ifsongpropertiesequal {mm}
   { \leadsheets_if_properties_eq:VnnTF \l_leadsheets_current_song_id_tl {#1} {#2} }
 
@@ -444,37 +458,64 @@
 % --------------------------------------------------------------------------
 \cs_new:Npn \leadsheets_print_song:nwn #1#2\end#3
   {
+    \tl_clear:N \l__leadsheets_song_body_tl
     \leadsheets_if_print_song:nT {#1}
       {
-          \tl_set:Nn \l_leadsheets_current_song_id_tl {#1}
-          \leadsheets_songtitle:
-          \leadsheets_check_capo:
-          \tl_use:N \l__leadsheets_songtext_format_tl
-          #2
+        \tl_set:Nn \l_leadsheets_current_song_id_tl {#1}
+        \tl_put_right:Nn \l__leadsheets_song_body_tl
+          {
+            \leadsheets_songtitle:
+            \leadsheets_check_capo:
+            \tl_use:N \l__leadsheets_songtext_format_tl
+            #2
+          }
       }
     \tl_if_eq:nnTF {#3} {song}
       {
+        \leadsheets_if_print_song:nT {#1}
+          { \leadsheets_end_song:n {#1} }
         \group_end:
         \end{song}
       }
       {
-        \end{#3}
+        \tl_put_right:Nn \l__leadsheets_song_body_tl { \end{#3} }
         \__leadsheets_continue_song:nwn {#1}
       }
   }
 
 \cs_new:Npn \__leadsheets_continue_song:nwn #1#2\end#3
   {
-    \leadsheets_if_print_song:nT {#1} {#2}
+    \leadsheets_if_print_song:nT {#1}
+      { \tl_put_right:Nn \l__leadsheets_song_body_tl {#2} }
     \tl_if_eq:nnTF {#3} {song}
       {
+        \leadsheets_if_print_song:nT {#1}
+          { \leadsheets_end_song:n {#1} }
         \group_end:
         \end{song}
       }
       {
-        \end{#3}
+        \tl_put_right:Nn \l__leadsheets_song_body_tl { \end{#3} }
         \__leadsheets_continue_song:nwn {#1}
       }
+  }
+
+\cs_new:Npn \leadsheets_end_song:n #1
+  {
+    \bool_set_true:N \l__leadsheets_measuring_bool
+    \box_clear:N \l__leadsheets_tmpa_box
+    \vbox_set:NV \l__leadsheets_tmpa_box \l__leadsheets_song_body_tl
+    \leadsheets_set_property:nnx {#1} {height}
+      {
+        \dim_to_decimal:n
+          {
+            \box_ht:N \l__leadsheets_tmpa_box +
+            \box_dp:N \l__leadsheets_tmpa_box
+          }
+        pt
+      }
+    \bool_set_false:N \l__leadsheets_measuring_bool
+    \tl_use:N \l__leadsheets_song_body_tl
   }
 
 \prg_new_conditional:Npnn \leadsheets_if_print_song:n #1 {T,F,TF}

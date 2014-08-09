@@ -14,6 +14,7 @@
     defineversetypetemplate , 
     expandcode ,
     ifobeylines ,
+    ifsongmeasuring ,
     ifsongpropertiesequal ,
     ifsongproperty ,
     ifversenamed ,
@@ -85,12 +86,34 @@
 
 \setchordnames{format=\libertineLF}
 
+\makeatletter
 \colorlet{property}{cnltxgreen}
 \newenvironment{properties}
-  {\colorlet{option}{property}\options}
-  {\endoptions}
+  {%
+    \def\prop{\@cnltx@option@item\propval}%
+    \cnltxlist
+  }
+  {\endcnltxlist}
 
-\newrobustcmd*\property[1]{{\colorlet{option}{property}\option*{#1}}}
+\newrobustcmd*\propval{\@ifstar{\cnltx@prop@star}{\cnltx@prop@nostar}}
+
+\newrobustcmd*\cnltx@prop@star{%
+  \cnltx@ifdash
+    {\cnltx@prop@aux*\meta}
+    {\cnltx@prop@aux*\marg}%
+}
+\newrobustcmd*\cnltx@prop@nostar{%
+  \cnltx@ifdash
+    {\cnltx@prop@aux{}\meta}
+    {\cnltx@prop@aux{}\marg}%
+}
+\newcommand*\cnltx@prop@aux[4]{%
+  \code{\property#1{#3}\cnltx@isvalue#2{#4}}%
+}
+\makeatother
+
+\newidxcmd\property{\code{\textcolor{property}{#1}}}
+
 \newrobustcmd*\symarg[1]{\textcolor{argument}{\code{#1}}}
 
 \newidxcmd\titletemplate{\textit{\sffamily#1}}[\ (songtitle template)]
@@ -355,7 +378,10 @@ specified via an option.
 
 \begin{environments}
   \environment{song}[\oarg{options}\marg{properties}]
-    The main environment used to typeset songs.
+    The main environment used to typeset songs.  It has a mandatory argument
+    where the song's properties are set
+    (\cf\ section~\ref{sec:song-properties}).  It also has an optional
+    argument for setting options specific to the song.
 \end{environments}
 
 \subsection{A First Example}
@@ -473,82 +499,88 @@ templates (see section~\ref{sec:title-templates}).  One specific property,
 \property{tags}, plays a different role, though.
 
 \begin{properties}
-  \keyval*{title}{title}
+  \prop{title}{title}
     This is the main title of the song.
-  \keyval*{subtitle}{subtitle}
+  \prop{subtitle}{subtitle}
     A subtitle.
-  \keyval*{short-title}{short song title}
+  \prop{short-title}{short song title}
     A short title (may be useful in a template that writes the titles in
     \cs*{section}s for a version to be used in the table of contents).
-  \keyval*{sort-title}{song title}
+  \prop{sort-title}{song title}
     If not set explicitly this property holds the same value as
     \property{title}.
-  \keyval*{sort-short-title}{short song title}
+  \prop{sort-short-title}{short song title}
     If not set explicitly this property holds the same value as
     \property{short-title}.
-  \keyval*{composer}{composer}
+  \prop{composer}{composer}
     The composer of the song.  As of now this accepts an arbitrary entry but
     maybe this will not be supported any more when indexing will be
     implemented.  No promises.
-  \keyval*{sort-composer}{composer}
+  \prop{sort-composer}{composer}
     If not set explicitly this property holds the same value as
     \property{composer}.
-  \keyval*{lyrics}{writer}
+  \prop{lyrics}{writer}
     Whoever wrote the lyrics if different from the composer.  As of now this
     accepts an arbitrary entry but maybe this will not be supported any more
     when indexing will be implemented.  No promises.
-  \keyval*{sort-lyrics}{writer}
+  \prop{sort-lyrics}{writer}
     If not set explicitly this property holds the same value as
     \property{writer}.
-  \keyval*{arr}{arranger}
+  \prop{arr}{arranger}
     Whoever arranged the song.  As of now this accepts an arbitrary entry but
     maybe this will not be supported any more when indexing will be
     implemented.  No promises.
-  \keyval*{sort-arr}{arranger}
+  \prop{sort-arr}{arranger}
     If not set explicitly this property holds the same value as
     \property{arr}.
-  \keyval*{band}{band}
+  \prop{band}{band}
     The band who plays or played the song.
-  \keyval*{sort-band}{band}
+  \prop{sort-band}{band}
     If not set explicitly this property holds the same value as
     \property{band}.
-  \keyval*{interpret}{interpret}
+  \prop{interpret}{interpret}
     The interpret of the song.  As of now this accepts an arbitrary entry but
     maybe this will not be supported any more when indexing will be
     implemented.  No promises.
-  \keyval*{sort-interpret}{interpret}
+  \prop{sort-interpret}{interpret}
     If not set explicitly this property holds the same value as
     \property{interpret}.
-  \keyval*{genre}{genre}
+  \prop{genre}{genre}
     The genre of the song.
-  \keyval*{key}{key}
+  \prop{key}{key}
     The key of the song.  This property is used for transposing and must have
     a specific format then, see section~\ref{sec:transposing}.
-  \keyval*{capo}{fret}
+  \prop{capo}{fret}
     This property is used for transposing and for the \cs{capo} macro, see
     sections~\ref{sec:capo-information} and~\ref{sec:transposing} .
-  \keyval*{tempo}{tempo}
+  \prop{tempo}{tempo}
     The tempo of the song.
-  \keyval*{tags}{tags}
+  \prop{tags}{tags}
     A comma separated list of tags. Those tags play a role for the option
-    {\colorlet{option}{cnltxyellow}\option{print-tags}}.  When that option is
-    used a song is only printed if it has at least one of the tags specified
-    in the option.
+    \option{print-tags}.  When that option is used a song is only printed if
+    it has at least one of the tags specified in the option.
 \end{properties}
 
-There are two more properties, \property{counter} and \property{ID} that
-cannot be set but are set automatically for each song.  The \property{counter}
-simply holds the number of the current song starting from \code{1} for the
-first song.  The \property{ID} currently always ia \code{song\meta{counter}}
-where \meta{counter} is the current \property{counter} value.
+There are three more properties, \property{counter}, \property{ID} and
+\property{height} that cannot be set but are set automatically for each song.
+The \property{counter} simply holds the number of the current song starting
+from \code{1} for the first song.  The \property{ID} currently always ia
+\code{song\meta{counter}} where \meta{counter} is the current
+\property{counter} value.  The property \property{height} holds the height of
+the typeset song in pt.  The height is determined by placing the body of the
+respective \env{song} environment in a vertical box and measuring the height
+and depth of the box.  This is done in a measuring phase that can be tested in
+a songtitle template definition, see section~\ref{sec:title-templates} for
+details. \emph{ This is important since the property \property{height} is not
+available in the measuring phase but only afterwards!}
 
 In principle all properties can get list of entries where items are separated
 with \code{\visualizespaces{ and }}.  Of course this doesn't make sense for
 each property -- a song does only have one title.  But a song can very well
-have more than one composer: think of the Beatles where most songs are written
-by Paul McCartney and John Lennon\footnote{This is not quite true: most songs
-  were written either by Paul or John but legally usually both are the
-  composers.}.
+have more than one composer: think of the Beatles where most songs were
+written by Paul McCartney and John Lennon\footnote{This is not quite true:
+  most songs were mostly written either by Paul or John but legally usually
+  both are the composers.}.
 
 It is possibly to define further such properties.  For details see
 section~\ref{sec:own-templates}.
@@ -1215,6 +1247,12 @@ contents or other auxiliary files.
     2}\marg{true}\marg{false}]
     Checks if properties \meta{property 1} and \meta{property 2} have been set
     to the same value.
+  \command{ifsongmeasuring}[\marg{true}\marg{false}]
+    \leadsheets{} measures the height of a song body before it typesets it and
+    it can be necessary in a template to know if the measuring phase is active
+    or not.  For example the song property \property{height} should only be
+    used if \emph{not} in the measuring phase: it's value get's determined
+    there and is not yet available.
   \command{expandcode}[\marg{code}]
     Exhaustively expands \meta{code}.  Experienced users won't need this.  It
     is essentially
