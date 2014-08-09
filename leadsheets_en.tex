@@ -1,6 +1,6 @@
 % arara: pdflatex: { shell: on }
 % !arara: biber
-% arara: pdflatex
+% !arara: pdflatex
 \documentclass[load-preamble+]{cnltx-doc}
 \usepackage{leadsheets}
 \setcnltx{
@@ -8,11 +8,6 @@
   authors = Clemens Niederberger ,
   email   = contact@mychemistry.eu ,
   url     = https://github.com/cgnieder/leadsheets/ ,
-  % add-frame-options = {
-  %   skipabove = \baselineskip ,
-  %   skipbelow = \baselineskip
-  % } ,
-%   info = ,
   add-cmds = {
     chord , chordname ,
     definesongtitletemplate ,
@@ -55,11 +50,6 @@
   index-setup = { othercode=\footnotesize, level=\section , noclearpage } ,
   makeindex-setup = {  columns=3, columnsep=1em }
 }
-
-\BeforeBeginEnvironment{example}{\vspace{\baselineskip}}
-\AfterEndEnvironment{example}{\vspace{\baselineskip}}
-\BeforeBeginEnvironment{sourcecode}{\vspace{\baselineskip}}
-\AfterEndEnvironment{sourcecode}{\vspace{\baselineskip}}
 
 \defbibheading{bibliography}{\section{References}}
 \addbibresource{\jobname.bib}
@@ -136,7 +126,7 @@ package \pkg{translations}~\cite{pkg:translations}.
 
 Over the years I repeatedly wanted to typeset simple leadsheets of songs, \ie,
 song lyrics and the corresponding chords\footnote{I also have had the need (or
-  let's say:wish) to typeset leadsheets in the style of the
+  let's say: wish) to typeset leadsheets in the style of the
   \citetitle{book:realbook} -- but this is a task where other software than
   \LaTeX{} is far easier.}.  This is not too hard with standard \LaTeX{}
 commands and environments but it is not very convenient\ldots{} so looking for
@@ -352,6 +342,14 @@ song is typeset.  For the typesetting of the titles a template mechansim is
 used (see section~\ref{sec:title-templates}).  Songs can also be tagged.  The
 tags then allow to typeset only songs matching a list of tags that is
 specified via an option.
+
+\begin{figure}
+  \centering
+  \includegraphics[width=.9\linewidth]{liederbuechlein.jpg}
+  \caption{Even before officially publishing this bundle I used it for
+    typesetting a small songbook!}
+  \label{fig:liederbuch}
+\end{figure}
 
 \section{The \env*{song} Environment}
 
@@ -588,8 +586,11 @@ the \enquote{capo} and \enquote{fret} strings (see
 section~\ref{sec:internationalization} for details) and the setting of the
 following option:
 \begin{options}
-  \keychoice{capo-format}{arabic,roman,Roman}\Default{Roman}
+  \keychoice{capo-nr-format}{arabic,roman,Roman}\Default{Roman}
     The format of the number printed by the \cs{capo} macro.
+  \keyval{capo-nr-cs}{cs}\Default{\cs*{@firstofone}}
+    A macro that takes one argument.  Can be used to give the printed number a
+    special formatting (like a trailing full stop for example).
 \end{options}
 
 \section{The \env*{verse} Environment}\label{sec:envverse-environment}
@@ -733,11 +734,14 @@ However, there is an option which sets the width of a chord to zero:
   text \chord{Gbmi7(b5)}text text
 \end{example}
 
-Before we forget:
+Before we forget -- there are more options:
 \begin{options}
   \keyval{empty-chord-dim}{dim}\Default{1em}
     The horizontal space that is inserted if the \meta{text} argument of
     \cs{chord} is empty.
+  \keyval{align-chords}{col}\Default{c}
+    Determines how a chord is aligned with respect to the word it is placed
+    above of.  Valid input is any valid \env*{tabular} column identifier.
 \end{options}
 
 While \cs{chord} is available in the whole document the

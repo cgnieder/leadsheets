@@ -1,9 +1,9 @@
 % --------------------------------------------------------------------------
 \RequirePackage{expl3}
 \ProvidesExplPackage{leadsheets}
-  {2014/08/01}
-  {0.0}
-  {songbook~ (draft)~ (CN)}
+  {2014/08/09}
+  {0.1-beta}
+  {songbook~ (beta version)~ (CN)}
 
 % --------------------------------------------------------------------------
 % required packages:
@@ -26,6 +26,16 @@
 \msg_new:nnn {leadsheets} {unknown-template}
   { Unknown~ #1~ template~ `#2'~ \msg_line_context: }
 
+\msg_new:nnn {leadsheets} {no-chords}
+  { No~ more~ chords~ left~ for~ verse~ type~ `#1'~ \msg_line_context: }
+
+\msg_new:nnn {leadsheets} {transpose-key}
+  {
+    You~ need~ to~ specify~ the~ `key'~ property~ for~ song~ `#1'~
+    ( \leadsheets_get_property:nn {#1} {title} )~ in~ order~ to~ use~ the~
+    transposing~ mechanism~ \msg_line_context:
+  }
+
 % --------------------------------------------------------------------------
 % variants of kernel functions:
 \cs_generate_variant:Nn \tl_if_eq:nnTF       { xx , V }
@@ -35,12 +45,14 @@
 \cs_generate_variant:Nn \int_to_arabic:n     { V }
 \cs_generate_variant:Nn \tl_replace_once:Nnn { NnV }
 \cs_generate_variant:Nn \prop_gput:Nnn       { cxx , NVf }
+\cs_generate_variant:Nn \msg_error:nnn       { nnV }
 
 % --------------------------------------------------------------------------
 % temporary variables:
 \tl_new:N   \l__leadsheets_tmpa_tl
 \tl_new:N   \l__leadsheets_tmpb_tl
 \tl_new:N   \l__leadsheets_tmpc_tl
+\tl_new:N   \l__leadsheets_tmpd_tl
 \bool_new:N \l__leadsheets_tmpa_bool
 \dim_new:N  \l__leadsheets_tmpa_dim
 \seq_new:N  \l__leadsheets_tmpa_seq
@@ -51,19 +63,25 @@
 
 % --------------------------------------------------------------------------
 % variables:
+\tl_const:Nn \c_leadsheets_sharp_tl {sharp}
+\tl_const:Nn \c_leadsheets_flat_tl  {flat}
+
 \tl_new:N    \l__leadsheets_songtext_format_tl
 \tl_new:N    \l__leadsheets_song_format_tl
-\tl_new:N    \l__leadsheets_current_song_tl
+\tl_new:N    \l_leadsheets_current_song_id_tl
 \tl_new:N    \l__leadsheets_songtitle_template_tl
-\tl_new:N    \l__leadsheets_verse_type_tl
-\tl_set:Nn   \l__leadsheets_verse_type_tl {verse}
+\tl_new:N    \l_leadsheets_verse_type_tl
+\tl_set:Nn   \l_leadsheets_verse_type_tl {verse}
 \tl_new:N    \l__leadsheets_verses_format_tl
 \tl_new:N    \l__leadsheets_verses_label_format_tl
 \tl_new:N    \l__leadsheets_verses_after_label_tl
 \tl_set:Nn   \l__leadsheets_verses_after_label_tl {:}
 \tl_new:N    \l__leadsheets_enharmonic_tl
-\tl_new:N    \l__leadsheets_capo_format_tl
+\tl_new:N    \l__leadsheets_capo_number_format_tl
 \tl_new:N    \l__leadsheets_recall_verse_type_tl
+\tl_new:N    \l__leadsheets_current_chord_tl
+\tl_new:N    \l__leadsheets_chord_stack_alignment_tl
+\tl_set:Nn   \l__leadsheets_chord_stack_alignment_tl {c}
 
 \bool_new:N  \l__leadsheets_print_selected_bool
 \bool_new:N  \l__leadsheets_chord_gobble_after_bool
@@ -146,12 +164,12 @@
     \str_case:nnF {#1}
       {
         {:} {\leftrepeat}
-        {|} {\leadsheets_checkbartype:}
+        {|} {\__leadsheets_checkbartype:}
       }
       {\normalbar\space #1}
   }
 
-\cs_new:Npn \leadsheets_checkbartype:
+\cs_new_protected:Npn \__leadsheets_checkbartype:
   {
     \peek_charcode_remove:NTF |
       {\stopbar}
@@ -161,11 +179,11 @@
 \leadsheets_define_shorthand:Npn :
   {
     \peek_charcode_remove:NTF |
-      {\leadsheets_checkrepeat:}
+      {\__leadsheets_checkrepeat:}
       {\token_to_str:N :}
   }
 
-\cs_new:Npn \leadsheets_checkrepeat:
+\cs_new_protected:Npn \__leadsheets_checkrepeat:
   {
     \peek_charcode_remove:NTF :
       {\leftrightrepeat}
@@ -188,9 +206,9 @@
 \ExplSyntaxOff
 \catcode`\:=11
 \catcode`\_=11
-\cs_new:Npn \leadsheets_active_eol: { \catcode`\^^M=\active }
+\cs_new:Npn \__leadsheets_active_eol: { \catcode`\^^M=\active }
 
-\leadsheets_active_eol: %
+\__leadsheets_active_eol: %
 \tl_const:Nn \c__leadsheets_eol_tl {^^M}%
 \cs_new_protected:Npn \leadsheets_obey_lines: {%
   \skip_set_eq:NN \l__leadsheets_obey_parskip_skip \parskip
@@ -321,7 +339,7 @@
   }
 
 \DeclareExpandableDocumentCommand \songproperty {m}
-  { \leadsheets_get_property:Vn \l__leadsheets_current_song_tl {#1} }
+  { \leadsheets_get_property:Vn \l_leadsheets_current_song_id_tl {#1} }
 
 % #1: command that formats every entry in list
 % #2: property
@@ -330,7 +348,7 @@
 % #5: separator between last two
 \NewDocumentCommand \printsongpropertylist {O{\use:n}mmmm}
   {
-    \leadsheets_print_property_list:Vnnnnn \l__leadsheets_current_song_tl
+    \leadsheets_print_property_list:Vnnnnn \l_leadsheets_current_song_id_tl
       {#2} {#1} {#3} {#4} {#5}
   }
 
@@ -339,7 +357,7 @@
 % #3: separator
 \NewDocumentCommand \usesongpropertylist {O{\use:n}mm}
   {
-    \leadsheets_use_property_list:Vnnn \l__leadsheets_current_song_tl
+    \leadsheets_use_property_list:Vnnn \l_leadsheets_current_song_id_tl
       {#2} {#1} {#3}
   }
 
@@ -348,15 +366,15 @@
 \DeclareExpandableDocumentCommand \forsongpropertylist {mm}
   {
     \leadsheets_for_property_list:fn
-      { \leadsheets_get_property:Vn \l__leadsheets_current_song_tl {#1} }
+      { \leadsheets_get_property:Vn \l_leadsheets_current_song_id_tl {#1} }
        {#2}
   }
 
 \DeclareExpandableDocumentCommand \ifsongproperty {m}
-  { \leadsheets_if_property:VnTF \l__leadsheets_current_song_tl {#1} }
+  { \leadsheets_if_property:VnTF \l_leadsheets_current_song_id_tl {#1} }
 
 \NewDocumentCommand \ifsongpropertiesequal {mm}
-  { \leadsheets_if_properties_eq:VnnTF \l__leadsheets_current_song_tl {#1} {#2} }
+  { \leadsheets_if_properties_eq:VnnTF \l_leadsheets_current_song_id_tl {#1} {#2} }
 
 \NewDocumentCommand \definesongproperty {m}
   { \leadsheets_define_property:n {#1} }
@@ -428,7 +446,7 @@
   {
     \leadsheets_if_print_song:nT {#1}
       {
-          \tl_set:Nn \l__leadsheets_current_song_tl {#1}
+          \tl_set:Nn \l_leadsheets_current_song_id_tl {#1}
           \leadsheets_songtitle:
           \leadsheets_check_capo:
           \tl_use:N \l__leadsheets_songtext_format_tl
@@ -606,22 +624,31 @@
 \cs_new:Npn \leadsheets_chord_print:n #1 {#1}
 \cs_generate_variant:Nn \leadsheets_chord_print:n {V}
 
-\cs_new:Npn \leadsheets_chord:nnn #1#2#3
+\cs_new_protected:Npn \leadsheets_chord:nnn #1#2#3
+  {
+    \leadsheets_if_record_chords:T
+      { \seq_put_right:Nn \l__leadsheets_chords_sequences_seq { {#3} } }
+    \leadsheets_set_chord:nnn
+      {#1}
+      {#2}
+      { \leadsheets_chord_write:n {#3} }
+  }
+
+\cs_new_protected:Npn \leadsheets_set_chord:nnn #1#2#3
   {
     \bool_if:NTF #1
       { \bool_set_true:N \l__leadsheets_chord_gobble_after_bool }
       { \bool_set_false:N \l__leadsheets_chord_gobble_after_bool }
     \bool_if:NT #2
       { \bool_set_true:N \g__leadsheets_smash_next_chord_bool }
-    \__leadsheets_chord:nwn {#3}
+    \__leadsheets_set_chord:nwn {#3}
   }
 
-\cs_new:Npn \__leadsheets_chord:nwn #1#2~#3
+\cs_new_protected:Npn \__leadsheets_set_chord:nwn #1#2~#3
   {
-    \leadsheets_if_record_chords:T
-      { \seq_put_right:Nn \l__leadsheets_chords_sequences_seq { {#1} } }
-    \leadsheets_place_above:nn
-      { \leadsheets_chord_write:n {#1} }
+    \leadsheets_place_above:Vnn
+      \l__leadsheets_chord_stack_alignment_tl
+      { #1 }
       {
         \tl_if_blank:nTF {#2}
           {\skip_horizontal:N \l__leadsheets_empty_chord_dim}
@@ -634,24 +661,35 @@
 
 \cs_new_protected:Npn \leadsheets_chord_write:n #1
   {
-    \tl_set:Nn \l__leadsheets_current_chord {#1}
+    \tl_set:Nn \l__leadsheets_current_chord_tl {#1}
     \bool_if:nT
       {
-        \leadsheets_if_property_p:Vn \l__leadsheets_current_song_tl {key}
+        \leadsheets_if_property_p:Vn \l_leadsheets_current_song_id_tl {key}
         &&
         ( \l__leadsheets_transpose_bool || \l__leadsheets_transpose_capo_bool )
       }
       {
         \leadsheets_transpose:xVN
-          { \leadsheets_get_property:Vn \l__leadsheets_current_song_tl {key} }
+          { \leadsheets_get_property:Vn \l_leadsheets_current_song_id_tl {key} }
           \l__leadsheets_transpose_steps_int
-          \l__leadsheets_current_chord
+          \l__leadsheets_current_chord_tl
       }
-    \leadsheets_chord_print:V \l__leadsheets_current_chord
+    \bool_if:nTF
+      {
+        ! \leadsheets_if_property_p:Vn \l_leadsheets_current_song_id_tl {key}
+        &&
+        ( \l__leadsheets_transpose_bool || \l__leadsheets_transpose_capo_bool )
+      }
+      {
+        \msg_warning:nnV {leadsheets}
+          {transpose-key}
+          \l_leadsheets_current_song_id_tl
+      }
+    \leadsheets_chord_print:V \l__leadsheets_current_chord_tl
   }
 \cs_generate_variant:Nn \leadsheets_chord_write:n { V }
 
-\cs_new:Npn \leadsheets_place_above:nn #1#2
+\cs_new_protected:Npn \leadsheets_place_above:nnn #1#2#3
   {
     \group_begin:
       \leadsheets_ignore_lines:
@@ -661,21 +699,23 @@
           \bool_gset_false:N \g__leadsheets_smash_next_chord_bool
         }
       \linespread{1} \selectfont
-      \begin{tabular} [b] {@{}c@{}}
+      \begin{tabular} [b] {@{}#1@{}}
         \bool_if:NTF \l__leadsheets_smash_chords_bool
-          {\makebox[0pt][c]{#1}}
-          {#1} \\
-        #2
+          {\makebox[0pt][c]{#2}}
+          {#2} \\
+        #3
       \end{tabular}
     \group_end:
   }
+\cs_generate_variant:Nn \leadsheets_place_above:nnn { V }
 
 \keys_define:nn {leadsheets}
   {
     smash-chords     .bool_set:N = \l__leadsheets_smash_chords_bool ,
     smash-next-chord .bool_set:N = \g__leadsheets_smash_next_chord_bool ,
     empty-chord-dim  .dim_set:N  = \l__leadsheets_empty_chord_dim ,
-    remember-chords  .bool_set:N = \l__leadsheets_record_chords_bool
+    remember-chords  .bool_set:N = \l__leadsheets_record_chords_bool ,
+    align-chords     .tl_set:N   = \l__leadsheets_chord_stack_alignment_tl
   }
 
 \cs_new_protected:Npn \leadsheets_specials:
@@ -685,7 +725,7 @@
       { \leadsheets_activate_shorthands:n {:|} }
     \char_set_catcode_other:N  \#
     \bool_if:NT \l__leadsheets_obey_lines_bool
-      { \leadsheets_active_eol: }
+      { \__leadsheets_active_eol: }
   }
 
 \NewDocumentCommand \chord {st-m} { \leadsheets_chord:nnn {#1} {#2} {#3} }
@@ -702,7 +742,7 @@
         \l__leadsheets_record_chords_bool &&
         ! \prop_if_in_p:NV
             \g__leadsheets_chords_sequences_prop
-            \l__leadsheets_verse_type_tl
+            \l_leadsheets_verse_type_tl
       }
       { \prg_return_true: }
       { \prg_return_false: }
@@ -715,7 +755,7 @@
         \l__leadsheets_record_chords_bool &&
         \prop_if_in_p:NV
           \g__leadsheets_chords_sequences_prop
-          \l__leadsheets_verse_type_tl
+          \l_leadsheets_verse_type_tl
       }
       { \prg_return_true: }
       { \prg_return_false: }
@@ -727,38 +767,22 @@
       {
         \prop_if_in:NVTF
           \g__leadsheets_chords_sequences_prop
-          \l__leadsheets_verse_type_tl
+          \l_leadsheets_verse_type_tl
           { \__leadsheets_recall_chord:w }
           { \chord }
       }
       { \chord }
   }
 
-\cs_new:Npn \leadsheets_recall_chord:nn #1#2
-  {
-    \bool_if:NTF #1
-      { \bool_set_true:N \l__leadsheets_chord_gobble_after_bool }
-      { \bool_set_false:N \l__leadsheets_chord_gobble_after_bool }
-    \bool_if:NT #2
-      { \bool_set_true:N \g__leadsheets_smash_next_chord_bool }
-    \__leadsheets_recall_chord:wn
-  }
-
-\cs_new:Npn \__leadsheets_recall_chord:wn #1~#2
+\cs_new_protected:Npn \leadsheets_recall_chord:nn #1#2
   {
     \seq_pop_left:NNF \l__leadsheets_chords_sequences_seq
       \l__leadsheets_tmpa_tl
-      { \ERROR } % TODO
-    \leadsheets_place_above:nn
+      { \msg_error:nnV {leadsheets} {no-chords} \l_leadsheets_verse_type_tl }
+    \leadsheets_set_chord:nnn
+      {#1}
+      {#2}
       { \leadsheets_chord_write:V \l__leadsheets_tmpa_tl }
-      {
-        \tl_if_blank:nTF {#1}
-          {\skip_horizontal:N \l__leadsheets_empty_chord_dim}
-          {#1}
-      }
-    \tl_if_blank:nF {#2}
-      { \bool_if:NF \l__leadsheets_chord_gobble_after_bool {\c_space_tl} }
-    #2
   }
 
 \NewDocumentCommand \__leadsheets_recall_chord:w {st-}
@@ -768,10 +792,10 @@
 % capo settings:
 \cs_new_protected:Npn \leadsheets_check_capo:
   {
-    \leadsheets_if_property:VnTF \l__leadsheets_current_song_tl {capo}
+    \leadsheets_if_property:VnTF \l_leadsheets_current_song_id_tl {capo}
       {
         \int_set:Nn \l__leadsheets_capo_int
-          { \leadsheets_get_property:Vn \l__leadsheets_current_song_tl {capo} }
+          { \leadsheets_get_property:Vn \l_leadsheets_current_song_id_tl {capo} }
       }
       { \int_zero:N \l__leadsheets_capo_int }
     \int_set:Nn \l__leadsheets_transpose_steps_int
@@ -783,13 +807,18 @@
       }
   }
 
+\cs_new:Npn \leadsheets_capo_number_print:n #1 {#1}
+
 \cs_new_protected:Npn \leadsheets_capo:
   {
-    \leadsheets_if_property:VnT \l__leadsheets_current_song_tl {capo}
+    \leadsheets_if_property:VnT \l_leadsheets_current_song_id_tl {capo}
       {
         \leadsheets_translation:n {capo} :~
-        \use:c {int_to_ \l__leadsheets_capo_format_tl :n}
-          { \l__leadsheets_capo_int }
+        \leadsheets_capo_number_print:n
+          {
+            \use:c {int_to_ \l__leadsheets_capo_number_format_tl :n}
+              { \l__leadsheets_capo_int }
+          }
         \nobreakspace
         \leadsheets_translation:n {fret}
       }
@@ -828,6 +857,9 @@
 \prop_put:Nnn \l__leadsheets_pitches_prop {E}     {4}
 \prop_put:Nnn \l__leadsheets_pitches_prop {Ema}   {4}
 \prop_put:Nnn \l__leadsheets_pitches_prop {C#mi}  {4}
+\prop_put:Nnn \l__leadsheets_pitches_prop {Fb}    {4}
+\prop_put:Nnn \l__leadsheets_pitches_prop {Fbma}  {4}
+\prop_put:Nnn \l__leadsheets_pitches_prop {Dbmi}  {4}
 \prop_put:Nnn \l__leadsheets_pitches_prop {F}     {5}
 \prop_put:Nnn \l__leadsheets_pitches_prop {Fma}   {5}
 \prop_put:Nnn \l__leadsheets_pitches_prop {Dmi}   {5}
@@ -921,18 +953,16 @@
 % #3: chord
 \cs_new_protected:Npn \leadsheets_transpose:nnN #1#2#3
   {
-    \int_set:Nn \l__leadsheets_tmpa_int
-      { \prop_item:Nn \l__leadsheets_pitches_prop {#1} }
-    % \l__leadsheets_tmpa_int holds the current pitch
+    \int_set:Nn \l__leadsheets_tmpa_int {0}
+    % \l__leadsheets_tmpa_int holds the C pitch
     \seq_if_in:NnTF \l__leadsheets_sharps_seq {#1}
       { \tl_set:Nn \l__leadsheets_tmpa_tl {sharp} }
       { \tl_set:Nn \l__leadsheets_tmpa_tl {flat} }
     % \l__leadsheets_tmpa_tl holds the `sharp' or `flat' preference
-    \int_set:Nn \l__leadsheets_tmpb_int
-      { \int_mod:nn { \l__leadsheets_tmpa_int + #2 } {12} }
+    \int_set:Nn \l__leadsheets_tmpb_int {#2}
     \int_while_do:nNnn { \l__leadsheets_tmpb_int } < { 0 }
       { \int_set:Nn \l__leadsheets_tmpb_int { \l__leadsheets_tmpb_int + 12 } }
-    % \l__leadsheets_tmpb_int holds the pitch number of the new key
+    % \l__leadsheets_tmpb_int holds the new pitch number relatice to C
     \bool_if:NTF \l__leadsheets_enharmonic_bool
       { \tl_set_eq:NN \l__leadsheets_tmpb_tl \l__leadsheets_enharmonic_tl }
       {
@@ -943,36 +973,47 @@
               \l__leadsheets_tmpb_int
           }
       }
-    % \l__leadsheets_tmpb_tl holds the `sharp' or `flat' preference of the new key
-    \tl_set_eq:NN \l__leadsheets_tmpc_tl #3 % the chord
-    \int_zero:N \l__leadsheets_tmpc_int
-    \seq_map_inline:cn
+    % \l__leadsheets_tmpb_tl holds the `sharp' or `flat' preference
+    % of the new key
+    \seq_set_split:NnV \l__leadsheets_tmpa_seq {/} #3
+    \tl_clear:N #3
+    \seq_clear:N \l__leadsheets_tmpb_seq
+    \seq_map_inline:Nn \l__leadsheets_tmpa_seq
       {
-        g__leadsheets_key_
-        \l__leadsheets_tmpa_tl _
-        \int_to_arabic:V \l__leadsheets_tmpa_int
-        _seq
-      }
-      {
-        \int_incr:N \l__leadsheets_tmpc_int
-        \tl_set:Nx \l__leadsheets_tmpa_tl
+        \tl_set:Nn \l__leadsheets_tmpc_tl {##1} % the chord
+        \int_zero:N \l__leadsheets_tmpc_int
+        \int_zero:N \l__leadsheets_tmpc_int
+        \seq_map_inline:cn
           {
-            \seq_item:cV
+            g__leadsheets_key_
+            \l__leadsheets_tmpb_tl _
+            \int_to_arabic:V \l__leadsheets_tmpa_int
+            _seq
+          }
+          {
+            \int_incr:N \l__leadsheets_tmpc_int
+            \tl_if_in:NnT \l__leadsheets_tmpc_tl {####1}
               {
-                g__leadsheets_key_
-                \l__leadsheets_tmpb_tl _
-                \int_to_arabic:V \l__leadsheets_tmpb_int
-                _seq
+                \tl_set:Nx \l__leadsheets_tmpd_tl
+                  {
+                    \seq_item:cV
+                      {
+                        g__leadsheets_key_
+                        \l__leadsheets_tmpb_tl _
+                        \int_to_arabic:V \l__leadsheets_tmpb_int
+                        _seq
+                      }
+                      \l__leadsheets_tmpc_int
+                  }
+                \tl_replace_once:NnV \l__leadsheets_tmpc_tl
+                  {####1}
+                  \l__leadsheets_tmpd_tl
+                \seq_map_break:
               }
-              \l__leadsheets_tmpc_int
           }
-        \tl_if_in:NnT \l__leadsheets_tmpc_tl {##1}
-          {
-            \tl_replace_once:NnV \l__leadsheets_tmpc_tl {##1} \l__leadsheets_tmpa_tl
-            \seq_map_break:
-          }
+        \seq_put_right:NV \l__leadsheets_tmpb_seq \l__leadsheets_tmpc_tl
       }
-    \tl_set_eq:NN #3 \l__leadsheets_tmpc_tl
+    \tl_set:Nx #3 { \seq_use:Nn \l__leadsheets_tmpb_seq {/} }
   }
 \cs_generate_variant:Nn \leadsheets_transpose:nnN { xV }
 
@@ -995,7 +1036,7 @@
 
 \cs_new_protected:Npn \leadsheets_verse_begin:n #1
   {
-    \refstepcounter {#1}
+    \stepcounter {#1}
     \tl_set:Nn \verselabel { \leadsheets_verse_label:n {#1} }
     \tl_set:Nn \verselabelformat
       { \tl_use:c {l__leadsheets_#1_label_format_tl} }
@@ -1056,7 +1097,7 @@
     \NewDocumentEnvironment {#2} {O{}}
       {
         \par
-        \tl_set:Nn \l__leadsheets_verse_type_tl {#2}
+        \tl_set:Nn \l_leadsheets_verse_type_tl {#2}
         \tl_set:Nn \l__leadsheets_recall_verse_type_tl {#2}
         \keys_set:nn {leadsheets/#2} {##1}
         \leadsheets_if_record_chords:T
@@ -1078,7 +1119,7 @@
         \leadsheets_if_record_chords:T
           {
             \prop_gput:NVf \g__leadsheets_chords_sequences_prop
-              \l__leadsheets_verse_type_tl
+              \l_leadsheets_verse_type_tl
               { \seq_use:Nn \l__leadsheets_chords_sequences_seq {} }
           }
         \leadsheets_verse_end:n {#2}
@@ -1169,10 +1210,10 @@
     song-format     .tl_set:N   = \l__leadsheets_song_format_tl ,
     verse/type      .choice: ,
     verse/type/verse   .code:n  =
-      \tl_set:Nn \l__leadsheets_verse_type_tl {verse} ,
+      \tl_set:Nn \l_leadsheets_verse_type_tl {verse} ,
     verse/type/unknown .code:n  =
       \msg_warning:nnn {leadsheets} {unknown-verse-type} {#1}
-      \tl_set:Nn \l__leadsheets_verse_type_tl {verse} ,
+      \tl_set:Nn \l_leadsheets_verse_type_tl {verse} ,
     verse/format    .tl_set:N   = \l__leadsheets_verse_format_tl ,
     verse/format    .initial:n  = \l__leadsheets_verses_format_tl ,
     verse/label-format  .tl_set:N   = \l__leadsheets_verse_label_format_tl ,
@@ -1187,10 +1228,13 @@
       \bool_set_true:N \l__leadsheets_transpose_bool
       \int_set:Nn \l__leadsheets_transpose_steps_int {#1} ,
     transpose-capo  .bool_set:N = \l__leadsheets_transpose_capo_bool ,
-    capo-format     .choices:nn =
+    capo-nr-format  .choices:nn =
       { arabic , roman , Roman }
-      { \tl_set:NV \l__leadsheets_capo_format_tl \l_keys_choice_tl } ,
-    capo-format     .initial:n  = {Roman} ,
+      { \tl_set:NV \l__leadsheets_capo_number_format_tl \l_keys_choice_tl } ,
+    capo-nr-format  .initial:n  = {Roman} ,
+    capo-nr-cs      .code:n     =
+      \cs_set_protected:Npn \leadsheets_capo_number_print:n {#1} ,
+    capo-nr-cs      .initial:n  = \use:n ,
     enharmonic      .choices:nn =
       { sharp , flat }
       {
@@ -1251,14 +1295,6 @@
 \tex_endinput:D
 
 TODO:
- - an option `remember-chords' that makes the first verse in a song remember
-   the chords so that in following verses ^ inserts the chord needed
-   => ideally the syntax ^{} would still work but maybe then using \chord is
-   required if different chords should be used
-   => maybe this is not required at all...
- - an option transpose to the song environment.  This should transpose all
-   chords in the various verse-like environments
- - indexing based on composers, interprets, song-titles, difficulties
- - don't just use an itemize environment for verses but something where new
-   lines are a bit indented... something like in the songs package maybe
-   
+ - input-notation=english|german, print-notation=english|german => damit man
+   wählen kann, ob Akkorde mit `H' oder `B' ein- bzw. ausgegeben werden.
+ - Fehlermeldungen/Warnungen
