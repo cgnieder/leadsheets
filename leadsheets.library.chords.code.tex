@@ -1,0 +1,182 @@
+\LeadsheetsExplLibrary{chords}{2014/08/10 printing chords}
+
+\msg_new:nnn {leadsheets} {no-chords}
+  { No~ more~ chords~ left~ for~ verse~ type~ `#1'~ \msg_line_context: }
+
+\tl_new:N    \l__leadsheets_current_chord_tl
+\tl_new:N    \l__leadsheets_chord_stack_alignment_tl
+\tl_set:Nn   \l__leadsheets_chord_stack_alignment_tl {c}
+
+\bool_new:N  \l__leadsheets_smash_chords_bool
+\bool_new:N  \g__leadsheets_smash_next_chord_bool
+\bool_new:N  \l__leadsheets_chord_gobble_after_bool
+\bool_new:N  \l__leadsheets_record_chords_bool
+
+\prop_new:N  \g__leadsheets_chords_sequences_prop
+
+\seq_new:N   \l__leadsheets_chords_sequences_seq
+
+\dim_new:N   \l__leadsheets_empty_chord_dim
+\dim_set:Nn  \l__leadsheets_empty_chord_dim {1em}
+
+\cs_new:Npn \leadsheets_chord_print:n #1 {#1}
+\cs_generate_variant:Nn \leadsheets_chord_print:n {V}
+
+\cs_new_protected:Npn \leadsheets_chord:nnn #1#2#3
+  {
+    \leadsheets_if_record_chords:T
+      { \seq_put_right:Nn \l__leadsheets_chords_sequences_seq { {#3} } }
+    \leadsheets_set_chord:nnn
+      {#1}
+      {#2}
+      { \leadsheets_chord_write:n {#3} }
+  }
+
+\cs_new_protected:Npn \leadsheets_set_chord:nnn #1#2#3
+  {
+    \bool_if:NTF #1
+      { \bool_set_true:N \l__leadsheets_chord_gobble_after_bool }
+      { \bool_set_false:N \l__leadsheets_chord_gobble_after_bool }
+    \bool_if:NT #2
+      { \bool_set_true:N \g__leadsheets_smash_next_chord_bool }
+    \__leadsheets_set_chord:nwn {#3}
+  }
+
+\cs_new_protected:Npn \__leadsheets_set_chord:nwn #1#2~#3
+  {
+    \leadsheets_place_above:Vnn
+      \l__leadsheets_chord_stack_alignment_tl
+      { #1 }
+      {
+        \tl_if_blank:nTF {#2}
+          {\skip_horizontal:N \l__leadsheets_empty_chord_dim}
+          {#2}
+      }
+    \tl_if_blank:nF {#3}
+      { \bool_if:NF \l__leadsheets_chord_gobble_after_bool {\c_space_tl} }
+    #3
+  }
+
+\cs_new_protected:Npn \leadsheets_chord_write:n #1
+  {
+    \tl_set:Nn \l__leadsheets_current_chord_tl {#1}
+    \bool_if:nT
+      {
+        \leadsheets_if_property_p:Vn \l_leadsheets_current_song_id_tl {key}
+        &&
+        ( \l__leadsheets_transpose_bool || \l__leadsheets_transpose_capo_bool )
+      }
+      {
+        \leadsheets_transpose:xVN
+          { \leadsheets_get_property:Vn \l_leadsheets_current_song_id_tl {key} }
+          \l__leadsheets_transpose_steps_int
+          \l__leadsheets_current_chord_tl
+      }
+    \bool_if:nTF
+      {
+        ! \leadsheets_if_property_p:Vn \l_leadsheets_current_song_id_tl {key}
+        &&
+        ( \l__leadsheets_transpose_bool || \l__leadsheets_transpose_capo_bool )
+      }
+      {
+        \msg_warning:nnV {leadsheets}
+          {transpose-key}
+          \l_leadsheets_current_song_id_tl
+      }
+    \leadsheets_chord_print:V \l__leadsheets_current_chord_tl
+  }
+\cs_generate_variant:Nn \leadsheets_chord_write:n { V }
+
+\cs_new_protected:Npn \leadsheets_place_above:nnn #1#2#3
+  {
+    \group_begin:
+      \leadsheets_ignore_lines:
+      \bool_if:NT \g__leadsheets_smash_next_chord_bool
+        {
+          \bool_set_true:N \l__leadsheets_smash_chords_bool
+          \bool_gset_false:N \g__leadsheets_smash_next_chord_bool
+        }
+      \linespread{1} \selectfont
+      \begin{tabular} [b] {@{}#1@{}}
+        \bool_if:NTF \l__leadsheets_smash_chords_bool
+          {\makebox[0pt][c]{#2}}
+          {#2} \\
+        #3
+      \end{tabular}
+    \group_end:
+  }
+\cs_generate_variant:Nn \leadsheets_place_above:nnn { V }
+
+\keys_define:nn {leadsheets}
+  {
+    smash-chords     .bool_set:N = \l__leadsheets_smash_chords_bool ,
+    smash-next-chord .bool_set:N = \g__leadsheets_smash_next_chord_bool ,
+    empty-chord-dim  .dim_set:N  = \l__leadsheets_empty_chord_dim ,
+    remember-chords  .bool_set:N = \l__leadsheets_record_chords_bool ,
+    align-chords     .tl_set:N   = \l__leadsheets_chord_stack_alignment_tl ,
+    chord-cs        .code:n      =
+      \cs_set_protected:Npn \leadsheets_chord_print:n {#1} ,
+    chord-cs        .initial:n   = \chordname ,
+  }
+
+\NewDocumentCommand \chord {st-m} { \leadsheets_chord:nnn {#1} {#2} {#3} }
+
+\NewDocumentCommand \writechord {m}
+  { \leadsheets_chord_write:n {#1} }
+
+% --------------------------------------------------------------------------
+% record changes for a verse and automatically print them in the next:
+\prg_new_conditional:Npnn \leadsheets_if_record_chords: {T,F,TF}
+  {
+    \bool_if:nTF
+      {
+        \l__leadsheets_record_chords_bool &&
+        ! \prop_if_in_p:NV
+            \g__leadsheets_chords_sequences_prop
+            \l_leadsheets_verse_type_tl
+      }
+      { \prg_return_true: }
+      { \prg_return_false: }
+  }
+
+\prg_new_conditional:Npnn \leadsheets_if_recall_chords: {T,F,TF}
+  {
+    \bool_if:nTF
+      {
+        \l__leadsheets_record_chords_bool &&
+        \prop_if_in_p:NV
+          \g__leadsheets_chords_sequences_prop
+          \l_leadsheets_verse_type_tl
+      }
+      { \prg_return_true: }
+      { \prg_return_false: }
+  }
+
+\cs_new:Npn \leadsheets_remember_or_recall_chords:w
+  {
+    \bool_if:NTF \l__leadsheets_record_chords_bool
+      {
+        \prop_if_in:NVTF
+          \g__leadsheets_chords_sequences_prop
+          \l_leadsheets_verse_type_tl
+          { \__leadsheets_recall_chord:w }
+          { \chord }
+      }
+      { \chord }
+  }
+
+\cs_new_protected:Npn \leadsheets_recall_chord:nn #1#2
+  {
+    \seq_pop_left:NNF \l__leadsheets_chords_sequences_seq
+      \l__leadsheets_tmpa_tl
+      { \msg_error:nnV {leadsheets} {no-chords} \l_leadsheets_verse_type_tl }
+    \leadsheets_set_chord:nnn
+      {#1}
+      {#2}
+      { \leadsheets_chord_write:V \l__leadsheets_tmpa_tl }
+  }
+
+\NewDocumentCommand \__leadsheets_recall_chord:w {st-}
+  { \leadsheets_recall_chord:nn {#1} {#2} }
+
+\endinput

@@ -1,0 +1,211 @@
+\LeadsheetsExplLibrary{transposing}{2014/08/10 transposing of chord symbols}
+
+\prop_new:N  \l__leadsheets_pitches_prop
+\prop_new:N  \l__leadsheets_prefer_key_prop
+\seq_new:N   \l__leadsheets_sharps_seq
+\seq_new:N   \l__leadsheets_flats_seq
+
+\cs_new_protected:Npn \leadsheets_define_key:nnn #1#2#3
+  {
+    \seq_new:c  {g__leadsheets_key_#1_#2_seq}
+    \prop_new:c {g__leadsheets_key_#1_#2_prop}
+    \seq_gset_from_clist:cn {g__leadsheets_key_#1_#2_seq} {#3}
+  }
+
+% pitches:
+\prop_put:Nnn \l__leadsheets_pitches_prop {C}     {0}
+\prop_put:Nnn \l__leadsheets_pitches_prop {Cma}   {0}
+\prop_put:Nnn \l__leadsheets_pitches_prop {Ami}   {0}
+\prop_put:Nnn \l__leadsheets_pitches_prop {C#}    {1}
+\prop_put:Nnn \l__leadsheets_pitches_prop {C#ma}  {1}
+\prop_put:Nnn \l__leadsheets_pitches_prop {A#mi}  {1}
+\prop_put:Nnn \l__leadsheets_pitches_prop {Db}    {1}
+\prop_put:Nnn \l__leadsheets_pitches_prop {Dbma}  {1}
+\prop_put:Nnn \l__leadsheets_pitches_prop {Bbmi}  {1}
+\prop_put:Nnn \l__leadsheets_pitches_prop {D}     {2}
+\prop_put:Nnn \l__leadsheets_pitches_prop {Dma}   {2}
+\prop_put:Nnn \l__leadsheets_pitches_prop {Bmi}   {2}
+\prop_put:Nnn \l__leadsheets_pitches_prop {D#}    {3}
+\prop_put:Nnn \l__leadsheets_pitches_prop {D#ma}  {3}
+\prop_put:Nnn \l__leadsheets_pitches_prop {F#mi}  {3}
+\prop_put:Nnn \l__leadsheets_pitches_prop {Eb}    {3}
+\prop_put:Nnn \l__leadsheets_pitches_prop {Ebma}  {3}
+\prop_put:Nnn \l__leadsheets_pitches_prop {Cmi}   {3}
+\prop_put:Nnn \l__leadsheets_pitches_prop {E}     {4}
+\prop_put:Nnn \l__leadsheets_pitches_prop {Ema}   {4}
+\prop_put:Nnn \l__leadsheets_pitches_prop {C#mi}  {4}
+\prop_put:Nnn \l__leadsheets_pitches_prop {Fb}    {4}
+\prop_put:Nnn \l__leadsheets_pitches_prop {Fbma}  {4}
+\prop_put:Nnn \l__leadsheets_pitches_prop {Dbmi}  {4}
+\prop_put:Nnn \l__leadsheets_pitches_prop {F}     {5}
+\prop_put:Nnn \l__leadsheets_pitches_prop {Fma}   {5}
+\prop_put:Nnn \l__leadsheets_pitches_prop {Dmi}   {5}
+\prop_put:Nnn \l__leadsheets_pitches_prop {F#}    {6}
+\prop_put:Nnn \l__leadsheets_pitches_prop {F#ma}  {6}
+\prop_put:Nnn \l__leadsheets_pitches_prop {D#mi}  {6}
+\prop_put:Nnn \l__leadsheets_pitches_prop {Gb}    {6}
+\prop_put:Nnn \l__leadsheets_pitches_prop {Gbma}  {6}
+\prop_put:Nnn \l__leadsheets_pitches_prop {Ebmi}  {6}
+\prop_put:Nnn \l__leadsheets_pitches_prop {G}     {7}
+\prop_put:Nnn \l__leadsheets_pitches_prop {Gma}   {7}
+\prop_put:Nnn \l__leadsheets_pitches_prop {Emi}   {7}
+\prop_put:Nnn \l__leadsheets_pitches_prop {G#}    {8}
+\prop_put:Nnn \l__leadsheets_pitches_prop {G#ma}  {8}
+\prop_put:Nnn \l__leadsheets_pitches_prop {E#mi}  {8}
+\prop_put:Nnn \l__leadsheets_pitches_prop {Ab}    {8}
+\prop_put:Nnn \l__leadsheets_pitches_prop {Abma}  {8}
+\prop_put:Nnn \l__leadsheets_pitches_prop {Fmi}   {8}
+\prop_put:Nnn \l__leadsheets_pitches_prop {A}     {9}
+\prop_put:Nnn \l__leadsheets_pitches_prop {Ama}   {9}
+\prop_put:Nnn \l__leadsheets_pitches_prop {F#mi}  {9}
+\prop_put:Nnn \l__leadsheets_pitches_prop {A#}    {10}
+\prop_put:Nnn \l__leadsheets_pitches_prop {A#ma}  {10}
+\prop_put:Nnn \l__leadsheets_pitches_prop {F##mi} {10}
+\prop_put:Nnn \l__leadsheets_pitches_prop {Bb}    {10}
+\prop_put:Nnn \l__leadsheets_pitches_prop {Bbma}  {10}
+\prop_put:Nnn \l__leadsheets_pitches_prop {Gmi}   {10}
+\prop_put:Nnn \l__leadsheets_pitches_prop {B}     {11}
+\prop_put:Nnn \l__leadsheets_pitches_prop {Bma}   {11}
+\prop_put:Nnn \l__leadsheets_pitches_prop {G#mi}  {11}
+
+\seq_set_from_clist:Nn \l__leadsheets_sharps_seq
+  {C,Ami,G,Emi,D,Bmi,A,F#mi,E,C#mi,B,G#mi,F#,D#mi}
+\seq_set_from_clist:Nn \l__leadsheets_flats_seq
+  {C,Ami,F,Dmi,Bb,Gmi,Eb,Cmi,Ab,Fmi,Db,Bbmi,Gb,Ebmi}
+
+\prop_put:Nnn \l__leadsheets_prefer_key_prop {0}  {sharp} % C
+\prop_put:Nnn \l__leadsheets_prefer_key_prop {1}  {flat}  % Db
+\prop_put:Nnn \l__leadsheets_prefer_key_prop {2}  {sharp} % D
+\prop_put:Nnn \l__leadsheets_prefer_key_prop {3}  {flat}  % Eb
+\prop_put:Nnn \l__leadsheets_prefer_key_prop {4}  {sharp} % E
+\prop_put:Nnn \l__leadsheets_prefer_key_prop {5}  {flat}  % F
+\prop_put:Nnn \l__leadsheets_prefer_key_prop {6}  {sharp} % F#
+\prop_put:Nnn \l__leadsheets_prefer_key_prop {7}  {sharp} % G
+\prop_put:Nnn \l__leadsheets_prefer_key_prop {8}  {flat}  % Ab
+\prop_put:Nnn \l__leadsheets_prefer_key_prop {9}  {sharp} % A
+\prop_put:Nnn \l__leadsheets_prefer_key_prop {10} {flat}  % Bb
+\prop_put:Nnn \l__leadsheets_prefer_key_prop {11} {sharp} % B
+
+\group_begin:
+\char_set_catcode_other:N  \#
+\leadsheets_define_key:nnn {sharp} {0}  {C,  D,  E,  F,  G,  A,  B}  % C
+\leadsheets_define_key:nnn {flat}  {0}  {C,  D,  E,  F,  G,  A,  B}  % C
+
+\leadsheets_define_key:nnn {sharp} {1}  {C#, D#, E#, F#, G#, A#, B#} % C#
+\leadsheets_define_key:nnn {flat}  {1}  {Db, Eb, F,  Gb, Ab, Bb, C}  % Db
+
+\leadsheets_define_key:nnn {sharp} {2}  {D,  E,  F#, G,  A,  B,  C#} % D
+\leadsheets_define_key:nnn {flat}  {2}  {Ebb,Fb, Gb, Abb,Bbb,Cb, Db} % Ebb
+
+\leadsheets_define_key:nnn {sharp} {3}  {D#, E#, F##,G#, A#, B#, C##}% Eb
+\leadsheets_define_key:nnn {flat}  {3}  {Eb, F,  G,  Ab, Bb, C,  D}  % Eb
+
+\leadsheets_define_key:nnn {sharp} {4}  {E,  F#, G#, A,  B,  C#, D#} % E
+\leadsheets_define_key:nnn {flat}  {4}  {Fb, Gb, Ab, Bbb,Cb, Db, Eb} % Fb
+
+\leadsheets_define_key:nnn {sharp} {5}  {E#, F##,G##,A#, B#, C##,D##}% E#
+\leadsheets_define_key:nnn {flat}  {5}  {F,  G,  A,  Bb, C,  D,  E}  % F
+
+\leadsheets_define_key:nnn {sharp} {6}  {F#, G#, A#, B,  C#, D#, E#} % F#
+\leadsheets_define_key:nnn {flat}  {6}  {Gb, Ab, Bb, Cb, Db, Eb, F}  % Gb
+
+\leadsheets_define_key:nnn {sharp} {7}  {G,  A,  B,  C,  D,  E,  F#} % G
+\leadsheets_define_key:nnn {flat}  {7}  {Abb,Bbb,Cb, Dbb,Ebb,Fb, Gb} % Abb
+
+\leadsheets_define_key:nnn {sharp} {8}  {G#, A#, B#, C#, D#, E#, F##}% G#
+\leadsheets_define_key:nnn {flat}  {8}  {Ab, Bb, C,  Db, Eb, F,  G}  % Ab
+
+\leadsheets_define_key:nnn {sharp} {9}  {A,  B,  C#, D,  E,  F#, G#} % A
+\leadsheets_define_key:nnn {flat}  {9}  {Bbb,Cb, Db, Ebb,Fb, Gb, Ab} % Bbb
+
+\leadsheets_define_key:nnn {sharp} {10} {A#, B#, C##,D#, E#, F##,G##}% A#
+\leadsheets_define_key:nnn {flat}  {10} {Bb, C,  D,  Eb, F,  G,  A}  % Bb
+
+\leadsheets_define_key:nnn {sharp} {11} {B,  C#, D#, E,  F#, G#, A#} % B
+\leadsheets_define_key:nnn {flat}  {11} {Cb, Db, Eb, Fb, Gb, Ab, Bb} % Cb
+\group_end:
+
+% #1: key
+% #2: semitone steps
+% #3: chord
+\cs_new_protected:Npn \leadsheets_transpose:nnN #1#2#3
+  {
+    \int_set:Nn \l__leadsheets_tmpa_int {0}
+    % \l__leadsheets_tmpa_int holds the C pitch
+    \seq_if_in:NnTF \l__leadsheets_sharps_seq {#1}
+      { \tl_set:Nn \l__leadsheets_tmpa_tl {sharp} }
+      { \tl_set:Nn \l__leadsheets_tmpa_tl {flat} }
+    % \l__leadsheets_tmpa_tl holds the `sharp' or `flat' preference
+    \int_set:Nn \l__leadsheets_tmpb_int {#2}
+    \int_while_do:nNnn { \l__leadsheets_tmpb_int } < { 0 }
+      { \int_set:Nn \l__leadsheets_tmpb_int { \l__leadsheets_tmpb_int + 12 } }
+    % \l__leadsheets_tmpb_int holds the new pitch number relatice to C
+    \bool_if:NTF \l__leadsheets_enharmonic_bool
+      { \tl_set_eq:NN \l__leadsheets_tmpb_tl \l__leadsheets_enharmonic_tl }
+      {
+        \tl_set:Nx \l__leadsheets_tmpb_tl
+          {
+            \prop_item:NV
+              \l__leadsheets_prefer_key_prop
+              \l__leadsheets_tmpb_int
+          }
+      }
+    % \l__leadsheets_tmpb_tl holds the `sharp' or `flat' preference
+    % of the new key
+    \seq_set_split:NnV \l__leadsheets_tmpa_seq {/} #3
+    \tl_clear:N #3
+    \seq_clear:N \l__leadsheets_tmpb_seq
+    \seq_map_inline:Nn \l__leadsheets_tmpa_seq
+      {
+        \tl_set:Nn \l__leadsheets_tmpc_tl {##1} % the chord
+        \int_zero:N \l__leadsheets_tmpc_int
+        \int_zero:N \l__leadsheets_tmpc_int
+        \seq_map_inline:cn
+          {
+            g__leadsheets_key_
+            \l__leadsheets_tmpb_tl _
+            \int_to_arabic:V \l__leadsheets_tmpa_int
+            _seq
+          }
+          {
+            \int_incr:N \l__leadsheets_tmpc_int
+            \tl_if_in:NnT \l__leadsheets_tmpc_tl {####1}
+              {
+                \tl_set:Nx \l__leadsheets_tmpd_tl
+                  {
+                    \seq_item:cV
+                      {
+                        g__leadsheets_key_
+                        \l__leadsheets_tmpb_tl _
+                        \int_to_arabic:V \l__leadsheets_tmpb_int
+                        _seq
+                      }
+                      \l__leadsheets_tmpc_int
+                  }
+                \tl_replace_once:NnV \l__leadsheets_tmpc_tl
+                  {####1}
+                  \l__leadsheets_tmpd_tl
+                \seq_map_break:
+              }
+          }
+        \seq_put_right:NV \l__leadsheets_tmpb_seq \l__leadsheets_tmpc_tl
+      }
+    \tl_set:Nx #3 { \seq_use:Nn \l__leadsheets_tmpb_seq {/} }
+  }
+\cs_generate_variant:Nn \leadsheets_transpose:nnN { xV }
+
+\keys_define:nn {leadsheets}
+  {
+    transpose       .code:n     =
+      \bool_set_true:N \l__leadsheets_transpose_bool
+      \int_set:Nn \l__leadsheets_transpose_steps_int {#1} ,
+    transpose-capo  .bool_set:N = \l__leadsheets_transpose_capo_bool ,
+    enharmonic      .choices:nn =
+      { sharp , flat }
+      {
+        \tl_set_eq:NN \l__leadsheets_enharmonic_tl \l_keys_choice_tl
+        \bool_set_true:N \l__leadsheets_enharmonic_bool
+      }
+  }
+
+\endinput

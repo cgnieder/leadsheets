@@ -1,0 +1,87 @@
+\LeadsheetsExplLibrary{templates}
+  {2014/08/10 template mechanism for song titles and verses}
+
+\msg_new:nnn {leadsheets} {unknown-template}
+  { Unknown~ #1~ template~ `#2'~ \msg_line_context: }
+
+\tl_new:N    \l__leadsheets_songtitle_template_tl
+\prop_new:N  \l__leadsheets_songtitle_template_prop
+
+\NewDocumentCommand \songtitle {} { \leadsheets_songtitle: }
+
+% the following is shamelessly adapted from the `needspace' package by
+% Peter Wilson and Herries Press:
+\cs_new:Npn \leadsheets_needspace:n #1
+  {
+    \group_begin:
+      \dim_set:Nn \l__leadsheets_tmpa_dim { #1 }
+      \skip_vertical:n { \c_zero_dim + \l__leadsheets_tmpa_dim }
+      \tex_penalty:D -100
+      \skip_vertical:n { \c_zero_dim - \l__leadsheets_tmpa_dim }
+      \skip_vertical:N \l__leadsheets_tmpa_dim
+      \tex_penalty:D 9999
+      \skip_vertical:n { - \l__leadsheets_tmpa_dim }
+      \skip_vertical:N \c_zero_dim
+    \group_end:
+  }
+
+\cs_new_protected:Npn \leadsheets_songtitle:
+  {
+    \leadsheets_use_songtitle_template:V \l__leadsheets_songtitle_template_tl
+    \leadsheets_needspace:n { 3\baselineskip }
+  }
+
+\cs_new_protected:Npn \leadsheets_use_songtitle_template:n #1
+  {
+    \prop_get:NnNTF \l__leadsheets_songtitle_template_prop
+      {#1}
+      \l__leadsheets_tmpa_tl
+      { \l__leadsheets_tmpa_tl }
+      { \msg_error:nnnn {leadsheets} {unknown-template} {songtitle} {#1} }
+  }
+\cs_generate_variant:Nn \leadsheets_use_songtitle_template:n { V }
+
+\cs_new_protected:Npn \leadsheets_define_songtitle_template:nn #1#2
+  { \prop_put:Nnn \l__leadsheets_songtitle_template_prop {#1} {#2} }
+
+
+\NewDocumentCommand \definesongtitletemplate {m+m}
+  { \leadsheets_define_songtitle_template:nn {#1} {#2} }
+
+\NewDocumentCommand \expandcode {+m} { \use:x {#1} }
+
+
+% verse-type templates
+\prop_new:N \l__leadsheets_verse_begin_template_prop
+\prop_new:N \l__leadsheets_verse_end_template_prop
+
+% #1: template name
+% #2: begin code
+% #3: end code
+\cs_new_protected:Npn \leadsheets_define_verse_template:nnn #1#2#3
+  {
+    \prop_put:Nnn \l__leadsheets_verse_begin_template_prop {#1} {#2}
+    \prop_put:Nnn \l__leadsheets_verse_end_template_prop {#1} {#3}
+  }
+
+\cs_new_protected:Npn \leadsheets_use_verse_template:nn #1#2
+  {
+    \exp_args:Nnc
+    \prop_get:cVNTF {l__leadsheets_verse_#1_template_prop}
+      {l__leadsheets_#2_template_tl}
+      \l__leadsheets_tmpa_tl
+      { \tl_use:N \l__leadsheets_tmpa_tl }
+      {
+        \msg_error:nnxx {leadsheets} {unknown-template}
+          {verse-type}
+          {\use:c{l__leadsheets_#2_template_tl}}
+      }
+  }
+
+\DeclareExpandableDocumentCommand \ifobeylines {}
+  { \bool_if:NTF \l__leadsheets_obey_lines_bool }
+
+\NewDocumentCommand \defineversetypetemplate {m+m+m}
+  { \leadsheets_define_verse_template:nnn {#1} {#2} {#3} }
+
+\endinput

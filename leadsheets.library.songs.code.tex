@@ -1,0 +1,625 @@
+\LeadsheetsExplLibrary{songs}{2014/08/10 typesetting songs}
+
+% --------------------------------------------------------------------------
+% messages:
+\msg_new:nnn {leadsheets} {unknown-verse-type}
+  {
+    The~ verse~ type~ `#1'~ is~ unknown.~ Using~ `verse'~ instead~
+    \msg_line_context:
+  }
+
+\msg_new:nnn {leadsheets} {song-defined}
+  {
+    A~ song~ with~ the~ ID~ `#1'~ has~ already~ been~ defined! Check~ your~
+    source~ \msg_line_context:
+  }
+
+\msg_new:nnn {leadsheets} {transpose-key}
+  {
+    You~ need~ to~ specify~ the~ `key'~ property~ for~ song~ `#1'~
+    ( \leadsheets_get_property:nn {#1} {title} )~ in~ order~ to~ use~ the~
+    transposing~ mechanism~ \msg_line_context:
+  }
+
+% --------------------------------------------------------------------------
+% variables:
+\tl_const:Nn \c_leadsheets_sharp_tl {sharp}
+\tl_const:Nn \c_leadsheets_flat_tl  {flat}
+
+\tl_new:N    \l__leadsheets_songtext_format_tl
+\tl_new:N    \l__leadsheets_song_format_tl
+\tl_new:N    \l_leadsheets_current_song_id_tl
+\tl_new:N    \l_leadsheets_verse_type_tl
+\tl_set:Nn   \l_leadsheets_verse_type_tl {verse}
+\tl_new:N    \l__leadsheets_verses_format_tl
+\tl_new:N    \l__leadsheets_verses_label_format_tl
+\tl_new:N    \l__leadsheets_verses_after_label_tl
+\tl_set:Nn   \l__leadsheets_verses_after_label_tl {:}
+\tl_new:N    \l__leadsheets_enharmonic_tl
+\tl_new:N    \l__leadsheets_capo_number_format_tl
+\tl_new:N    \l__leadsheets_recall_verse_type_tl
+\tl_new:N    \l__leadsheets_song_body_tl
+
+\bool_new:N  \l__leadsheets_print_selected_bool
+\bool_new:N  \l__leadsheets_transpose_bool
+\bool_new:N  \l__leadsheets_transpose_capo_bool
+\bool_new:N  \l__leadsheets_enharmonic_bool
+\bool_new:N  \l__leadsheets_obey_lines_bool
+\bool_new:N  \l__leadsheets_bar_shorthands_bool
+\bool_new:N  \l__leadsheets_measuring_bool
+
+\clist_new:N \l__leadsheets_print_tags_clist
+
+\seq_new:N   \l__leadsheets_defined_songs_seq
+\seq_new:N   \l__leadsheets_songs_print_seq
+\seq_new:N   \l__leadsheets_reset_counters_seq
+
+\int_new:N   \l__leadsheets_transpose_steps_int
+\int_new:N   \l__leadsheets_capo_int
+\int_new:N   \g__leadsheets_song_id_int
+
+\skip_new:N  \l__leadsheets_obey_parskip_skip
+
+% --------------------------------------------------------------------------
+% load necessary libraries:
+\loadleadsheetslibraries
+  {
+    musicsymbols,
+    chordnames,
+    chords,
+    shorthands,
+    properties,
+    transposing,
+    templates,
+    translations
+  }
+
+% --------------------------------------------------------------------------
+% define shorthands
+\leadsheets_define_shorthand:Npn ^ {\leadsheets_remember_or_recall_chords:w}
+\leadsheets_define_shorthand:Npn _ {\writechord}
+\leadsheets_define_shorthand:Npn | #1
+  {
+    \str_case:nnF {#1}
+      {
+        {:} {\leftrepeat}
+        {|} {\__leadsheets_checkbartype:}
+      }
+      {\normalbar\space #1}
+  }
+\cs_new_protected:Npn \__leadsheets_checkbartype:
+  {
+    \peek_charcode_remove:NTF |
+      {\stopbar}
+      {\doublebar}
+  }
+
+\leadsheets_define_shorthand:Npn :
+  {
+    \peek_charcode_remove:NTF |
+      {\__leadsheets_checkrepeat:}
+      {\token_to_str:N :}
+  }
+\cs_new_protected:Npn \__leadsheets_checkrepeat:
+  {
+    \peek_charcode_remove:NTF :
+      {\leftrightrepeat}
+      {\rightrepeat}
+  }
+
+% --------------------------------------------------------------------------
+% the `song' environment:
+\NewDocumentEnvironment {song} { O{}m }
+  {
+    \int_gincr:N \g__leadsheets_song_id_int
+    \tl_set:Nx \l__leadsheets_tmpa_tl
+      { song-\int_to_arabic:n { \g__leadsheets_song_id_int } }
+    \leadsheets_startsong:nVn {#1} \l__leadsheets_tmpa_tl {#2}
+  }
+  {}
+
+% some hacks for the `obey-lines' option:
+\group_begin:
+\ExplSyntaxOff
+\catcode`\:=11
+\catcode`\_=11
+\cs_new:Npn \__leadsheets_active_eol: { \catcode`\^^M=\active }
+
+\__leadsheets_active_eol: %
+\tl_const:Nn \c__leadsheets_eol_tl {^^M}%
+\cs_new_protected:Npn \leadsheets_obey_lines: {%
+  \skip_set_eq:NN \l__leadsheets_obey_parskip_skip \parskip
+  \cs_set:Npn ^^M{%
+    \peek_meaning:NTF ^^M%
+      {\par \skip_vertical:N \l__leadsheets_obey_parskip_skip}%
+      {\par}%
+  }%
+}%
+\cs_new_protected:Npn \leadsheets_ignore_lines:{%
+  \cs_set:Npn ^^M{%
+    \peek_meaning:NTF^^M%
+      {\par}%
+      {\c_space_tl}%
+  }%
+}%
+\group_end:
+
+% #1: options
+% #2: ID
+% #3: properties
+\cs_new_protected:Npn \leadsheets_startsong:nnn #1#2#3
+  {
+    \leadsheets_song_define:nn {#2} {#3}
+    \leadsheets_set_duplicate_properties:n {#2}
+    \leadsheets_check_print:n {#2}
+    \prop_gclear:N \g__leadsheets_chords_sequences_prop
+    \group_begin:
+      \keys_set:nn {leadsheets} {#1}
+      \leadsheets_specials:
+      \tl_use:N \l__leadsheets_song_format_tl
+      \leadsheets_ignore_lines:
+      \leadsheets_print_song:nwn {#2}
+  }
+\cs_generate_variant:Nn \leadsheets_startsong:nnn { nV }
+
+\cs_new_protected:Npn \leadsheets_specials:
+  {
+    \leadsheets_activate_shorthands:n {^_}
+    \bool_if:NT \l__leadsheets_bar_shorthands_bool
+      { \leadsheets_activate_shorthands:n {:|} }
+    \char_set_catcode_other:N  \#
+    \bool_if:NT \l__leadsheets_obey_lines_bool
+      { \__leadsheets_active_eol: }
+  }
+
+% --------------------------------------------------------------------------
+% define song properties:
+\definesongproperty {title}
+\definesongproperty {subtitle}
+\definesongproperty {short-title}
+\definesongproperty {sort-title}
+\definesongproperty {sort-short-title}
+\definesongproperty {composer}
+\definesongproperty {sort-composer}
+\definesongproperty {lyrics}
+\definesongproperty {sort-lyrics}
+\definesongproperty {arr}
+\definesongproperty {sort-arr}
+\definesongproperty {band}
+\definesongproperty {sort-band}
+\definesongproperty {genre}
+\definesongproperty {interpret}
+\definesongproperty {sort-interpret}
+\definesongproperty {key}
+\definesongproperty {capo}
+\definesongproperty {tempo}
+\definesongproperty {tags}
+\definesongproperty {counter}
+\definesongproperty {ID}
+
+% properties that should take the value of another property if they're not set
+% explicitly:
+\copysongproperty {composer} {sort-composer}
+\copysongproperty {lyrics} {sort-lyrics}
+\copysongproperty {title} {sort-title}
+\copysongproperty {short-title} {sort-short-title}
+\copysongproperty {arr} {sort-arr}
+\copysongproperty {interpret} {sort-interpret}
+
+% --------------------------------------------------------------------------
+% defining a new song:
+\cs_new_protected:Npn \leadsheets_song_define:nn #1#2
+  {
+    \seq_if_in:NnTF \l__leadsheets_defined_songs_seq {#1}
+      { \msg_error:nnn {leadsheets} {song-defined} {#1} }
+      { \seq_put_right:Nn \l__leadsheets_defined_songs_seq {#1} }
+    \leadsheets_define_song_properties:n {#1}
+    \keys_set:nn {leadsheets/song/#1} {#2}
+    \leadsheets_set_property:nnn {#1} {ID} {#1}
+    \leadsheets_set_property:nnx {#1} {counter}
+      { \int_to_arabic:n {\g__leadsheets_song_id_int} }
+  }
+
+\cs_new_protected:Npn \leadsheets_define_song_properties:n #1
+  {
+    \seq_map_inline:Nn \l__leadsheets_song_properties_seq
+      {
+        \keys_define:nn {leadsheets/song/#1}
+          { ##1 .code:n = \leadsheets_set_property:nnn {#1} {##1} {####1} }
+      }
+  }
+
+% --------------------------------------------------------------------------
+\cs_new:Npn \leadsheets_print_song:nwn #1#2\end#3
+  {
+    \tl_clear:N \l__leadsheets_song_body_tl
+    \leadsheets_if_print_song:nT {#1}
+      {
+        \tl_set:Nn \l_leadsheets_current_song_id_tl {#1}
+        \tl_put_right:Nn \l__leadsheets_song_body_tl
+          {
+            \leadsheets_songtitle:
+            \leadsheets_check_capo:
+            \tl_use:N \l__leadsheets_songtext_format_tl
+            #2
+          }
+      }
+    \tl_if_eq:nnTF {#3} {song}
+      {
+        \leadsheets_if_print_song:nT {#1}
+          { \leadsheets_end_song:n {#1} }
+        \group_end:
+        \end{song}
+      }
+      {
+        \tl_put_right:Nn \l__leadsheets_song_body_tl { \end{#3} }
+        \__leadsheets_continue_song:nwn {#1}
+      }
+  }
+
+\cs_new:Npn \__leadsheets_continue_song:nwn #1#2\end#3
+  {
+    \leadsheets_if_print_song:nT {#1}
+      { \tl_put_right:Nn \l__leadsheets_song_body_tl {#2} }
+    \tl_if_eq:nnTF {#3} {song}
+      {
+        \leadsheets_if_print_song:nT {#1}
+          { \leadsheets_end_song:n {#1} }
+        \group_end:
+        \end{song}
+      }
+      {
+        \tl_put_right:Nn \l__leadsheets_song_body_tl { \end{#3} }
+        \__leadsheets_continue_song:nwn {#1}
+      }
+  }
+
+\cs_new:Npn \leadsheets_end_song:n #1
+  {
+    \bool_set_true:N \l__leadsheets_measuring_bool
+    \leadsheets_reset_counters:
+    \box_clear:N \l__leadsheets_tmpa_box
+    \vbox_set:NV \l__leadsheets_tmpa_box \l__leadsheets_song_body_tl
+    \leadsheets_set_property:nnx {#1} {height}
+      {
+        \dim_to_decimal:n
+          {
+            \box_ht:N \l__leadsheets_tmpa_box +
+            \box_dp:N \l__leadsheets_tmpa_box
+          }
+        pt
+      }
+    \bool_set_false:N \l__leadsheets_measuring_bool
+    \leadsheets_reset_counters:
+    \tl_use:N \l__leadsheets_song_body_tl
+  }
+
+\cs_new_protected:Npn \leadsheets_add_to_reset:n #1
+  { \seq_put_right:Nn \l__leadsheets_reset_counters_seq {#1} }
+
+\cs_new_protected:Npn \leadsheets_reset_counters:
+  {
+    \seq_map_inline:Nn \l__leadsheets_reset_counters_seq
+      { \setcounter {##1} {0} }
+  }
+
+\prg_new_conditional:Npnn \leadsheets_if_print_song:n #1 {T,F,TF}
+  {
+    \seq_if_in:NnTF \l__leadsheets_songs_print_seq {#1}
+      { \prg_return_true: }
+      { \prg_return_false: }
+  }
+
+\cs_new_protected:Npn \leadsheets_check_print:n #1
+  {
+    \leadsheets_if_print_tags:nT {#1}
+      { \seq_put_right:Nn \l__leadsheets_songs_print_seq {#1} }
+  }
+
+\prg_new_protected_conditional:Npnn \leadsheets_if_print_tags:n #1 {T,F,TF}
+  {
+    \bool_if:NTF \l__leadsheets_print_selected_bool
+      {
+        \leadsheets_if_property:nnTF {#1} {tags}
+          {
+            \bool_set_false:N \l__leadsheets_tmpa_bool
+            \tl_set:Nx \l__leadsheets_tmpa_tl
+              { \leadsheets_get_property:nn {#1} {tags} }
+            \clist_map_inline:Nn \l__leadsheets_print_tags_clist
+              {
+                \clist_if_in:NnT \l__leadsheets_tmpa_tl {##1}
+                  {
+                    \bool_set_true:N \l__leadsheets_tmpa_bool
+                    \clist_map_break:
+                  }
+              }
+            \bool_if:NTF \l__leadsheets_tmpa_bool
+              { \prg_return_true: }
+              { \prg_return_false: }
+          }
+          { \prg_return_false: }
+      }
+      { \prg_return_true: }
+  }
+
+\keys_define:nn { leadsheets }
+  {
+    print-tags .code:n =
+      \bool_set_true:N \l__leadsheets_print_selected_bool
+      \clist_set:Nn \l__leadsheets_print_tags_clist {#1}
+  }
+
+% --------------------------------------------------------------------------
+% predefined title templates
+\definesongtitletemplate {minimal}
+  { \section*{ \songproperty {title} } }
+
+\definesongtitletemplate {tabular}
+  {
+    \section{ \songproperty {title} }
+    \begingroup\footnotesize
+    \begin{tabular}{
+        @{}
+        >{\raggedright\arraybackslash}p{.5\linewidth}
+        @{}
+        >{\raggedleft\arraybackslash}p{.5\linewidth}
+        @{}
+      }
+      \ifsongproperty{interpret}
+        {\GetTranslation{leadsheets/interpret}}
+        {}
+      \ifsongproperty{composer}
+        {
+          & \GetTranslation{leadsheets/composer}:~
+          \printsongpropertylist{composer}{~\&~}{,~}{~\&~}
+          \ifsongproperty{lyrics}
+            {\\ & \GetTranslation{leadsheets/lyrics}:~
+              \printsongpropertylist{lyrics}{~\&~}{,~}{~\&~}
+            }
+            {}
+        }
+        {}
+      \ifsongproperty{interpret}{\\}{\ifsongproperty{composer}{\\}{}}
+      \ifsongproperty{genre}
+        {& Genre:~ \songproperty{genre} \\}
+        {}
+      \ifsongproperty{tempo}
+        {& Tempo:~ \songproperty{tempo} \\}
+        {}
+      \ifsongproperty{key}
+        {
+          &
+          \setchordnames{
+            major = -\GetTranslation{leadsheets/major} ,
+            minor = -\GetTranslation{leadsheets/minor}
+          }
+          \GetTranslation{leadsheets/key}:~
+          \expandcode{\writechord{\songproperty{key}}} \\
+        }
+        {}
+    \end{tabular}
+    \par\endgroup
+  }
+
+% --------------------------------------------------------------------------
+% capo settings:
+\cs_new_protected:Npn \leadsheets_check_capo:
+  {
+    \leadsheets_if_property:VnTF \l_leadsheets_current_song_id_tl {capo}
+      {
+        \int_set:Nn \l__leadsheets_capo_int
+          { \leadsheets_get_property:Vn \l_leadsheets_current_song_id_tl {capo} }
+      }
+      { \int_zero:N \l__leadsheets_capo_int }
+    \int_set:Nn \l__leadsheets_transpose_steps_int
+      {
+        \bool_if:NTF \l__leadsheets_transpose_bool
+          { \l__leadsheets_transpose_steps_int }
+          {12}
+        - \l__leadsheets_capo_int
+      }
+  }
+
+\cs_new:Npn \leadsheets_capo_number_print:n #1 {#1}
+
+\cs_new_protected:Npn \leadsheets_capo:
+  {
+    \leadsheets_if_property:VnT \l_leadsheets_current_song_id_tl {capo}
+      {
+        \leadsheets_translation:n {capo} :~
+        \leadsheets_capo_number_print:n
+          {
+            \use:c {int_to_ \l__leadsheets_capo_number_format_tl :n}
+              { \l__leadsheets_capo_int }
+          }
+        \nobreakspace
+        \leadsheets_translation:n {fret}
+      }
+  }
+
+\NewDocumentCommand \capo {} { \leadsheets_capo: }
+
+% --------------------------------------------------------------------------
+% verses and the like:
+\cs_new_protected:Npn \leadsheets_verse_label:n #1
+  {
+    \bool_if:cF {l__leadsheets_#1_empty_bool}
+      {
+        \tl_use:c {l__leadsheets_#1_label_format_tl}
+        \bool_if:cT {l__leadsheets_#1_named_bool}
+          {
+            \leadsheets_translation:n {#1}
+            \bool_if:cT {l__leadsheets_#1_numbered_bool} { ~ }
+          }
+        \bool_if:cT {l__leadsheets_#1_numbered_bool}
+          { \use:c {the#1} }
+        \tl_use:c {l__leadsheets_#1_after_label_tl}
+      }
+  }
+
+\cs_new_protected:Npn \leadsheets_verse_begin:n #1
+  {
+    \stepcounter {#1}
+    \tl_set:Nn \verselabel { \leadsheets_verse_label:n {#1} }
+    \tl_set:Nn \verselabelformat
+      { \tl_use:c {l__leadsheets_#1_label_format_tl} }
+    \tl_set:Nn \versenumber { \use:c {the#1} }
+    \tl_set:Nn \verseafterlabel { \tl_use:c {l__leadsheets_#1_after_label_tl} }
+    \tl_set:Nn \versename { \leadsheets_translation:n {#1} }
+    \tl_set:Nn \ifversestarred { \bool_if:cTF {l__leadsheets_#1_empty_bool} }
+    \tl_set:Nn \ifversenamed { \bool_if:cTF {l__leadsheets_#1_named_bool} }
+    \tl_set:Nn \ifversenumbered
+      { \bool_if:cTF {l__leadsheets_#1_numbered_bool} }
+    \leadsheets_obey_lines:
+    \leadsheets_use_verse_template:nn {begin} {#1}
+  }
+
+\cs_new_protected:Npn \leadsheets_verse_end:n #1
+  {
+    \leadsheets_ignore_lines:
+    \leadsheets_use_verse_template:nn {end} {#1}
+    \ignorespacesafterend
+  }
+
+\cs_new_protected:Npn \leadsheets_new_verse_type:Nnn #1#2#3
+  {
+    \bool_new:c {l__leadsheets_#2_empty_bool}
+    \bool_new:c {l__leadsheets_#2_numbered_bool}
+    \bool_new:c {l__leadsheets_#2_named_bool}
+    \bool_set_true:c {l__leadsheets_#2_named_bool}
+    \bool_if:NTF #1
+      { \bool_set_true:c {l__leadsheets_#2_empty_bool} }
+      { \bool_set_false:c {l__leadsheets_#2_empty_bool} }
+    \tl_new:c {l__leadsheets_#2_format_tl}
+    \tl_new:c {l__leadsheets_#2_template_tl}
+    \tl_new:c {l__leadsheets_#2_label_format_tl}
+    \tl_new:c {l__leadsheets_#2_after_label_tl}
+    \newcounter {#2}
+    \leadsheets_add_to_reset:n {#2}
+    \tl_set:cn {the#2} { \arabic {#2} . }
+    \keys_define:nn {leadsheets/#2}
+      {
+        numbered      .bool_set:c = {l__leadsheets_#2_numbered_bool} ,
+        named         .bool_set:c = {l__leadsheets_#2_named_bool} ,
+        format        .code:n     =
+          \tl_set:cn {l__leadsheets_#2_format_tl} {##1} ,
+        format        .initial:n  = \l__leadsheets_verses_format_tl ,
+        label-format  .code:n     =
+          \tl_set:cn {l__leadsheets_#2_label_format_tl} {##1} ,
+        label-format  .initial:n  = \l__leadsheets_verses_label_format_tl ,
+        after-label   .code:n     =
+          \tl_set:cn {l__leadsheets_#2_after_label_tl} {##1} ,
+        after-label   .initial:n  = \l__leadsheets_verses_after_label_tl ,
+        template      .code:n     =
+          \tl_set:cn {l__leadsheets_#2_template_tl} {##1} ,
+        template      .initial:n  = itemize ,
+        recall-chords .tl_set:N   = \l__leadsheets_recall_verse_type_tl ,
+        name          .code:n     =
+         \@trnslt@declare@translation {leadsheets/#2} {fallback} {##1}
+         \@trnslt@declare@translation {leadsheets/#2} {English} {##1}
+      }
+    \NewDocumentEnvironment {#2} {O{}}
+      {
+        \par
+        \tl_set:Nn \l_leadsheets_verse_type_tl {#2}
+        \tl_set:Nn \l__leadsheets_recall_verse_type_tl {#2}
+        \keys_set:nn {leadsheets/#2} {##1}
+        \leadsheets_if_record_chords:T
+          { \seq_clear:N \l__leadsheets_chords_sequences_seq }
+        \leadsheets_if_recall_chords:T
+          {
+            \prop_get:NVN
+              \g__leadsheets_chords_sequences_prop
+              \l__leadsheets_recall_verse_type_tl
+              \l__leadsheets_tmpa_tl
+            \seq_clear:N \l__leadsheets_chords_sequences_seq
+            \tl_map_inline:Nn \l__leadsheets_tmpa_tl
+              { \seq_put_right:Nn \l__leadsheets_chords_sequences_seq {####1} }
+          }
+        \leadsheets_verse_begin:n {#2}
+        \tl_use:c {l__leadsheets_#2_format_tl}
+      }
+      {
+        \leadsheets_if_record_chords:T
+          {
+            \prop_gput:NVf \g__leadsheets_chords_sequences_prop
+              \l_leadsheets_verse_type_tl
+              { \seq_use:Nn \l__leadsheets_chords_sequences_seq {} }
+          }
+        \leadsheets_verse_end:n {#2}
+        \par
+      }
+    \@trnslt@declare@translation {leadsheets/#2} {fallback} {}
+    \@trnslt@declare@translation {leadsheets/#2} {English} {}
+    \keys_set:nn {leadsheets/#2} {#3}
+  }
+
+\NewDocumentCommand \newversetype {smO{}}
+  { \leadsheets_new_verse_type:Nnn #1 {#2} {#3} }
+
+\cs_undefine:N \verse
+\cs_undefine:N \endverse
+
+\newversetype {verse}     [ name=Verse, named=false, after-label= ]
+\newversetype*{verse*}
+\newversetype {chorus}    [ name=Chorus ]
+\newversetype*{chorus*}
+\newversetype {intro}     [ name=Intro ]
+\newversetype*{intro*}    [ name=Intro ]
+\newversetype {outro}     [ name=Outro ]
+\newversetype {interlude} [ name=Interlude ]
+\newversetype {bridge}    [ name=Bridge ]
+\newversetype*{info}
+\newversetype*{solo*}
+\newversetype {solo}      [ name=Solo ]
+
+% --------------------------------------------------------------------------
+% predefined verse templates:
+\defineversetypetemplate {itemize}
+  {
+    \itemize
+    \int_zero:N \@itemdepth
+    \bool_if:NT \l__leadsheets_obey_lines_bool
+      {
+        \dim_zero:N \parskip
+        \keys_set:nn {leadsheets}
+          { obey-lines-parskip = \parsep }
+      }
+    \item[{\verselabel}]
+  }
+  { \enditemize }
+
+% --------------------------------------------------------------------------
+
+\keys_define:nn { leadsheets }
+  {
+    title-template  .tl_set:N   = \l__leadsheets_songtitle_template_tl ,
+    title-template  .initial:n  = minimal ,
+    text-format     .tl_set:N   = \l__leadsheets_songtext_format_tl ,
+    song-format     .tl_set:N   = \l__leadsheets_song_format_tl ,
+    verse/type      .choice: ,
+    verse/type/verse   .code:n  =
+      \tl_set:Nn \l_leadsheets_verse_type_tl {verse} ,
+    verse/type/unknown .code:n  =
+      \msg_warning:nnn {leadsheets} {unknown-verse-type} {#1}
+      \tl_set:Nn \l_leadsheets_verse_type_tl {verse} ,
+    verse/format    .tl_set:N   = \l__leadsheets_verse_format_tl ,
+    verse/format    .initial:n  = \l__leadsheets_verses_format_tl ,
+    verse/label-format  .tl_set:N   = \l__leadsheets_verse_label_format_tl ,
+    verse/label-format  .initial:n  = \l__leadsheets_verses_label_format_tl ,
+    verses-format   .tl_set:N   = \l__leadsheets_verses_format_tl ,
+    verses-label-format .tl_set:N   = \l__leadsheets_verses_label_format_tl ,
+    verses-after-label  .tl_set:N   = \l__leadsheets_verses_after_label_tl ,
+    obey-lines      .bool_set:N = \l__leadsheets_obey_lines_bool ,
+    obey-lines-parskip .skip_set:N = \l__leadsheets_obey_parskip_skip ,
+    bar-shortcuts   .bool_set:N = \l__leadsheets_bar_shorthands_bool ,
+    capo-nr-format  .choices:nn =
+      { arabic , roman , Roman }
+      { \tl_set:NV \l__leadsheets_capo_number_format_tl \l_keys_choice_tl } ,
+    capo-nr-format  .initial:n  = {Roman} ,
+    capo-nr-cs      .code:n     =
+      \cs_set_protected:Npn \leadsheets_capo_number_print:n {#1} ,
+    capo-nr-cs      .initial:n  = \use:n
+  }
+
+\endinput

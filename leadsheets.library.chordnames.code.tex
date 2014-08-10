@@ -1,10 +1,7 @@
-\RequirePackage{expl3,xparse}
-\ProvidesExplPackage{chordnames}
-  {2014/08/09}
-  {v0.1-beta}
-  {typesetting~ chord~ names~ with~ easy~ syntax (beta version)~ (CN)}
+\LeadsheetsExplLibrary{chordnames}
+  {2014/08/10 typesetting chord names with easy syntax}
 
-\RequirePackage{musicsymbols}
+\loadleadsheetslibraries{musicsymbols}
 
 \tl_new:N \l__chordnames_chord_tl
 \tl_new:N \l__chordnames_tension_tl
@@ -118,7 +115,7 @@
     \group_end:
   }
 
-\keys_define:nn {chordnames}
+\keys_define:nn {leadsheets/chordnames}
   {
     format       .tl_set:N = \l__chordnames_format_tl ,
     sharp        .tl_set:N = \l__chordnames_sharp_tl ,
@@ -138,7 +135,8 @@
   }
 
 \NewDocumentCommand \setchordnames {m}
-  { \keys_set:nn {chordnames} {#1} }
+  { \keys_set:nn {leadsheets/chordnames} {#1} }
 
 \NewDocumentCommand \chordname {} { \chordnames_chord: }
 
+\endinput

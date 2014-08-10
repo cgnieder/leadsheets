@@ -1,0 +1,45 @@
+\LeadsheetsExplLibrary{translations}{2014/08/10 dictionary for leadsheets}
+
+\cs_new:Npn \leadsheets_translation:n #1
+  { \GetTranslation{leadsheets/#1} }
+\cs_generate_variant:Nn \leadsheets_translation:n { V }
+
+\DeclareTranslation {German}  {leadsheets/chorus} {Refrain}
+\DeclareTranslation {German}  {leadsheets/verse}  {Strophe}
+
+\DeclareTranslationFallback   {leadsheets/composer} {Composer}
+\DeclareTranslation {English} {leadsheets/composer} {Composer}
+\DeclareTranslation {German}  {leadsheets/composer} {Komponist}
+
+\DeclareTranslationFallback   {leadsheets/lyrics} {Lyrics}
+\DeclareTranslation {English} {leadsheets/lyrics} {Lyrics}
+\DeclareTranslation {German}  {leadsheets/lyrics} {Text}
+
+\DeclareTranslationFallback   {leadsheets/key} {Key}
+\DeclareTranslation {English} {leadsheets/key} {Key}
+\DeclareTranslation {German}  {leadsheets/key} {Tonart}
+
+\DeclareTranslationFallback   {leadsheets/interpret}
+  {as~ interpreted~ by~ \printsongpropertylist{interpret}{~\&~}{,~}{~\&~}}
+\DeclareTranslation {English} {leadsheets/interpret}
+  {as~ interpreted~ by~ \printsongpropertylist{interpret}{~\&~}{,~}{~\&~}}
+\DeclareTranslation {German}  {leadsheets/interpret}
+  {wie~ von~ \printsongpropertylist{interpret}{~\&~}{,~}{~\&~}~ interpretiert}
+
+\DeclareTranslationFallback   {leadsheets/major} {major}
+\DeclareTranslation {English} {leadsheets/major} {major}
+\DeclareTranslation {German}  {leadsheets/major} {Dur}
+
+\DeclareTranslationFallback   {leadsheets/minor} {minor}
+\DeclareTranslation {English} {leadsheets/minor} {minor}
+\DeclareTranslation {German}  {leadsheets/minor} {Moll}
+
+\DeclareTranslationFallback   {leadsheets/capo} {Capo}
+\DeclareTranslation {English} {leadsheets/capo} {Capo}
+\DeclareTranslation {German}  {leadsheets/capo} {Kapo}
+
+\DeclareTranslationFallback   {leadsheets/fret} {fret}
+\DeclareTranslation {English} {leadsheets/fret} {fret}
+\DeclareTranslation {German}  {leadsheets/fret} {Bund}
+
+\endinput
