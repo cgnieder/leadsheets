@@ -20,6 +20,7 @@
     ifversenamed ,
     ifversenumbered ,
     ifversestarred ,
+    loadleadsheetslibraries ,
     newversetype ,
     printsongpropertylist ,
     setchordnames ,
@@ -81,8 +82,9 @@
 
 \usepackage{booktabs}
 
-\newpackagename\musicsymbols{musicsymbols}
-\newpackagename\chordnames{chordnames}
+\newidxcmd\library{\code{#1}}[ (library)]
+\newrobustcmd*\musicsymbols{\library{musicsymbols}}
+\newrobustcmd*\chordnames{\library{chordnames}}
 
 \setchordnames{format=\libertineLF}
 
@@ -132,7 +134,7 @@
 
 \begin{document}
 
-\part{About the Bundle}
+\part{About the Package}
 \dictum[Tom Waits]{%
   I like beautiful melodies telling me terrible things.%
 }
@@ -151,30 +153,95 @@ Over the years I repeatedly wanted to typeset simple leadsheets of songs, \ie,
 song lyrics and the corresponding chords\footnote{I also have had the need (or
   let's say: wish) to typeset leadsheets in the style of the
   \citetitle{book:realbook} -- but this is a task where other software than
-  \LaTeX{} is far easier.}.  This is not too hard with standard \LaTeX{}
-commands and environments but it is not very convenient\ldots{} so looking for
-existing packages is the logical next step and I found two very promising
-packages: \pkg{songs}~\cite{pkg:songs} and \pkg{songbook}~\cite{pkg:songbook}.
-However, both were note \emph{quite} what I wanted.  Just a bit to inflexible
-in the wrong places, needing tweaking here and there, and so one.  On the
-other hand I had quite some code lying on my hard drive with various attempts
-of typesetting leadsheets.  This bundle of packages is now the attempt to have
-a clean, documented and customisable version of my code\footnote{Plus new
-  things!}.
+  \LaTeX{} usually is far easier.}.  This is not too hard with standard
+\LaTeX{} commands and environments but it is not very convenient\ldots{} so
+looking for existing packages is the logical next step and I found two very
+promising packages: \pkg{songs}~\cite{pkg:songs} and
+\pkg{songbook}~\cite{pkg:songbook}.  However, both were note \emph{quite} what
+I wanted.  Just a bit too inflexible in the wrong places, needing tweaking
+here and there, and so on.  On the other hand I had quite some code lying on
+my hard drive with various attempts of typesetting leadsheets.  This package
+is now the attempt to have a clean, documented and customisable version of my
+code\footnote{Plus new things!}.
 
-\clearpage
-\part{The \musicsymbols{} Package}
+\section{The Structure of the Package}
+\leadsheets{} is a modular package and consists of several libraries.  If you
+just say
+\begin{sourcecode}
+  \usepackage{leadsheets}
+\end{sourcecode}
+then \emph{all} libraries are loaded and you have not to think about anything.
+If you instead use
+\begin{sourcecode}
+  \usepackage[minimal]{leadsheets}
+\end{sourcecode}
+then \emph{no} libraries are loaded.  In this case you have to load the
+libraries yourself in order to use the package.
+\begin{commands}
+  \command{loadleadsheetslibraries}[\marg{list of libraries}]
+    With this command one or several of \leadsheets' libraries can be loaded.
+\end{commands}
+The libraries are divided into two parts: libraries to be loaded by users and
+auxiliary libraries loaded by other libraries but not to be loaded directly by
+users.
+
+The user-libraries are the following ones:
+\begin{description}
+  \item[\library{musicsymbols}] This library makes the music symbol font
+    provided by MusiX\TeX{} available as text font.  It is described in
+    part~\ref{part:musicsymbols-library}.
+  \item[\library{chordnames}] This library defines a few macros for
+    typesetting of chord symbols.  It is described in
+    part~\ref{part:chordnames-library}.  It also loads the
+    \library{musicsymbols} library.
+  \item[\library{songs}]  This is the main library.  It defines everything
+    necessary for the typesetting of the leadsheets.  It loads \emph{all other
+      libraries.}  This library including all the following libraries is
+    described in part~\ref{part:leadsheets-library}.
+\end{description}
+
+Then there is quite a number of auxiliary libraries which are all needed by
+the \library{songs} library:
+\begin{description}
+  \item[\library{properties}] This is an auxiliary library not meant to be
+    loaded directly by users.  It defines the necessary macros for song
+    properties.  See section~\ref{sec:song-properties} for more details on the
+    concept.
+  \item[\library{transposing}]  This is an auxiliary library not meant to be
+    loaded directly by users.  It defines a transposing mechanism for chord
+    symbols.  See section~\ref{sec:transposing} for further details.
+  \item[\library{chords}]  This is an auxiliary library not meant to be loaded
+    directly by users.  It defines the necessary macros for printing the
+    chords in songs as well as the mechanism of remembering and recalling
+    chord sequences of verses.
+  \item[\library{templates}] This is an auxiliary library not meant to be
+    loaded directly by users.  It defines the necessary macros for
+    \leadsheets' template mechanism.  See section~\ref{sec:templates} for
+    details on the concept.
+  \item[\library{translations}] This is an auxiliary library not meant to be
+    loaded directly by users.  It provides a few translations for a number of
+    printed strings.  See section~\ref{sec:internationalization} for more
+    information.
+\end{description}
+
+\part{The \library*{musicsymbols} Library}\label{part:musicsymbols-library}
 \dictum[Victor Hugo]{%
   Music expresses that which cannot be said and on which it is impossible to
   be silent.%
 }
 \vspace*{\baselineskip}\csname @afterheading\endcsname
 
-The \musicsymbols{} package is a very small package that makes the music
+The \musicsymbols{} library is a very small library that makes the music
 symbol font provided by MusiX\TeX{} available as text font and then uses it to
 define a number of symbols.  This redefines the macros \cs{sharp}, \cs{flat}
 and \cs{natural}.  All defined symbold are listed in
 table~\ref{tab:musicsymbols}.
+
+If you want to use the library standalone then you can say:
+\begin{sourcecode}
+  \usepackage[minimal]{leadsheets}
+  \loadleadsheetslibraries{musicsymbols}
+\end{sourcecode}
 
 \musicsymbols{} defines three further commands, namely \cs{musix},
 \cs{textmusix} -- a font switch and a text font command -- and
@@ -228,7 +295,7 @@ macros are listed in table~\ref{tab:bar-symbols}.
 \end{table}
 
 \clearpage
-\part{The \chordnames{} Package}
+\part{The \library*{chordnames} Library}\label{part:chordnames-library}
 \dictum[Wes Montgomery]{%
   I never practice my guitar -- from time to time I just open the case and
   throw in a piece of raw meat.%
@@ -303,6 +370,13 @@ How these token lists are treated depends on optional settings:
   \chordname{G7^#5}
 \end{example}
 
+If you want to use the library standalone then you can say:
+\begin{sourcecode}
+  \usepackage[minimal]{leadsheets}
+  \loadleadsheetslibraries{chordnames}
+\end{sourcecode}
+This also loads the \musicsymbols{} library.
+
 \section{Options}
 
 Options are set with the command
@@ -310,6 +384,9 @@ Options are set with the command
   \command{setchordnames}[\marg{options}]
     where \meta{options} is a comma separated list of keyval options.
 \end{commands}
+Actually there's a second possibility: options can also be set with the
+command \cs{setleadsheets} (see section~\ref{sec:options}) if they're preceded
+by \code{chordnames/} (including the slash).
 
 The options allow detailed customization of how chords are printed.  It
 doesn't change the input syntax.
@@ -349,7 +426,7 @@ doesn't change the input syntax.
 \end{options}
 
 \clearpage
-\part{The \leadsheets{} Package}
+\part{The \library*{songs} Library}\label{part:leadsheets-library}
 \dictum[Jeff Beck]{%
   I don't care about the rules. If I don't break the rules at least ten
   times every song then I'm not doing my job.%
@@ -448,7 +525,7 @@ and print it (as option to the internal \cs*{item}).
 These environments and their options are described in more detail in
 sections~\ref{sec:envverse-environment} and~\ref{sec:other-envverse-like}.
 
-\subsection{Options}
+\subsection{Options}\label{sec:options}
 
 The options to the \env{song} environment are the same as the general options
 of \leadsheets.  This means you can set the following options either local to

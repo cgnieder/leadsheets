@@ -1,8 +1,8 @@
 --------------------------------------------------------------------------
-the LEADSHEETS bundle 2014/08/09 -- beta version --
- - musicsymbols package v0.1-beta -> musical symbols
- - chordnames package v0.1-beta   -> typesetting chord names
- - leadsheets package v0.1-beta   -> typesetting leadsheets
+the LEADSHEETS package v0.1-beta 2014/08/10 -- beta version --
+ 
+  typesetting leadsheets and songbooks
+
 --------------------------------------------------------------------------
 Clemens Niederberger
 Web:    https://github.com/cgnieder/leadsheets/
@@ -24,8 +24,16 @@ The Current Maintainer of this work is Clemens Niederberger.
 --------------------------------------------------------------------------
 The leadsheets bundle consists of the following files
  - leadsheets.sty
- - chordnames.sty
- - musicsymbols.sty
+ - libraries -- they all follow the naming scheme
+   leadsheets.library.<name>.code.tex:
+   * chordnames
+   * musicsymbols
+   * songs
+   * properties
+   * transposing
+   * chords
+   * templates
+   * translations
  - leadsheets_en.tex
  - leadsheets_en.pdf
 --------------------------------------------------------------------------
