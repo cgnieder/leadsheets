@@ -199,6 +199,17 @@ The user-libraries are the following ones:
       libraries.}  This library including all the following libraries is
     described in part~\ref{part:leadsheets-library}.
 \end{description}
+Those three libraries can also be loaded as a package option.  If you say
+\begin{sourcecode}
+  \usepackage[musicsymbols]{leadsheets}
+\end{sourcecode}
+then \emph{only} the \library{musicsymbols} library is loaded.  Saying
+\begin{sourcecode}
+  \usepackage[songs]{leadsheets}
+\end{sourcecode}
+is the same as using the package \emph{without} any options.  ``Without any''
+also means that neither \library{musicsymbols}, \library{chordnames} nor
+\library{songs} has been given as class option!
 
 Then there is quite a number of auxiliary libraries which are all needed by
 the \library{songs} library:

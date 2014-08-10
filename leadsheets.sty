@@ -3,7 +3,7 @@
 \def\leadsheets@version{0.1-beta}
 \def\leadsheets@info{songbook (beta version) (CN)}
 
-\RequirePackage{expl3}
+\RequirePackage{expl3,l3keys2e}
 \ProvidesExplPackage{leadsheets}
   {\leadsheets@date}
   {\leadsheets@version}
@@ -102,13 +102,27 @@
   { \keys_set:nn {leadsheets} {#1} }
 
 % --------------------------------------------------------------------------
-\bool_new:N \l__leadsheets_minimal_bool
+\bool_new:N \l__leadsheets_with_options_bool
 
-\DeclareOption{minimal}{\bool_set_true:N \l__leadsheets_minimal_bool}
-\ProcessOptions*
+\keys_define:nn {leadsheets}
+  {
+    musicsymbols .code:n =
+      \bool_set_true:N \l__leadsheets_with_options_bool
+      \leadsheets_load_libraries:n {musicsymbols} ,
+    chordnames   .code:n =
+      \bool_set_true:N \l__leadsheets_with_options_bool
+      \leadsheets_load_libraries:n {chordnames} ,
+    songs        .code:n =
+      \bool_set_true:N \l__leadsheets_with_options_bool
+      \leadsheets_load_libraries:n {songs} ,
+    minimal      .code:n =
+      \bool_set_true:N \l__leadsheets_with_options_bool
+  }
+\ProcessKeysOptions{leadsheets}
 
-\bool_if:NF \l__leadsheets_minimal_bool
-  { \loadleadsheetslibraries {songs} }
+\bool_if:NF \l__leadsheets_with_options_bool
+  { \leadsheets_load_libraries:n {songs} }
+  
 
 % --------------------------------------------------------------------------
 \tex_endinput:D
