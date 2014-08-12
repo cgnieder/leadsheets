@@ -20,12 +20,13 @@
     ifversenamed ,
     ifversenumbered ,
     ifversestarred ,
-    loadleadsheetslibraries ,
     newversetype ,
     printsongpropertylist ,
     setchordnames ,
     setleadsheets ,
     songproperty ,
+    useleadsheetslibraries ,
+    useleadsheetslibrary ,
     verseafterlabel ,
     verselabel ,
     verselabelformat ,
@@ -144,7 +145,7 @@
 \license
 
 \leadsheets{} requires the bundles \bnd{l3kernel}~\cite{bnd:l3kernel} and
-\bnd{l3packages}~\cite{bnd:l3packages} ro be available.  It also needs the
+\bnd{l3packages}~\cite{bnd:l3packages}  to be available.  It also needs the
 package \pkg{translations}~\cite{pkg:translations}.
 
 \section{Background}
@@ -178,8 +179,10 @@ If you instead use
 then \emph{no} libraries are loaded.  In this case you have to load the
 libraries yourself in order to use the package.
 \begin{commands}
-  \command{loadleadsheetslibraries}[\marg{list of libraries}]
+  \command{useleadsheetslibraries}[\marg{comma list of libraries}]
     With this command one or several of \leadsheets' libraries can be loaded.
+  \command{useleadsheetslibrary}[\marg{library}]
+    With this command one of \leadsheets' libraries can be loaded.
 \end{commands}
 The libraries are divided into two parts: libraries to be loaded by users and
 auxiliary libraries loaded by other libraries but not to be loaded directly by
@@ -251,7 +254,7 @@ table~\ref{tab:musicsymbols}.
 If you want to use the library standalone then you can say:
 \begin{sourcecode}
   \usepackage[minimal]{leadsheets}
-  \loadleadsheetslibraries{musicsymbols}
+  \useleadsheetslibraries{musicsymbols}
 \end{sourcecode}
 
 \musicsymbols{} defines three further commands, namely \cs{musix},
@@ -384,7 +387,7 @@ How these token lists are treated depends on optional settings:
 If you want to use the library standalone then you can say:
 \begin{sourcecode}
   \usepackage[minimal]{leadsheets}
-  \loadleadsheetslibraries{chordnames}
+  \useleadsheetslibraries{chordnames}
 \end{sourcecode}
 This also loads the \musicsymbols{} library.
 
@@ -435,6 +438,66 @@ doesn't change the input syntax.
   \keyval{major-nine}{code}\Default{\cs*{textsuperscript}\Marg{maj9}}
     The token list \code{maj9}.
 \end{options}
+
+There are two further options which concern the different notations of the
+pitches \chordname{B} and \chordname{Bb} in German (and a few other European
+countries) and English.
+\begin{options}
+  \keychoice{input-notation}{literal,german,english}\Default{literal}
+    If set to \code{german} B should be input as \code{H} and B~flat as
+    \code{B}. If set to \code{american} B should be input as \code{B} and
+    B~flat as \code{Bb}.
+  \keychoice{output-notation}{literal,german,english}\Default{literal}
+    \setchordnames{output-notation=german}If set to \code{german} B is output
+    as \chordname{B} and B-flat as \chordname{Bb}.
+\end{options}
+Setting one option to a value other than \code{literal} implicitly sets the
+other one to \code{english} except the other option already has been set.
+This is shown in the example below.  Setting on option to \code{literal} again
+also sets the other option to \code{literal}.  This also resets the options.
+Earlier settings are forgotten.  What does that mean?  Here is an exercise:
+which options are active at each step and at the end?
+\begin{sourcecode}
+  1. \setchordnames{ input-notation = german }
+  2. \setchordnames{ output-notation = german , input-notation = english }
+  3. \setchordnames{ input-notation = german }
+  4. \setchordnames{ output-notation = english , input-notation = literal }
+  5. \setchordnames{ output-notation = german }
+\end{sourcecode}
+Here's the solution:
+\begin{enumerate}
+  \item \keyis{input-notation}{german} and \keyis{output-notation}{english}
+  \item \keyis{input-notation}{english} and \keyis{output-notation}{german}
+  \item \keyis{input-notation}{german} and \keyis{output-notation}{german}
+  \item \keyis{input-notation}{literal} and \keyis{output-notation}{literal}
+  \item \keyis{input-notation}{german} and \keyis{output-notation}{english}
+\end{enumerate}
+
+The following example shows the effects of different input and output
+notations.
+\begin{example}
+  input and output literal:\par
+  \chordname{Bb} \chordname{B} \chordname{B#}\par
+  \chordname{B} \chordname{H} \chordname{H#}\par
+  \medskip
+
+  \setchordnames{input-notation=german}
+  input German and output English:\par
+  \chordname{Bb} \chordname{B} \chordname{B#}\par
+  \chordname{B} \chordname{H} \chordname{H#}\par
+  \medskip
+
+  \setchordnames{output-notation=german}
+  input and output German:\par
+  \chordname{Bb} \chordname{B} \chordname{B#}\par
+  \chordname{B} \chordname{H} \chordname{H#}\par
+
+  \medskip
+  \setchordnames{input-notation=english}
+  input English and output German:\par
+  \chordname{Bb} \chordname{B} \chordname{B#}\par
+  \chordname{B} \chordname{H} \chordname{H#}\par
+\end{example}
 
 \clearpage
 \part{The \library*{songs} Library}\label{part:leadsheets-library}

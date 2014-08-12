@@ -1,17 +1,19 @@
 % --------------------------------------------------------------------------
-\def\leadsheets@date{2014/08/10}
-\def\leadsheets@version{0.1-beta}
-\def\leadsheets@info{songbook (beta version) (CN)}
-
-\RequirePackage{expl3,l3keys2e}
-\ProvidesExplPackage{leadsheets}
-  {\leadsheets@date}
-  {\leadsheets@version}
-  {\leadsheets@info}
+% required packages:
+\RequirePackage{expl3,l3keys2e,xparse,translations}
 
 % --------------------------------------------------------------------------
-% required packages:
-\RequirePackage{xparse,translations}
+% package information:
+\ExplSyntaxOn
+\tl_const:Nx \c_leadsheets_date_tl    {2014/08/11}
+\tl_const:Nx \c_leadsheets_version_tl {0.1-beta-2}
+\tl_const:Nx \c_leadsheets_info_tl    {congbook~(beta~version)}
+
+\ProvidesExplPackage
+  {leadsheets}
+  {\c_leadsheets_date_tl}
+  {\c_leadsheets_version_tl}
+  {\c_leadsheets_info_tl \c_space_tl (CN)}
 
 % --------------------------------------------------------------------------
 % messages:
@@ -50,8 +52,8 @@
 \box_new:N  \l__leadsheets_tmpa_box
 
 % --------------------------------------------------------------------------
-% libraries:
-\tl_const:Nn \c__leadsheets_library_extension_tl {tex}
+% library mechanism:
+\tl_const:Nn \c__leadsheets_library_extension_tl {code.tex}
 
 \cs_new_protected:Npn \leadsheets_load_libraries:n #1
   { \clist_map_inline:nn {#1} { \leadsheets_load_library:n {##1} } }
@@ -66,10 +68,11 @@
   {
     \cs_if_exist:cF {leadsheets-library-#1-loaded}
       {
-        \file_if_exist:nTF {leadsheets.library.#1.code.tex}
+        \file_if_exist:nTF
+          {leadsheets.library.#1.\c__leadsheets_library_extension_tl}
           {
             \@onefilewithoptions
-              {leadsheets.library.#1.code}[][]
+              {leadsheets.library.#1}[][]
               \c__leadsheets_library_extension_tl
           }
           { \msg_warning:nnn {leadsheets} {library-missing} {#1} }
@@ -80,54 +83,63 @@
 \cs_new_protected:Npn \__leadsheets_library:nn #1#2
   {
     \cs_new:cpn {leadsheets-library-#1-loaded} {leadsheets:~`#1'~library}
-    \ProvidesFile{leadsheets.library.#1.code.tex}
+    \ProvidesFile
+      {leadsheets.library.#1.\c__leadsheets_library_extension_tl}
       [
-        \leadsheets@date\space
-        v\leadsheets@version\space
+        \c_leadsheets_date_tl
+        \c_space_tl
+        v \c_leadsheets_version_tl
+        \c_space_tl
         leadsheets~ library~ `#1'~ #2
       ]
   }
 
+% --------------------------------------------------------------------------
+% one of those defines a leadsheets library, either using expl syntax or 2e
+% package syntax:
 \NewDocumentCommand \LeadsheetsExplLibrary {mm}
   { \__leadsheets_library:nn {#1} {#2} \ExplSyntaxOn }
 
 \NewDocumentCommand \LeadsheetsLibrary {mm}
   { \__leadsheets_library:nn {#1} {#2} }
 
-\NewDocumentCommand \loadleadsheetslibraries {m}
+% --------------------------------------------------------------------------
+% commands for loading libraries:
+\NewDocumentCommand \useleadsheetslibraries {m}
   { \leadsheets_load_libraries:n {#1} }
 
+\NewDocumentCommand \useleadsheetslibrary {m}
+  { \leadsheets_load_library:n {#1} }
+
 % --------------------------------------------------------------------------
+% a setup command:
 \NewDocumentCommand \setleadsheets {m}
   { \keys_set:nn {leadsheets} {#1} }
 
 % --------------------------------------------------------------------------
+% package options:
 \bool_new:N \l__leadsheets_with_options_bool
 
 \keys_define:nn {leadsheets}
   {
     musicsymbols .code:n =
       \bool_set_true:N \l__leadsheets_with_options_bool
-      \leadsheets_load_libraries:n {musicsymbols} ,
+      \leadsheets_load_library:n {musicsymbols} ,
     chordnames   .code:n =
       \bool_set_true:N \l__leadsheets_with_options_bool
-      \leadsheets_load_libraries:n {chordnames} ,
+      \leadsheets_load_library:n {chordnames} ,
     songs        .code:n =
       \bool_set_true:N \l__leadsheets_with_options_bool
-      \leadsheets_load_libraries:n {songs} ,
+      \leadsheets_load_library:n {songs} ,
     minimal      .code:n =
       \bool_set_true:N \l__leadsheets_with_options_bool
   }
 \ProcessKeysOptions{leadsheets}
 
 \bool_if:NF \l__leadsheets_with_options_bool
-  { \leadsheets_load_libraries:n {songs} }
+  { \leadsheets_load_library:n {songs} }
   
 
 % --------------------------------------------------------------------------
 \tex_endinput:D
 
-TODO:
- - input-notation=english|german, print-notation=english|german => damit man
-   wählen kann, ob Akkorde mit `H' oder `B' ein- bzw. ausgegeben werden.
- - Fehlermeldungen/Warnungen

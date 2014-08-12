@@ -1,7 +1,12 @@
 \LeadsheetsExplLibrary{chordnames}
   {2014/08/10 typesetting chord names with easy syntax}
 
-\loadleadsheetslibraries{musicsymbols}
+\leadsheets_load_library:n {musicsymbols}
+
+\bool_new:N \l__leadsheets_output_notation_german_bool
+\bool_new:N \l__leadsheets_input_notation_german_bool
+\bool_new:N \l__leadsheets_notation_literal_bool
+\bool_set_true:N \l__leadsheets_notation_literal_bool
 
 \tl_new:N \l__chordnames_chord_tl
 \tl_new:N \l__chordnames_tension_tl
@@ -43,7 +48,11 @@
 \tl_set:Nn \l__chordnames_major_nine_tl  {\textsuperscript{maj9}}
 
 \group_begin:
+% for convenient input of sharps:
 \char_set_catcode_other:N \#
+% because ^ is active in the song environment:
+\char_set_catcode_active:N \^
+% # is other so we need another parameter character:
 \char_set_catcode_parameter:N \!
 
 \cs_gset_protected:Npn \chordnames_chord:
@@ -51,6 +60,7 @@
     \group_begin:
       \tl_use:N \l__chordnames_format_tl
       \char_set_catcode_other:N \#
+      \char_set_catcode_active:N \^
       \chordnames_chord_aux:n
   }
 
@@ -61,8 +71,27 @@
       {\l__chordnames_major_seven_tl}
     \chordnames_chord_sym:Nnn  \l__chordnames_chord_tl {maj9}
       {\l__chordnames_major_nine_tl}
-    \chordnames_chord_sym:Nnn  \l__chordnames_chord_tl {sus} {\l__chordnames_sus_tl}
+    \chordnames_chord_sym:Nnn  \l__chordnames_chord_tl {sus}
+      {\l__chordnames_sus_tl}
     \chordnames_chord_sym:Nnn  \l__chordnames_chord_tl {^} {\textsuperscript}
+    \bool_if:NF \l__leadsheets_notation_literal_bool
+      {
+        % convert to English to German input:
+        \bool_if:NT \l__leadsheets_input_notation_german_bool
+          {
+            \chordnames_chord_sym:Nnn \l__chordnames_chord_tl {B}   {@@@}
+            \chordnames_chord_sym:Nnn \l__chordnames_chord_tl {H}   {B}
+            \chordnames_chord_sym:Nnn \l__chordnames_chord_tl {@@@} {Bb}
+          }
+        % convert to English to German output:
+        \bool_if:NT \l__leadsheets_output_notation_german_bool
+          {
+            \chordnames_chord_sym:Nnn \l__chordnames_chord_tl {Bb}  {@@@}
+            \chordnames_chord_sym:Nnn \l__chordnames_chord_tl {B}   {H}
+            \chordnames_chord_sym:Nnn \l__chordnames_chord_tl {@@@} {B}
+            \chordnames_chord_sym:Nnn \l__chordnames_chord_tl {B#}  {H}
+          }
+      }
     \chordnames_chord_sym:Nnn  \l__chordnames_chord_tl {#b} {}
     \chordnames_chord_sym:Nnn  \l__chordnames_chord_tl {b#} {}
     \chordnames_chord_sym:Nnn  \l__chordnames_chord_tl {##}
@@ -131,7 +160,29 @@
     add          .tl_set:N = \l__chordnames_add_tl ,
     dim          .tl_set:N = \l__chordnames_dim_tl ,
     major-seven  .tl_set:N = \l__chordnames_major_seven_tl ,
-    major-nine   .tl_set:N = \l__chordnames_major_nine_tl
+    major-nine   .tl_set:N = \l__chordnames_major_nine_tl ,
+    output-notation .choice: ,
+    output-notation/literal .code:n =
+      \bool_set_false:N \l__leadsheets_input_notation_german_bool
+      \bool_set_false:N \l__leadsheets_output_notation_german_bool
+      \bool_set_true:N \l__leadsheets_notation_literal_bool ,
+    output-notation/german  .code:n =
+      \bool_set_true:N \l__leadsheets_output_notation_german_bool
+      \bool_set_false:N \l__leadsheets_notation_literal_bool ,
+    output-notation/english .code:n =
+      \bool_set_false:N \l__leadsheets_output_notation_german_bool
+      \bool_set_false:N \l__leadsheets_notation_literal_bool ,
+    input-notation .choice: ,
+    input-notation/literal  .code:n =
+      \bool_set_false:N \l__leadsheets_input_notation_german_bool
+      \bool_set_false:N \l__leadsheets_output_notation_german_bool
+      \bool_set_true:N \l__leadsheets_notation_literal_bool ,
+    input-notation/german   .code:n =
+      \bool_set_true:N \l__leadsheets_input_notation_german_bool
+      \bool_set_false:N \l__leadsheets_notation_literal_bool ,
+    input-notation/english  .code:n =
+      \bool_set_false:N \l__leadsheets_input_notation_german_bool
+      \bool_set_false:N \l__leadsheets_notation_literal_bool
   }
 
 \NewDocumentCommand \setchordnames {m}
