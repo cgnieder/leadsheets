@@ -1,6 +1,6 @@
 % arara: pdflatex: { shell: on }
 % !arara: biber
-% !arara: pdflatex
+% arara: pdflatex
 \documentclass[load-preamble+]{cnltx-doc}
 \usepackage{leadsheets}
 \setcnltx{
@@ -40,8 +40,11 @@
     mdframed
   } ,
   add-envs = {
+    arraybackslash ,
     bridge ,
     chorus , chorus* ,
+    flushleft ,
+    flushright ,
     info ,
     interlude ,
     intro , intro* ,
@@ -84,6 +87,11 @@
 \usepackage{booktabs}
 
 \newidxcmd\library{\code{#1}}[ (library)]
+\AtEndPreamble{%
+  \pdfstringdefDisableCommands{%
+    \def\library*#1{``#1''}%
+  }%
+}
 \newrobustcmd*\musicsymbols{\library{musicsymbols}}
 \newrobustcmd*\chordnames{\library{chordnames}}
 
@@ -122,6 +130,8 @@
 \newidxcmd\titletemplate{\textit{\sffamily#1}}[\ (songtitle template)]
 \newidxcmd\versetemplate{\textit{\sffamily#1}}[\ (verse-type template)]
 \newidxcmd\shortcut{\code{#1}}[ (shortcut)]
+\newidxcmd\pkgopt{\code{#1}}[ (package option)]
+\newnote*\packageoption[1]{Package option: \pkgopt{#1}}
 
 \newrobustcmd*\barsymbol{|}
 
@@ -171,8 +181,14 @@ just say
 \begin{sourcecode}
   \usepackage{leadsheets}
 \end{sourcecode}
-then \emph{all} libraries are loaded and you have not to think about anything.
-If you instead use
+then the \library{songs} library is loaded\footnote{Which currently means that
+  \emph{all} libraries are loaded as the \library{songs} library needs them.}.
+If you want to ensure that \emph{every} library is loaded\packageoption{full}
+so you don't have to think about it any more you can use
+\begin{sourcecode}
+  \usepackage[full]{leadsheets}
+\end{sourcecode}
+If you instead use\packageoption{minimal}
 \begin{sourcecode}
   \usepackage[minimal]{leadsheets}
 \end{sourcecode}
@@ -190,17 +206,17 @@ users.
 
 The user-libraries are the following ones:
 \begin{description}
-  \item[\library{musicsymbols}] This library makes the music symbol font
-    provided by MusiX\TeX{} available as text font.  It is described in
-    part~\ref{part:musicsymbols-library}.
-  \item[\library{chordnames}] This library defines a few macros for
-    typesetting of chord symbols.  It is described in
+  \item[\library{musicsymbols}] \packageoption{musicsymbols}This library makes
+    the music symbol font provided by MusiX\TeX{} available as text font.  It
+    is described in part~\ref{part:musicsymbols-library}.
+  \item[\library{chordnames}] \packageoption{chordnames}This library defines a
+    few macros for typesetting of chord symbols.  It is described in
     part~\ref{part:chordnames-library}.  It also loads the
     \library{musicsymbols} library.
-  \item[\library{songs}]  This is the main library.  It defines everything
-    necessary for the typesetting of the leadsheets.  It loads \emph{all other
-      libraries.}  This library including all the following libraries is
-    described in part~\ref{part:leadsheets-library}.
+  \item[\library{songs}]  \packageoption{songs}This is the main library.  It
+    defines everything necessary for the typesetting of the leadsheets.  It
+    currently loads \emph{all other libraries}, \ie, user libraries \emph{and}
+    internal libraries.  This library including~\ref{part:leadsheets-library}.
 \end{description}
 Those three libraries can also be loaded as a package option.  If you say
 \begin{sourcecode}
@@ -215,7 +231,9 @@ also means that neither \library{musicsymbols}, \library{chordnames} nor
 \library{songs} has been given as class option!
 
 Then there is quite a number of auxiliary libraries which are all needed by
-the \library{songs} library:
+the \library{songs} library.  The libraries are usually not described in
+sections of their own but as part of the \library{songs} library.  However,
+the following list gives hints to where some of the concepts are explained:
 \begin{description}
   \item[\library{properties}] This is an auxiliary library not meant to be
     loaded directly by users.  It defines the necessary macros for song
@@ -307,6 +325,18 @@ macros are listed in table~\ref{tab:bar-symbols}.
   \end{tabular}
   \label{tab:bar-symbols}
 \end{table}
+
+There are three macros that cen be redefined to adjust the appearance of those
+bars:
+\begin{commands}
+  \command{normalbarwidth}\Default{.02em}
+    The thickness of a bar rule as used in \cs{normalbar}.
+  \command{thickbarwidth}\Default{.15em}
+    The thickness of the thick bar rules as used for example in
+    \cs{leftrepeat} or \cs{stopbar}.
+  \command{interbarwidth}\Default{.1em}
+    The distance between two bar rules as in \cs{doublebar} or \cs{stopbar}.
+\end{commands}
 
 \clearpage
 \part{The \library*{chordnames} Library}\label{part:chordnames-library}
@@ -1493,22 +1523,22 @@ commands.
         {%
           &
           \GetTranslation{leadsheets/composer}: %
-          \printsongpropertylist{composer}{ \& }{,~}{ \& }
+          \printsongpropertylist{composer}{ \& }{, }{ \& }
           \ifsongproperty{lyrics}
             {
               \\ &
               \GetTranslation{leadsheets/lyrics}: %
-              \printsongpropertylist{lyrics}{ \& }{,~}{ \& }
+              \printsongpropertylist{lyrics}{ \& }{, }{ \& }
             }
             {}%
         }
         {}%
       \ifsongproperty{interpret}{\\}{\ifsongproperty{composer}{\\}{}}%
       \ifsongproperty{genre}
-        {& Genre:~ \songproperty{genre} \\}
+        {& Genre: \songproperty{genre} \\}
         {}%
       \ifsongproperty{tempo}
-        {& Tempo:~ \songproperty{tempo} \\}
+        {& Tempo: \songproperty{tempo} \\}
         {}%
       \ifsongproperty{key}
         {%
@@ -1760,11 +1790,10 @@ The example adapts one of the examples of \pkg{mdframed}'s manual.
 
 Th environments described in sections~\ref{sec:envverse-environment}
 and~\ref{sec:other-envverse-like} as well as a few other words used in
-\leadsheets{} are translated with the help of the
-\pkg{translations}~\cite{pkg:translations} package.  All predefined and
-available translation strings are listed in table~\ref{tab:translations}. You
-can change those translations or add translations for other languages with this
-command:
+\leadsheets{} are translated with the help of the \pkg{translations}
+package~\cite{pkg:translations}.  All predefined and available translation
+strings are listed in table~\ref{tab:translations}. You can change those
+translations or add translations for other languages with this command:
 \begin{commands}
   \command*{DeclareTranslation}[\marg{language}\marg{string}\marg{translation}]
     The command provided by the \pkg{translations} package for translating
@@ -1776,9 +1805,9 @@ table~\ref{tab:translations} is a little different: the string
 \code{leadsheets/interpret} is declared as
 \begin{sourcecode}
   \DeclareTranslation{English}{leadsheets/interpret}
-    {as interpreted by \printsongpropertylist{interpret}{ \& }{,~}{ \& }}
+    {as interpreted by \printsongpropertylist{interpret}{ \& }{, }{ \& }}
   \DeclareTranslation{German}{leadsheets/interpret}
-    {wie von \printsongpropertylist{interpret}{ \& }{,~}{ \& } interpretiert}
+    {wie von \printsongpropertylist{interpret}{ \& }{, }{ \& } interpretiert}
 \end{sourcecode}
 which means it uses the song property \property{interpret}.  As a consequence
 it only really can be used inside a \env{song} environment.  In other cases as

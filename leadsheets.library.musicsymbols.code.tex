@@ -47,12 +47,12 @@
   \rule[-.2\mscsym@barheight]{#1}{\mscsym@barheight}%
 }
 
-\newcommand*\mscsym@normalbarwidth{.02em}
-\newcommand*\mscsym@thickbarwidth{.15em}
-\newcommand*\mscsym@interbarwidth{.1em}
+\newcommand*\normalbarwidth{.02em}
+\newcommand*\thickbarwidth{.15em}
+\newcommand*\interbarwidth{.1em}
 
 \newrobustcmd*\mscsym@thickbar{%
-  \mscsym@genericbar{\mscsym@thickbarwidth}%
+  \mscsym@genericbar{\thickbarwidth}%
 }
 
 \newrobustcmd*\mscsym@repeatcolon{%
@@ -61,10 +61,10 @@
   \raise.1\mscsym@barheight\hbox{:}%
 }
 
-\newrobustcmd*\mscsym@interbar{\kern\mscsym@interbarwidth\relax}
+\newrobustcmd*\mscsym@interbar{\kern\interbarwidth\relax}
 
 \newrobustcmd*\normalbar{%
-  \mscsym@genericbar{\mscsym@normalbarwidth}%
+  \mscsym@genericbar{\normalbarwidth}%
 }
 
 \newrobustcmd*\leftrepeat{%

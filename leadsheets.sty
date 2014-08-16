@@ -5,9 +5,9 @@
 % --------------------------------------------------------------------------
 % package information:
 \ExplSyntaxOn
-\tl_const:Nx \c_leadsheets_date_tl    {2014/08/11}
-\tl_const:Nx \c_leadsheets_version_tl {0.1-beta-2}
-\tl_const:Nx \c_leadsheets_info_tl    {congbook~(beta~version)}
+\tl_const:Nx \c_leadsheets_date_tl    {2014/08/16}
+\tl_const:Nx \c_leadsheets_version_tl {0.1-beta-3}
+\tl_const:Nx \c_leadsheets_info_tl    {songbook~(beta~version)}
 
 \ProvidesExplPackage
   {leadsheets}
@@ -132,7 +132,21 @@
       \bool_set_true:N \l__leadsheets_with_options_bool
       \leadsheets_load_library:n {songs} ,
     minimal      .code:n =
+      \bool_set_true:N \l__leadsheets_with_options_bool ,
+    full         .code:n =
       \bool_set_true:N \l__leadsheets_with_options_bool
+      \leadsheets_load_libraries:n
+        {
+          musicsymbols ,
+          chordnames ,
+          songs ,
+          chords ,
+          shorthands ,
+          properties ,
+          transposing ,
+          templates ,
+          translations
+        }
   }
 \ProcessKeysOptions{leadsheets}
 
