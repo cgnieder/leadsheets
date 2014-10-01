@@ -5,8 +5,8 @@
 % --------------------------------------------------------------------------
 % package information:
 \ExplSyntaxOn
-\tl_const:Nx \c_leadsheets_date_tl    {2014/08/16}
-\tl_const:Nx \c_leadsheets_version_tl {0.1-beta-3}
+\tl_const:Nx \c_leadsheets_date_tl    {2014/10/01}
+\tl_const:Nx \c_leadsheets_version_tl {0.1-beta-4}
 \tl_const:Nx \c_leadsheets_info_tl    {songbook~(beta~version)}
 
 \ProvidesExplPackage
@@ -128,6 +128,9 @@
     chordnames   .code:n =
       \bool_set_true:N \l__leadsheets_with_options_bool
       \leadsheets_load_library:n {chordnames} ,
+    musejazz     .code:n =
+      \bool_set_true:N \l__leadsheets_with_options_bool
+      \leadsheets_load_library:n {musejazz\g__leadsheets_chords_sequences_prop} ,
     songs        .code:n =
       \bool_set_true:N \l__leadsheets_with_options_bool
       \leadsheets_load_library:n {songs} ,

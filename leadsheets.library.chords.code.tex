@@ -11,6 +11,8 @@
 \bool_new:N  \g__leadsheets_smash_next_chord_bool
 \bool_new:N  \l__leadsheets_chord_gobble_after_bool
 \bool_new:N  \l__leadsheets_record_chords_bool
+\bool_new:N  \l__leadsheets_chord_print_bool
+\bool_set_true:N \l__leadsheets_chord_print_bool
 
 \prop_new:N  \g__leadsheets_chords_sequences_prop
 
@@ -46,7 +48,7 @@
   {
     \leadsheets_place_above:Vnn
       \l__leadsheets_chord_stack_alignment_tl
-      { #1 }
+      {#1}
       {
         \tl_if_blank:nTF {#2}
           {\skip_horizontal:N \l__leadsheets_empty_chord_dim}
@@ -59,6 +61,8 @@
 
 \cs_new_protected:Npn \leadsheets_chord_write:n #1
   {
+%    \bool_if:NT \l__leadsheets_chord_print_bool
+%      {
     \tl_set:Nn \l__leadsheets_current_chord_tl {#1}
     \bool_if:nT
       {
@@ -84,26 +88,31 @@
           \l_leadsheets_current_song_id_tl
       }
     \leadsheets_chord_print:V \l__leadsheets_current_chord_tl
+%      }
   }
 \cs_generate_variant:Nn \leadsheets_chord_write:n { V }
 
 \cs_new_protected:Npn \leadsheets_place_above:nnn #1#2#3
   {
-    \group_begin:
-      \leadsheets_ignore_lines:
-      \bool_if:NT \g__leadsheets_smash_next_chord_bool
-        {
-          \bool_set_true:N \l__leadsheets_smash_chords_bool
-          \bool_gset_false:N \g__leadsheets_smash_next_chord_bool
-        }
-      \linespread{1} \selectfont
-      \begin{tabular} [b] {@{}#1@{}}
-        \bool_if:NTF \l__leadsheets_smash_chords_bool
-          {\makebox[0pt][c]{#2}}
-          {#2} \\
-        #3
-      \end{tabular}
-    \group_end:
+    \bool_if:NTF \l__leadsheets_chord_print_bool
+      {
+        \group_begin:
+          \leadsheets_ignore_lines:
+          \bool_if:NT \g__leadsheets_smash_next_chord_bool
+            {
+              \bool_set_true:N \l__leadsheets_smash_chords_bool
+              \bool_gset_false:N \g__leadsheets_smash_next_chord_bool
+            }
+          \linespread{1} \selectfont
+          \begin{tabular} [b] {@{}#1@{}}
+            \bool_if:NTF \l__leadsheets_smash_chords_bool
+              {\makebox[0pt][c]{#2}}
+              {#2} \\
+            #3
+          \end{tabular}
+        \group_end:
+      }
+      {#3}
   }
 \cs_generate_variant:Nn \leadsheets_place_above:nnn { V }
 
@@ -114,9 +123,10 @@
     empty-chord-dim  .dim_set:N  = \l__leadsheets_empty_chord_dim ,
     remember-chords  .bool_set:N = \l__leadsheets_record_chords_bool ,
     align-chords     .tl_set:N   = \l__leadsheets_chord_stack_alignment_tl ,
-    chord-cs        .code:n      =
+    chord-cs         .code:n     =
       \cs_set_protected:Npn \leadsheets_chord_print:n {#1} ,
-    chord-cs        .initial:n   = \chordname ,
+    chord-cs         .initial:n  = \chordname ,
+    print-chords     .bool_set:N = \l__leadsheets_chord_print_bool
   }
 
 \NewDocumentCommand \chord {st-m} { \leadsheets_chord:nnn {#1} {#2} {#3} }
@@ -133,7 +143,8 @@
         \l__leadsheets_record_chords_bool &&
         ! \prop_if_in_p:NV
             \g__leadsheets_chords_sequences_prop
-            \l_leadsheets_verse_type_tl
+            \l_leadsheets_verse_type_tl &&
+        !\l__leadsheets_measuring_bool
       }
       { \prg_return_true: }
       { \prg_return_false: }
@@ -147,6 +158,8 @@
         \prop_if_in_p:NV
           \g__leadsheets_chords_sequences_prop
           \l_leadsheets_verse_type_tl
+        &&
+        !\l__leadsheets_measuring_bool
       }
       { \prg_return_true: }
       { \prg_return_false: }
@@ -154,14 +167,8 @@
 
 \cs_new:Npn \leadsheets_remember_or_recall_chords:w
   {
-    \bool_if:NTF \l__leadsheets_record_chords_bool
-      {
-        \prop_if_in:NVTF
-          \g__leadsheets_chords_sequences_prop
-          \l_leadsheets_verse_type_tl
-          { \__leadsheets_recall_chord:w }
-          { \chord }
-      }
+    \leadsheets_if_recall_chords:TF
+      { \__leadsheets_recall_chord:w }
       { \chord }
   }
 

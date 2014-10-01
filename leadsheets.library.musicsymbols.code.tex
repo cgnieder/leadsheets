@@ -39,66 +39,66 @@
 \newrobustcmd*\eighthrest    {\musicsymbol[-1ex]{?}\kern.33em}
 \newrobustcmd*\sixteenthrest {\musicsymbol[-1ex]{@}\kern.33em}
 
-\newcommand*\mscsym@size{\f@size pt}
-\newlength\mscsym@barheight
+\newcommand*\leadsheets@size{\f@size pt}
+\newlength\leadsheets@barheight
 
-\newrobustcmd*\mscsym@genericbar[1]{%
-  \setlength\mscsym@barheight\mscsym@size
-  \rule[-.2\mscsym@barheight]{#1}{\mscsym@barheight}%
+\newrobustcmd*\genericbar[1]{%
+  \setlength\leadsheets@barheight\leadsheets@size
+  \rule[-.2\leadsheets@barheight]{#1}{\leadsheets@barheight}%
 }
 
 \newcommand*\normalbarwidth{.02em}
 \newcommand*\thickbarwidth{.15em}
 \newcommand*\interbarwidth{.1em}
 
-\newrobustcmd*\mscsym@thickbar{%
-  \mscsym@genericbar{\thickbarwidth}%
+\newrobustcmd*\leadsheets@thickbar{%
+  \genericbar{\thickbarwidth}%
 }
 
-\newrobustcmd*\mscsym@repeatcolon{%
+\newrobustcmd*\leadsheets@repeatcolon{%
   \leavevmode
-  \setlength\mscsym@barheight\mscsym@size
-  \raise.1\mscsym@barheight\hbox{:}%
+  \setlength\leadsheets@barheight\leadsheets@size
+  \raise.1\leadsheets@barheight\hbox{:}%
 }
 
-\newrobustcmd*\mscsym@interbar{\kern\interbarwidth\relax}
+\newrobustcmd*\leadsheets@interbar{\kern\interbarwidth\relax}
 
 \newrobustcmd*\normalbar{%
-  \mscsym@genericbar{\normalbarwidth}%
+  \genericbar{\normalbarwidth}%
 }
 
 \newrobustcmd*\leftrepeat{%
-  \mscsym@thickbar
-  \mscsym@interbar
+  \leadsheets@thickbar
+  \leadsheets@interbar
   \normalbar
-  \mscsym@repeatcolon
+  \leadsheets@repeatcolon
 }
 
 \newrobustcmd*\rightrepeat{%
-  \mscsym@repeatcolon
+  \leadsheets@repeatcolon
   \normalbar
-  \mscsym@interbar
-  \mscsym@thickbar
+  \leadsheets@interbar
+  \leadsheets@thickbar
 }
 
 \newrobustcmd*\leftrightrepeat{%
-  \mscsym@repeatcolon
-  \mscsym@thickbar
-  \mscsym@interbar
-  \mscsym@thickbar
-  \mscsym@repeatcolon
+  \leadsheets@repeatcolon
+  \leadsheets@thickbar
+  \leadsheets@interbar
+  \leadsheets@thickbar
+  \leadsheets@repeatcolon
 }
 
 \newrobustcmd*\doublebar{%
   \normalbar
-  \mscsym@interbar
+  \leadsheets@interbar
   \normalbar
 }
 
 \newrobustcmd*\stopbar{%
   \normalbar
-  \mscsym@interbar
-  \mscsym@thickbar
+  \leadsheets@interbar
+  \leadsheets@thickbar
 }
 
 \endinput

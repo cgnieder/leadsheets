@@ -955,6 +955,9 @@ Before we forget -- there are more options:
   \keyval{align-chords}{col}\Default{c}
     Determines how a chord is aligned with respect to the word it is placed
     above of.  Valid input is any valid \env*{tabular} column identifier.
+  \keybool{print-chords}\Default{true}
+    If set to false \cs{chord} won't print the chord but will do nothing
+    instead.  This options does not affect \cs{writechord}.
 \end{options}
 
 While \cs{chord} is available in the whole document the
