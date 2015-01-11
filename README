@@ -27,13 +27,14 @@ The leadsheets bundle consists of the following files
  - libraries -- they all follow the naming scheme
    leadsheets.library.<name>.code.tex:
     * chordnames
-    * musicsymbols
-    * songs
-    * properties
-    * transposing
     * chords
+    * musejazz
+    * musicsymbols
+    * properties
+    * songs
     * templates
     * translations
+    * transposing
  - leadsheets_en.tex
  - leadsheets_en.pdf
 --------------------------------------------------------------------------
