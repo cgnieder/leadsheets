@@ -1,5 +1,5 @@
-% arara: pdflatex: { shell: on }
-% arara: biber
+% !arara: pdflatex: { shell: on }
+% !arara: biber
 % arara: pdflatex
 % arara: pdflatex
 \documentclass[load-preamble+]{cnltx-doc}
@@ -181,8 +181,10 @@ is now the attempt to have a clean, documented and customisable version of my
 code\footnote{Plus new things!}.
 
 \section{The Structure of the Package}
-\leadsheets{} is a modular package and consists of several libraries.  If you
-just say
+\leadsheets{} is a modular package and consists of several
+libraries\footnote{This did seem like a good idea for maintenance when I first
+  came up with it.  Now I'm not so sure any more but I am way too lazy to
+  change it back.  So here we are\ldots}.  If you just say
 \begin{sourcecode}
   \usepackage{leadsheets}
 \end{sourcecode}
@@ -218,14 +220,17 @@ The user-libraries are the following ones:
     few macros for typesetting of chord symbols.  It is described in
     part~\ref{part:chordnames-library}.  It also loads the
     \library{musicsymbols}library.
-  \item[\library{musejazz}] extends the \chordnames\ library to use
-    MuseScore's \enquote{MuseJazz} font, see section~\ref{sec:musejazz-libr}.
+  \item[\library{musejazz}] \packageoption{musejazz}extends the \chordnames\
+    library to use MuseScore's \enquote{MuseJazz} font, see
+    section~\ref{sec:musejazz-libr}.  It loads the \library{chordnames}
+    library.
   \item[\library{songs}]  \packageoption{songs}This is the main library.  It
     defines everything necessary for the typesetting of the leadsheets.  It
     currently loads \emph{all other libraries}, \ie, user libraries \emph{and}
-    internal libraries.  This library including~\ref{part:leadsheets-library}.
+    internal libraries.  This library is described in
+    part~\ref{part:leadsheets-library}.
 \end{description}
-Those three libraries can also be loaded as a package option.  If you say
+Those libraries can also be loaded as a package option.  If you say
 \begin{sourcecode}
   \usepackage[musicsymbols]{leadsheets}
 \end{sourcecode}
@@ -237,7 +242,7 @@ is the same as using the package \emph{without} any options.  ``Without any''
 also means that neither \library{musicsymbols}, \library{chordnames} nor
 \library{songs} has been given as class option!
 
-Then there is quite a number of auxiliary libraries which are all needed by
+There is also a number of auxiliary libraries which are all needed by
 the \library{songs} library.  The libraries are usually not described in
 sections of their own but as part of the \library{songs} library.  However,
 the following list gives hints to where some of the concepts are explained:
@@ -346,7 +351,7 @@ bars:
 \end{commands}
 
 \clearpage
-\part{The \library*{chordnames} Library (and the \library*{musejazz} library)}\label{part:chordnames-library}
+\part{The \library*{chordnames} Library (and the \library*{musejazz} Library)}\label{part:chordnames-library}
 \dictum[Wes Montgomery]{%
   I never practice my guitar -- from time to time I just open the case and
   throw in a piece of raw meat.%
@@ -823,19 +828,19 @@ explained in section~\ref{sec:placing-chords}.
 \subsection{Capo Information}\label{sec:capo-information}
 When you set the \property{capo} property the macro \cs{capo} writes
 \begin{center}
-  \GetTranslation{leadsheets/capo}: IV~\GetTranslation{leadsheets/fret}
+  \GetTranslation{leadsheets/capo}: IV.~\GetTranslation{leadsheets/fret}
 \end{center}
 What it writes \emph{exactly} depends on a few settings: the \property{capo}
-obviously, which determines the number that is printed.  The translations for
-the \enquote{capo} and \enquote{fret} strings (see
+property obviously, which determines the number that is printed.  The
+translations for the \enquote{capo} and \enquote{fret} strings (see
 section~\ref{sec:internationalization} for details) and the setting of the
 following option:
 \begin{options}
   \keychoice{capo-nr-format}{arabic,roman,Roman}\Default{Roman}
     The format of the number printed by the \cs{capo} macro.
-  \keyval{capo-nr-cs}{cs}\Default{\cs*{@firstofone}}
-    A macro that takes one argument.  Can be used to give the printed number a
-    special formatting (like a trailing full stop for example).
+  \keyval{capo-nr}{code}\Default{\#1.}
+    The code to print the number.  In the code refer to the number with
+    \code{\#1}.
 \end{options}
 
 \section{The \env*{verse} Environment}\label{sec:envverse-environment}

@@ -426,7 +426,7 @@
       }
   }
 
-\cs_new:Npn \leadsheets_capo_number_print:n #1 {#1}
+\cs_new:Npn \leadsheets_capo_number_print:n #1 {#1.}
 
 \cs_new_protected:Npn \leadsheets_capo:
   {
@@ -623,9 +623,9 @@
       { arabic , roman , Roman }
       { \tl_set:NV \l__leadsheets_capo_number_format_tl \l_keys_choice_tl } ,
     capo-nr-format  .initial:n  = {Roman} ,
-    capo-nr-cs      .code:n     =
-      \cs_set_protected:Npn \leadsheets_capo_number_print:n {#1} ,
-    capo-nr-cs      .initial:n  = \use:n
+    capo-nr         .code:n     =
+      \cs_set_protected:Npn \leadsheets_capo_number_print:n ##1 {#1} ,
+    capo-nr         .initial:n  = #1.
   }
 
 \endinput
