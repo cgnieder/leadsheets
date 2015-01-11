@@ -1,10 +1,12 @@
 % arara: pdflatex: { shell: on }
-% !arara: biber
+% arara: biber
+% arara: pdflatex
 % arara: pdflatex
 \documentclass[load-preamble+]{cnltx-doc}
 \usepackage{leadsheets}
 \setcnltx{
   package = leadsheets ,
+  info    = Typesetting leadsheets and songbooks ,
   authors = Clemens Niederberger ,
   email   = contact@mychemistry.eu ,
   url     = https://github.com/cgnieder/leadsheets/ ,
@@ -37,7 +39,9 @@
   add-silent-cmds = {
     @itemdepth ,
     endmdframed ,
-    mdframed
+    mdframed ,
+    newfontfamily,
+    musejazz
   } ,
   add-envs = {
     arraybackslash ,
@@ -94,6 +98,7 @@
 }
 \newrobustcmd*\musicsymbols{\library{musicsymbols}}
 \newrobustcmd*\chordnames{\library{chordnames}}
+\newrobustcmd*\musejazz{\library{musejazz}}
 
 \setchordnames{format=\libertineLF}
 
@@ -212,7 +217,9 @@ The user-libraries are the following ones:
   \item[\library{chordnames}] \packageoption{chordnames}This library defines a
     few macros for typesetting of chord symbols.  It is described in
     part~\ref{part:chordnames-library}.  It also loads the
-    \library{musicsymbols} library.
+    \library{musicsymbols}library.
+  \item[\library{musejazz}] extends the \chordnames\ library to use
+    MuseScore's \enquote{MuseJazz} font, see section~\ref{sec:musejazz-libr}.
   \item[\library{songs}]  \packageoption{songs}This is the main library.  It
     defines everything necessary for the typesetting of the leadsheets.  It
     currently loads \emph{all other libraries}, \ie, user libraries \emph{and}
@@ -339,7 +346,7 @@ bars:
 \end{commands}
 
 \clearpage
-\part{The \library*{chordnames} Library}\label{part:chordnames-library}
+\part{The \library*{chordnames} Library (and the \library*{musejazz} library)}\label{part:chordnames-library}
 \dictum[Wes Montgomery]{%
   I never practice my guitar -- from time to time I just open the case and
   throw in a piece of raw meat.%
@@ -529,6 +536,30 @@ notations.
   \chordname{B} \chordname{H} \chordname{H#}\par
 \end{example}
 
+\section{The \library*{musejazz} Library}\label{sec:musejazz-libr}
+
+The \musejazz\ library extends the \chordnames\ library to use
+MuseScore's\footnote{\url{http://musescore.com/}} font \enquote{MuseJazz} for
+the chord symbols.  The library contains the two lines which explains why it
+requires \LuaLaTeX\ or \XeLaTeX.  Well, and the font, obviously.
+
+\begin{sourcecode}
+  \RequirePackage{fontspec}
+  \newfontfamily\musejazz{MuseJazz}
+\end{sourcecode}
+
+Here is a small example of it's usage and the outcome:
+
+\begin{example}[compile,program=lualatex,max-pages=1,add-frame=false]
+  % compile with LuaLaTeX or XeLaTeX
+  \documentclass[margin=4mm]{standalone}
+  \usepackage{leadsheets}
+  \useleadsheetslibrary{musejazz}
+  \begin{document}
+  \Huge\chordname{Bb7(#9)}\space\chordname{F##9}
+  \end{document}
+\end{example}
+
 \clearpage
 \part{The \library*{songs} Library}\label{part:leadsheets-library}
 \dictum[Jeff Beck]{%
@@ -576,19 +607,20 @@ First let's take a look at an example:
   \usepackage{leadsheets}
   \begin{document}
 
-  \begin{song}{title=Layla,composer={Eric Clapton and Jim
-        Gordon},tags={clapton,unplugged,r&b}}
+  \begin{song}{title={Mary Had A Little Lamb}, music={Stevie Ray Vaughan},
+      lyrics={traditional}, tags={srv,blues}}
   \begin{verse}
-    What will you do when you get lonely? \\
-    Noone waiting by your side. \\
-    You've been runnin', hidin' much too long. \\
-    You know it's just your foolish pride .
+    Mary had a little lamb \\
+    Its fleece was white as snow, yea \\
+    Everywhere the child went \\
+    The little lamb was sure to go, yea
   \end{verse}
-  \begin{chorus}
-    Layla, got me on my knees. \\
-    Layla, beggin' darlin', please! \\
-    Layla, darlin' won't you ease my worried mind? 
-  \end{chorus}
+  \begin{verse}
+    He followed her to school one day \\
+    And broke the teacher's rule \\
+    What a time did they have \\
+    That day at school
+  \end{verse}
   \end{song}
   
   \end{document}
@@ -972,19 +1004,20 @@ inside of the \env{song} environment.
   \usepackage{leadsheets}
   \begin{document}
 
-  \begin{song}{title=Layla,composer={Eric Clapton and Jim
-        Gordon},tags={clapton,unplugged,r&b}}
+  \begin{song}{title={Mary Had A Little Lamb}, music={Stevie Ray Vaughan},
+      lyrics={traditional}, tags={srv,blues}}
   \begin{verse}
-    ^{C#mi7} What will you do when you get ^*{G#7}lone ly? \\
-    ^{C#mi7} Noone ^*{C}wai ting ^{D}by your ^{E}side. ^{E7} \\
-    ^{F#mi} You've been ^*{B}run nin', ^*{E}hid in' much too ^{A}long. \\
-    ^{F#mi} You know it's ^{B}just your foolish ^{E}pride .
+    ^{E7} Mary had a little lamb ^{A7} \\
+    Its fleece was white as ^{E7}snow, yea \\
+    Everywhere the child ^{B7}went ^{A7} \\
+    The little lamb was sure to ^{E7}go, yea
   \end{verse}
-  \begin{chorus}
-    ^*{A}Lay ---^-{Dmi7}la, \quad ^{Bb} ^{C}got me on my knees. \\
-    Lay^-{Dmi7}la, \quad ^{Bb} ^*{C}beg gin' darlin', ^{Dmi7}please, Layla. \\
-    Darlin' won't you ease my worried ^{Dmi7}mind? ^{Bb} ^{C}
-  \end{chorus}
+  \begin{verse}
+    ^{E7} He followed her to school one day ^{A7} \\
+    And broke the teacher's ^{E7}rule \\
+    What a time did they ^{B7}have ^{A7} \\
+    That day at ^{E7}school {}
+  \end{verse}
   \end{song}
   
   \end{document}
@@ -1166,23 +1199,20 @@ that if you change \option{chord-cs} horrible things may happen.  \emph{So
   \usepackage{leadsheets}
   \begin{document}
 
-  \begin{song}[transpose=2]{
-      title=Layla,
-      composer={Eric Clapton and Jim Gordon},
-      tags={clapton,unplugged,r&b},
-      key = Dmi
-    }
+  \begin{song}[transpose=2]{title={Mary Had A Little Lamb}, music={Stevie Ray
+        Vaughan}, lyrics={traditional}, tags={srv,blues},key=E}
   \begin{verse}
-    ^{C#mi7} What will you do when you get ^*{G#7}lone ly? \\
-    ^{C#mi7} Noone ^*{C}wai ting ^{D}by your ^{E}side. ^{E7} \\
-    ^{F#mi} You've been ^*{B}run nin', ^*{E}hid in' much too ^{A}long. \\
-    ^{F#mi} You know it's ^{B}just your foolish ^{E}pride .
+    ^{E7} Mary had a little lamb ^{A7} \\
+    Its fleece was white as ^{E7}snow, yea \\
+    Everywhere the child ^{B7}went ^{A7} \\
+    The little lamb was sure to ^{E7}go, yea
   \end{verse}
-  \begin{chorus}
-    ^*{A}Lay ---^-{Dmi7}la, \quad ^{Bb} ^{C}got me on my knees. \\
-    Lay^-{Dmi7}la, \quad ^{Bb} ^*{C}beg gin' darlin', ^{Dmi7}please, Layla. \\
-    Darlin' won't you ease my worried ^{Dmi7}mind? ^{Bb} ^{C}
-  \end{chorus}
+  \begin{verse}
+    ^{E7} He followed her to school one day ^{A7} \\
+    And broke the teacher's ^{E7}rule \\
+    What a time did they ^{B7}have ^{A7} \\
+    That day at ^{E7}school {}
+  \end{verse}
   \end{song}
   
   \end{document}
@@ -1431,7 +1461,7 @@ contents or other auxiliary files.
     2}\marg{true}\marg{false}]
     Checks if properties \meta{property 1} and \meta{property 2} have been set
     to the same value.
-  \command{ifsongmeasuring}[\marg{true}\marg{false}]
+  \expandable\command{ifsongmeasuring}[\marg{true}\marg{false}]
     \leadsheets{} measures the height of a song body before it typesets it and
     it can be necessary in a template to know if the measuring phase is active
     or not.  For example the song property \property{height} should only be
@@ -1476,29 +1506,32 @@ as the \titletemplate{minimal} template.
   \documentclass{article}
   \usepackage{leadsheets}
   \definesongtitletemplate{custom}{
-    \section{%
+    \ifsongmeasuring
+      {\section*}
+      {\section}{%
       \songproperty{title}%
-      \ifsongproperty{composer}
-        { (by \printsongpropertylist{composer}{ \& }{, }{ \& })}
+      \ifsongproperty{music}
+        { (music by \printsongpropertylist{music}{ \& }{, }{ \& })}
         {}%
     }
   }
   \setleadsheets{title-template = custom}
   \begin{document}
 
-  \begin{song}{title=Layla,composer={Eric Clapton and Jim
-        Gordon},tags={clapton,unplugged,r&b}}
+  \begin{song}{title={Mary Had A Little Lamb}, music={Stevie Ray Vaughan},
+      lyrics={traditional}, tags={srv,blues}}
   \begin{verse}
-    What will you do when you get lonely? \\
-    Noone waiting by your side. \\
-    You've been runnin', hidin' much too long. \\
-    You know it's just your foolish pride .
+    Mary had a little lamb \\
+    Its fleece was white as snow, yea \\
+    Everywhere the child went \\
+    The little lamb was sure to go, yea
   \end{verse}
-  \begin{chorus}
-    Layla, got me on my knees. \\
-    Layla, beggin' darlin', please! \\
-    Layla, darlin' won't you ease my worried mind? 
-  \end{chorus}
+  \begin{verse}
+    He followed her to school one day \\
+    And broke the teacher's rule \\
+    What a time did they have \\
+    That day at school
+  \end{verse}
   \end{song}
   
   \end{document}
@@ -1510,7 +1543,10 @@ commands.
 
 \begin{sourcecode}
   \definesongtitletemplate{tabular}{
-    \section{\songproperty{title}}
+    \ifsongmeasuring
+      {\section*}
+      {\section}%
+      {\songproperty{title}}
     \begingroup\footnotesize
     \begin{tabular}{
         @{}
@@ -1570,23 +1606,20 @@ A song using the \titletemplate{tabular} template:
   \setleadsheets{title-template = tabular}
   \begin{document}
 
-  \begin{song}{
-      title = Layla ,
-      composer = {Eric Clapton and Jim Gordon} ,
-      tags = {clapton,unplugged,r&b} ,
-      key = Dmi
-    }
+  \begin{song}{title={Mary Had A Little Lamb}, interpret={Stevie Ray Vaughan},
+      genre={blues}, tags={srv,blues},key=E}
   \begin{verse}
-    ^{C#mi7} What will you do when you get ^*{G#7}lone ly? \\
-    ^{C#mi7} Noone ^*{C}wai ting ^{D}by your ^{E}side. ^{E7} \\
-    ^{F#mi} You've been ^*{B}run nin', ^*{E}hid in' much too ^{A}long. \\
-    ^{F#mi} You know it's ^{B}just your foolish ^{E}pride .
+    ^{E7} Mary had a little lamb ^{A7} \\
+    Its fleece was white as ^{E7}snow, yea \\
+    Everywhere the child ^{B7}went ^{A7} \\
+    The little lamb was sure to ^{E7}go, yea
   \end{verse}
-  \begin{chorus}
-    ^*{A}Lay ---^-{Dmi7}la, \quad ^{Bb} ^{C}got me on my knees. \\
-    Lay^-{Dmi7}la, \quad ^{Bb} ^*{C}beg gin' darlin', ^{Dmi7}please, Layla. \\
-    Darlin' won't you ease my worried ^{Dmi7}mind? ^{Bb} ^{C}
-  \end{chorus}
+  \begin{verse}
+    ^{E7} He followed her to school one day ^{A7} \\
+    And broke the teacher's ^{E7}rule \\
+    What a time did they ^{B7}have ^{A7} \\
+    That day at ^{E7}school {}
+  \end{verse}
   \end{song}
   
   \end{document}

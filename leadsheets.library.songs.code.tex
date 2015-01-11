@@ -181,6 +181,8 @@
 \definesongproperty {sort-short-title}
 \definesongproperty {composer}
 \definesongproperty {sort-composer}
+\definesongproperty {music}
+\definesongproperty {sort-music}
 \definesongproperty {lyrics}
 \definesongproperty {sort-lyrics}
 \definesongproperty {arr}
@@ -199,12 +201,13 @@
 
 % properties that should take the value of another property if they're not set
 % explicitly:
-\copysongproperty {composer} {sort-composer}
-\copysongproperty {lyrics} {sort-lyrics}
-\copysongproperty {title} {sort-title}
+\copysongproperty {composer}    {sort-composer}
+\copysongproperty {lyrics}      {sort-lyrics}
+\copysongproperty {music}       {sort-music}
+\copysongproperty {title}       {sort-title}
 \copysongproperty {short-title} {sort-short-title}
-\copysongproperty {arr} {sort-arr}
-\copysongproperty {interpret} {sort-interpret}
+\copysongproperty {arr}         {sort-arr}
+\copysongproperty {interpret}   {sort-interpret}
 
 % --------------------------------------------------------------------------
 % defining a new song:
@@ -356,7 +359,10 @@
 
 \definesongtitletemplate {tabular}
   {
-    \section{ \songproperty {title} }
+    \ifsongmeasuring
+      { \section* }
+      { \section }
+      { \songproperty {title} }
     \begingroup\footnotesize
     \begin{tabular}{
         @{}

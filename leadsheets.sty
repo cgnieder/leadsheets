@@ -5,9 +5,9 @@
 % --------------------------------------------------------------------------
 % package information:
 \ExplSyntaxOn
-\tl_const:Nx \c_leadsheets_date_tl    {2014/10/01}
-\tl_const:Nx \c_leadsheets_version_tl {0.1-beta-4}
-\tl_const:Nx \c_leadsheets_info_tl    {songbook~(beta~version)}
+\tl_const:Nx \c_leadsheets_date_tl    {2015/01/11}
+\tl_const:Nx \c_leadsheets_version_tl {0.1}
+\tl_const:Nx \c_leadsheets_info_tl    {Typesetting leadsheets and songbooks}
 
 \ProvidesExplPackage
   {leadsheets}
@@ -24,6 +24,12 @@
     Loading~ the~ library~ will~ abort~ \msg_line_context:
   }
 
+\msg_new:nnn {leadsheets} {loading-library}
+  {
+    (leadsheets) \c_space_tl \c_space_tl \c_space_tl \c_space_tl
+    Loading~ library~ `#1'...
+  }
+
 % --------------------------------------------------------------------------
 % variants of kernel functions:
 \cs_generate_variant:Nn \tl_if_eq:nnTF       { xx , V }
@@ -34,6 +40,7 @@
 \cs_generate_variant:Nn \tl_replace_once:Nnn { NnV }
 \cs_generate_variant:Nn \prop_gput:Nnn       { cxx , NVf }
 \cs_generate_variant:Nn \msg_error:nnn       { nnV }
+\cs_generate_variant:Nn \msg_warning:nnn     { nnV }
 \cs_generate_variant:Nn \vbox_set:Nn         { NV }
 
 % --------------------------------------------------------------------------
@@ -54,6 +61,7 @@
 % --------------------------------------------------------------------------
 % library mechanism:
 \tl_const:Nn \c__leadsheets_library_extension_tl {code.tex}
+\tl_const:Nn \c__leadsheets_library_prefix_tl    {leadsheets.library}
 
 \cs_new_protected:Npn \leadsheets_load_libraries:n #1
   { \clist_map_inline:nn {#1} { \leadsheets_load_library:n {##1} } }
@@ -69,10 +77,11 @@
     \cs_if_exist:cF {leadsheets-library-#1-loaded}
       {
         \file_if_exist:nTF
-          {leadsheets.library.#1.\c__leadsheets_library_extension_tl}
+          {\c__leadsheets_library_prefix_tl.#1.\c__leadsheets_library_extension_tl}
           {
+            \msg_log:nnn {leadsheets} {loading-library} {#1}
             \@onefilewithoptions
-              {leadsheets.library.#1}[][]
+              {\c__leadsheets_library_prefix_tl.#1}[][]
               \c__leadsheets_library_extension_tl
           }
           { \msg_warning:nnn {leadsheets} {library-missing} {#1} }
@@ -84,7 +93,7 @@
   {
     \cs_new:cpn {leadsheets-library-#1-loaded} {leadsheets:~`#1'~library}
     \ProvidesFile
-      {leadsheets.library.#1.\c__leadsheets_library_extension_tl}
+      {\c__leadsheets_library_prefix_tl.#1.\c__leadsheets_library_extension_tl}
       [
         \c_leadsheets_date_tl
         \c_space_tl
@@ -130,7 +139,7 @@
       \leadsheets_load_library:n {chordnames} ,
     musejazz     .code:n =
       \bool_set_true:N \l__leadsheets_with_options_bool
-      \leadsheets_load_library:n {musejazz\g__leadsheets_chords_sequences_prop} ,
+      \leadsheets_load_library:n {musejazz} ,
     songs        .code:n =
       \bool_set_true:N \l__leadsheets_with_options_bool
       \leadsheets_load_library:n {songs} ,
