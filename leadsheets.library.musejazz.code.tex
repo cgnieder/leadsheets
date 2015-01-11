@@ -1,0 +1,259 @@
+\LeadsheetsExplLibrary{musejazz}
+  {2014/08/10 using MuseScore's MuseJazz font for chordnames}
+
+\leadsheets_load_library:n {chordnames}
+
+\msg_new:nnnn { leadsheets } { wrong-engine }
+  {
+    the~ `musejazz'~ library~ needs~ either~ to~ be~ run~ with~ XeLaTeX~ or~
+    with~ LuaLaTeX.
+  }
+  {
+    the~ `musejazz'~ library~ needs~ either~ to~ be~ run~ with~ XeLaTeX~ or~
+    with~ LuaLaTeX.~ Since~ you're~ using~ something~ different~ I~ will~
+    abort!
+  }
+
+\bool_if:nF { \xetex_if_engine_p: || \luatex_if_engine_p: }
+  { \msg_error:nn {leadsheets} {wrong-engine} \tex_endinput:D }
+
+\RequirePackage {fontspec}
+
+\newfontfamily \musejazz {MuseJazz}
+
+\cs_new_protected:Npn \leadsheets_char:Nn #1#2
+  { \cs_set:Npx #1 { \tex_char:D "#2 \scan_stop: } }
+
+
+% give names to the chararacters of the MuseJazz fonts by using their unicode
+% point:
+
+% \leadsheets_char:Nn \leadsheets_quarter: {2669} % viertel
+% \leadsheets_char:Nn \leadsheets_eigth:   {266A} % achtel
+\leadsheets_char:Nn \leadsheets_flat:    {266D} % b
+\leadsheets_char:Nn \leadsheets_natural: {266E} % auflösung
+\leadsheets_char:Nn \leadsheets_sharp:   {266F} % #
+
+% \leadsheets_char:Nn \leadsheets_sharp:   {E10C} % #
+% \leadsheets_char:Nn \leadsheets_flat:    {E10D} % b
+% \leadsheets_char:Nn \leadsheets_natural: {E10E} % auflösung
+\leadsheets_char:Nn \leadsheets_segno:   {E167} % segno
+\leadsheets_char:Nn \leadsheets_coda:    {E168} % coda
+
+% \leadsheets_char:Nn \leadsheets_segno: {E177} % segno
+% \leadsheets_char:Nn \leadsheets_coda:  {E178} % coda
+
+\leadsheets_char:Nn \leadsheets_major:              {E180} % ma
+\leadsheets_char:Nn \leadsheets_minor:              {E181} % mi
+\leadsheets_char:Nn \leadsheets_tension_eleven:     {E182} % ^11
+\leadsheets_char:Nn \leadsheets_tension_thirteen:   {E183} % ^13
+\leadsheets_char:Nn \leadsheets_tension_dim:        {E184} % ^dim
+\leadsheets_char:Nn \leadsheets_sus:                {E185} % sus
+\leadsheets_char:Nn \leadsheets_tension_aug_symbol: {E186} % ^+
+\leadsheets_char:Nn \leadsheets_tension_dim_symbol: {E187} % ^o
+\leadsheets_char:Nn \leadsheets_tension_flat:       {E188} % ^b
+\leadsheets_char:Nn \leadsheets_tension_sharp:      {E189} % ^#
+\leadsheets_char:Nn \leadsheets_major_seven:        {E18A} % Delta
+\leadsheets_char:Nn \leadsheets_tension_add:        {E18B} % ^add
+\leadsheets_char:Nn \leadsheets_tension_add_eleven: {E18C} % ^(add 11)
+\leadsheets_char:Nn \leadsheets_sus_four:           {E18D} % sus4
+\leadsheets_char:Nn \leadsheets_dim_symbol:         {E18E} % o
+\leadsheets_char:Nn \leadsheets_half_dim_symbol:    {E18F} % ø
+
+\leadsheets_char:Nn \leadsheets_tension_zero:  {E190} % ^0
+\leadsheets_char:Nn \leadsheets_tension_one:   {E191} % ^1
+\leadsheets_char:Nn \leadsheets_tension_two:   {E192} % ^2
+\leadsheets_char:Nn \leadsheets_tension_three: {E193} % ^3
+\leadsheets_char:Nn \leadsheets_tension_four:  {E194} % ^4
+\leadsheets_char:Nn \leadsheets_tension_five:  {E195} % ^5
+\leadsheets_char:Nn \leadsheets_tension_six:   {E196} % ^6
+\leadsheets_char:Nn \leadsheets_tension_seven: {E197} % ^7
+\leadsheets_char:Nn \leadsheets_tension_eight: {E198} % ^8
+\leadsheets_char:Nn \leadsheets_tension_nine:  {E199} % ^9
+
+\leadsheets_char:Nn \leadsheets_do:  {E201} % Do
+\leadsheets_char:Nn \leadsheets_re:  {E202} % Re
+\leadsheets_char:Nn \leadsheets_mi:  {E203} % Mi
+\leadsheets_char:Nn \leadsheets_fa:  {E204} % Fa
+\leadsheets_char:Nn \leadsheets_sol: {E205} % Sol
+\leadsheets_char:Nn \leadsheets_la:  {E206} % La
+\leadsheets_char:Nn \leadsheets_si:  {E207} % Si
+\leadsheets_char:Nn \leadsheets_ut:  {E208} % Ut
+\leadsheets_char:Nn \leadsheets_so:  {E209} % So
+\leadsheets_char:Nn \leadsheets_ti:  {E20A} % Ti
+
+% \leadsheets_char:Nn \leadsheets_segno:     {1D10B} % segno
+% \leadsheets_char:Nn \leadsheets_coda:      {1D10C} % coda
+\leadsheets_char:Nn \leadsheets_whole:     {1D15D} % ganze
+\leadsheets_char:Nn \leadsheets_half:      {1D15E} % halbe
+\leadsheets_char:Nn \leadsheets_quarter:   {1D15F} % viertel
+\leadsheets_char:Nn \leadsheets_eighth:    {1D160} % achtel
+\leadsheets_char:Nn \leadsheets_sixteenth: {1D161} % sechzenhtel
+\leadsheets_char:Nn \leadsheets_dot:       {1D16D} % punkt
+
+\RenewDocumentCommand \flat          {} { \leadsheets_flat: }
+\RenewDocumentCommand \sharp         {} { \leadsheets_sharp: }
+\RenewDocumentCommand \natural       {} { \leadsheets_natural: }
+\NewDocumentCommand   \segno         {} { \leadsheets_segno: }
+\NewDocumentCommand   \coda          {} { \leadsheets_coda: }
+\RenewDocumentCommand \dim           {} { \leadsheets_dim_symbol: }
+\NewDocumentCommand   \halfdim       {} { \leadsheets_half_dim_symbol: }
+\NewDocumentCommand   \wholenote     {} { \leadsheets_whole: }
+\NewDocumentCommand   \halfnote      {} { \leadsheets_half: }
+\NewDocumentCommand   \quarternote   {} { \leadsheets_quarter: }
+\NewDocumentCommand   \eigthnote     {} { \leadsheets_eighth: }
+\NewDocumentCommand   \sixteenthnote {} { \leadsheets_sixteenth: }
+\NewDocumentCommand   \musicdot      {} { \leadsheets_dot: }
+
+\tl_set:Nn \l__leadsheets_sharp_tl       {\leadsheets_sharp:}
+\tl_set:Nn \l__leadsheets_flat_tl        {\leadsheets_flat:}
+\tl_set:Nn \l__leadsheets_doublesharp_tl {\doublesharp}
+\tl_set:Nn \l__leadsheets_doubleflat_tl  {\doubleflat}
+\tl_set:Nn \l__leadsheets_half_dim_tl    {\leadsheets_half_dim_symbol:}
+\tl_set:Nn \l__leadsheets_full_dim_tl    {\leadsheets_dim_symbol:}
+\tl_set:Nn \l__leadsheets_aug_tl         {\leadsheets_tension_aug_symbol:}
+\tl_set:Nn \l__leadsheets_major_tl       {\leadsheets_major:}
+\tl_set:Nn \l__leadsheets_minor_tl       {\leadsheets_minor:}
+\tl_set:Nn \l__leadsheets_sus_tl         {\leadsheets_sus:}
+\tl_set:Nn \l__leadsheets_dim_tl         {\leadsheets_tension_dim:}
+\tl_set:Nn \l__leadsheets_add_tl         {\leadsheets_tension_add:}
+\tl_set:Nn \l__leadsheets_major_seven_tl {\leadsheets_major_seven:}
+\tl_set:Nn \l__leadsheets_major_nine_tl  {\leadsheets_major_seven:\leadsheets_tension_nine:}
+
+\group_begin:
+% for convenient input of sharps:
+\char_set_catcode_other:N \#
+% because ^ is active in the song environment:
+\char_set_catcode_active:N \^
+% # is other so we need another parameter character:
+\char_set_catcode_parameter:N \!
+
+\cs_gset_protected:Npn \leadsheets_chord:
+  {
+    \group_begin:
+      \tl_use:N \l__leadsheets_format_tl
+      \musejazz
+      \char_set_catcode_other:N \#
+      \char_set_catcode_active:N \^
+      \leadsheets_chord_aux:n
+  }
+
+\cs_gset_protected:Npn \leadsheets_chord_aux:n !1
+ {
+    \tl_set:Nn \l__leadsheets_chord_tl {!1}
+    \leadsheets_chord_sym:Nnn  \l__leadsheets_chord_tl {maj7}
+      {\l__leadsheets_major_seven_tl}
+    \leadsheets_chord_sym:Nnn  \l__leadsheets_chord_tl {maj9}
+      {\l__leadsheets_major_nine_tl}
+    \leadsheets_chord_sym:Nnn  \l__leadsheets_chord_tl {sus4}
+      {\leadsheets_sus_four:}
+    \leadsheets_chord_sym:Nnn  \l__leadsheets_chord_tl {sus}
+      {\l__leadsheets_sus_tl}
+    \leadsheets_chord_sym:Nnn  \l__leadsheets_chord_tl {^} {\textsuperscript}
+    \bool_if:NF \l__leadsheets_notation_literal_bool
+      {
+        % convert to English to German input:
+        \bool_if:NT \l__leadsheets_input_notation_german_bool
+          {
+            \leadsheets_chord_sym:Nnn \l__leadsheets_chord_tl {B}   {@@@}
+            \leadsheets_chord_sym:Nnn \l__leadsheets_chord_tl {H}   {B}
+            \leadsheets_chord_sym:Nnn \l__leadsheets_chord_tl {@@@} {Bb}
+          }
+        % convert to English to German output:
+        \bool_if:NT \l__leadsheets_output_notation_german_bool
+          {
+            \leadsheets_chord_sym:Nnn \l__leadsheets_chord_tl {Bb}  {@@@}
+            \leadsheets_chord_sym:Nnn \l__leadsheets_chord_tl {B}   {H}
+            \leadsheets_chord_sym:Nnn \l__leadsheets_chord_tl {@@@} {B}
+            \leadsheets_chord_sym:Nnn \l__leadsheets_chord_tl {B#}  {H}
+          }
+      }
+    \leadsheets_chord_sym:Nnn  \l__leadsheets_chord_tl {#b} {}
+    \leadsheets_chord_sym:Nnn  \l__leadsheets_chord_tl {b#} {}
+    \leadsheets_chord_sym:Nnn  \l__leadsheets_chord_tl {##}
+      {\l__leadsheets_doublesharp_tl}
+    \leadsheets_chord_sym:Nnn  \l__leadsheets_chord_tl {bb}
+      {\l__leadsheets_doubleflat_tl}
+    \leadsheets_chord_sym:Nnn  \l__leadsheets_chord_tl {#} {\l__leadsheets_sharp_tl}
+    \leadsheets_chord_sym:Nnn  \l__leadsheets_chord_tl {b} {\l__leadsheets_flat_tl}
+    \leadsheets_chord_sym:Nnn  \l__leadsheets_chord_tl {dim} {\l__leadsheets_dim_tl}
+    \leadsheets_chord_sym:Nnn  \l__leadsheets_chord_tl {add} {\l__leadsheets_add_tl}
+    % those need to be taken care of:
+    \leadsheets_chord_sym:Nnn \l__leadsheets_chord_tl {11} {\leadsheets_tension_eleven:}
+    \leadsheets_chord_sym:Nnn \l__leadsheets_chord_tl {13} {\leadsheets_tension_thirteen:}
+    \leadsheets_chord_sym:Nnn \l__leadsheets_chord_tl {0}  {\leadsheets_tension_zero:}
+    \leadsheets_chord_sym:Nnn \l__leadsheets_chord_tl {1}  {\leadsheets_tension_one:}
+    \leadsheets_chord_sym:Nnn \l__leadsheets_chord_tl {2}  {\leadsheets_tension_two:}
+    \leadsheets_chord_sym:Nnn \l__leadsheets_chord_tl {3}  {\leadsheets_tension_three:}
+    \leadsheets_chord_sym:Nnn \l__leadsheets_chord_tl {4}  {\leadsheets_tension_four:}
+    \leadsheets_chord_sym:Nnn \l__leadsheets_chord_tl {5}  {\leadsheets_tension_five:}
+    \leadsheets_chord_sym:Nnn \l__leadsheets_chord_tl {6}  {\leadsheets_tension_six:}
+    \leadsheets_chord_sym:Nnn \l__leadsheets_chord_tl {7}  {\leadsheets_tension_seven:}
+    \leadsheets_chord_sym:Nnn \l__leadsheets_chord_tl {8}  {\leadsheets_tension_eight:}
+    \leadsheets_chord_sym:Nnn \l__leadsheets_chord_tl {9}  {\leadsheets_tension_nine:}
+    % as do those:
+    \leadsheets_chord_sym:Nnn  \l__leadsheets_chord_tl {/o}
+      {\l__leadsheets_half_dim_tl}
+    \leadsheets_chord_sym:Nnn  \l__leadsheets_chord_tl {o}
+      {\l__leadsheets_full_dim_tl}
+    \leadsheets_chord_sym:Nnn  \l__leadsheets_chord_tl {+}
+      {\l__leadsheets_aug_tl}
+    \leadsheets_chord_sym:Nnn \l__leadsheets_chord_tl  {(}
+      { \leadsheets_tension:w( }
+    \leadsheets_chord_sym:Nnn \l__leadsheets_chord_tl  {mi}
+      {\l__leadsheets_minor_tl}
+    \leadsheets_chord_sym:Nnn \l__leadsheets_chord_tl  {ma}
+      {\l__leadsheets_major_tl}
+    \tl_replace_all:Nnn \l__leadsheets_chord_tl
+      {\textsuperscript\textsuperscript}
+      {\textsuperscript}
+    \tl_replace_all:Nnn \l__leadsheets_chord_tl
+      {\textsuperscript}
+      {\leadsheets_chord_tension:n}
+    \tl_use:N \l__leadsheets_chord_tl
+    \group_end:
+  }
+
+\group_end:
+
+\cs_new:Npn \leadsheets_chord_tension:n #1
+  {
+    \group_begin:
+      \tl_set:Nn \l__leadsheets_tension_tl {#1}
+      \leadsheets_chord_sym:Nnn \l__leadsheets_tension_tl
+        {\textsuperscript}
+        {\use:n}
+      \tl_set:Nn \l__leadsheets_sharp_tl {\leadsheets_tension_sharp:}
+      \tl_set:Nn \l__leadsheets_flat_tl  {\leadsheets_tension_flat:}
+      \l__leadsheets_tension_tl
+    \group_end:
+  }
+
+\cs_set_protected:Npn \leadsheets_tension:w (#1)
+  {
+    \group_begin:
+      \tl_set:Nn \l__leadsheets_tension_tl {#1}
+      \leadsheets_chord_sym:Nnn \l__leadsheets_tension_tl
+        {\textsuperscript}
+        {\use:n}
+      \tl_set:Nn \l__leadsheets_sharp_tl {\leadsheets_tension_sharp:}
+      \tl_set:Nn \l__leadsheets_flat_tl  {\leadsheets_tension_flat:}
+      \textsuperscript {(}
+      \l__leadsheets_tension_tl
+      \textsuperscript {)}
+      % \textsuperscript { ( \tl_use:N \l__leadsheets_tension_tl ) }
+    \group_end:
+  }
+
+\cs_new_protected:Npn \mjc_tension:w (#1)
+  {
+    \group_begin:
+      \tl_set:Nn \l__leadsheets_sharp_tl {\leadsheets_tension_sharp:}
+      \tl_set:Nn \l__leadsheets_flat_tl  {\leadsheets_tension_flat:}
+      \textsuperscript {(}
+      #1
+      \textsuperscript {)}
+    \group_end:
+  }
+
+\tex_endinput:D
