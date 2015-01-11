@@ -814,7 +814,7 @@ catecory codes:
   \item[\shortcut{\barsymbol}] category code 13 (active).  Used for
     typesetting bars.
   \item[\shortcut{:}] category code 13 (active).  Used for typesetting bars.
-  \item[\code{\#}] category code 12 (other).  Used fo chord names.
+  \item[\code{\#}] category code 12 (other).  Used for chord names.
 \end{labeling}
 
 Actually the characters \shortcut{\barsymbol} and \shortcut{:} are \emph{not}
@@ -1021,7 +1021,7 @@ inside of the \env{song} environment.
     ^{E7} He followed her to school one day ^{A7} \\
     And broke the teacher's ^{E7}rule \\
     What a time did they ^{B7}have ^{A7} \\
-    That day at ^{E7}school {}
+    That day at ^{E7}school
   \end{verse}
   \end{song}
   
@@ -1040,10 +1040,10 @@ chords.  If you place a chord over the last word in a line
   ^{F#mi} You've been ^*{B}run nin', ^*{E}hid in' much too ^{A}long.
 \end{sourcecode}
 then the end of line that is used as the mandatory space argument for
-\cs{chord} won't be recognized as an end of line.  Even worse: at the end of a
-\env{verse} like environment this may cause non-obvious errors.  So in these
-cases you should always insert an explicit space by one of the following
-methods:
+\cs{chord} may not be recognized as an end of line.  Even worse: at the end of
+a \env{verse} like environment this may cause non-obvious errors.  So if
+you're getting in trouble in these cases you should always insert an explicit
+space, \eg. by one of the following methods:
 \begin{sourcecode}
   ^{F#mi} You've been ^*{B}run nin', ^*{E}hid in' much too ^{A}long. {}
   ^{F#mi} You've been ^*{B}run nin', ^*{E}hid in' much too ^{A}long. \empty
@@ -1216,7 +1216,7 @@ that if you change \option{chord-cs} horrible things may happen.  \emph{So
     ^{E7} He followed her to school one day ^{A7} \\
     And broke the teacher's ^{E7}rule \\
     What a time did they ^{B7}have ^{A7} \\
-    That day at ^{E7}school {}
+    That day at ^{E7}school
   \end{verse}
   \end{song}
   
@@ -1623,7 +1623,7 @@ A song using the \titletemplate{tabular} template:
     ^{E7} He followed her to school one day ^{A7} \\
     And broke the teacher's ^{E7}rule \\
     What a time did they ^{B7}have ^{A7} \\
-    That day at ^{E7}school {}
+    That day at ^{E7}school
   \end{verse}
   \end{song}
   
