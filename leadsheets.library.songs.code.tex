@@ -496,6 +496,7 @@
     \bool_if:NTF #1
       { \bool_set_true:c {l__leadsheets_#2_empty_bool} }
       { \bool_set_false:c {l__leadsheets_#2_empty_bool} }
+    \tl_new:c {l__leadsheets_#2_class_tl}
     \tl_new:c {l__leadsheets_#2_format_tl}
     \tl_new:c {l__leadsheets_#2_template_tl}
     \tl_new:c {l__leadsheets_#2_label_format_tl}
@@ -507,6 +508,8 @@
       {
         numbered      .bool_set:c = {l__leadsheets_#2_numbered_bool} ,
         named         .bool_set:c = {l__leadsheets_#2_named_bool} ,
+        class         .tl_set:c   = {l__leadsheets_#2_class_tl} ,
+        class         .initial:n  = default ,
         format        .code:n     =
           \tl_set:cn {l__leadsheets_#2_format_tl} {##1} ,
         format        .initial:n  = \l__leadsheets_verses_format_tl ,
@@ -527,9 +530,10 @@
     \NewDocumentEnvironment {#2} {O{}}
       {
         \par
-        \tl_set:Nn \l_leadsheets_verse_type_tl {#2}
-        \tl_set:Nn \l__leadsheets_recall_verse_type_tl {#2}
         \keys_set:nn {leadsheets/#2} {##1}
+        \tl_set:Nx \l_leadsheets_verse_type_tl
+          { #2-\tl_use:c {l__leadsheets_#2_class_tl} }
+        \tl_set_eq:NN \l__leadsheets_recall_verse_type_tl \l_leadsheets_verse_type_tl
         \leadsheets_if_record_chords:T
           { \seq_clear:N \l__leadsheets_chords_sequences_seq }
         \leadsheets_if_recall_chords:T
