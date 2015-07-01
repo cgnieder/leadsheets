@@ -1,4 +1,4 @@
-\LeadsheetsExplLibrary{songs}{2014/08/10 typesetting songs}
+\LeadsheetsExplLibrary{songs}{2015/05/22 typesetting songs}
 
 % --------------------------------------------------------------------------
 % messages:
@@ -47,6 +47,7 @@
 \bool_new:N  \l__leadsheets_obey_lines_bool
 \bool_new:N  \l__leadsheets_bar_shorthands_bool
 \bool_new:N  \l__leadsheets_measuring_bool
+\bool_new:N  \l__leadsheets_recall_verse_type_bool
 
 \clist_new:N \l__leadsheets_print_tags_clist
 
@@ -447,6 +448,9 @@
 
 % --------------------------------------------------------------------------
 % verses and the like:
+\tl_new:N \l__leadsheets_verses_default_class_tl
+\tl_set:Nn \l__leadsheets_verses_default_class_tl {default}
+
 \cs_new_protected:Npn \leadsheets_verse_label:n #1
   {
     \bool_if:cF {l__leadsheets_#1_empty_bool}
@@ -509,7 +513,7 @@
         numbered      .bool_set:c = {l__leadsheets_#2_numbered_bool} ,
         named         .bool_set:c = {l__leadsheets_#2_named_bool} ,
         class         .tl_set:c   = {l__leadsheets_#2_class_tl} ,
-        class         .initial:n  = default ,
+        class         .initial:V  = \l__leadsheets_verses_default_class_tl ,
         format        .code:n     =
           \tl_set:cn {l__leadsheets_#2_format_tl} {##1} ,
         format        .initial:n  = \l__leadsheets_verses_format_tl ,
@@ -522,29 +526,38 @@
         template      .code:n     =
           \tl_set:cn {l__leadsheets_#2_template_tl} {##1} ,
         template      .initial:n  = itemize ,
-        recall-chords .tl_set:N   = \l__leadsheets_recall_verse_type_tl ,
+        recall-chords .code:n     =
+          \tl_set:Nn \l__leadsheets_recall_verse_type_tl {##1}
+          \bool_set_true:N \l__leadsheets_recall_verse_type_bool ,
         name          .code:n     =
          \@trnslt@declare@translation {leadsheets/#2} {fallback} {##1}
          \@trnslt@declare@translation {leadsheets/#2} {English} {##1}
       }
+    % TODO: recall-chords funktioniert nicht mehr!
     \NewDocumentEnvironment {#2} {O{}}
       {
         \par
+        \bool_set_false:N \l__leadsheets_recall_verse_type_bool
         \keys_set:nn {leadsheets/#2} {##1}
         \tl_set:Nx \l_leadsheets_verse_type_tl
           { #2-\tl_use:c {l__leadsheets_#2_class_tl} }
-        \tl_set_eq:NN \l__leadsheets_recall_verse_type_tl \l_leadsheets_verse_type_tl
+        \bool_if:NF \l__leadsheets_recall_verse_type_bool
+          {
+            \tl_set_eq:NN
+              \l__leadsheets_recall_verse_type_tl
+              \l_leadsheets_verse_type_tl
+          }
         \leadsheets_if_record_chords:T
-          { \seq_clear:N \l__leadsheets_chords_sequences_seq }
+          { \seq_gclear:N \g__leadsheets_chords_sequences_seq }
         \leadsheets_if_recall_chords:T
           {
             \prop_get:NVN
               \g__leadsheets_chords_sequences_prop
               \l__leadsheets_recall_verse_type_tl
               \l__leadsheets_tmpa_tl
-            \seq_clear:N \l__leadsheets_chords_sequences_seq
+            \seq_gclear:N \g__leadsheets_chords_sequences_seq
             \tl_map_inline:Nn \l__leadsheets_tmpa_tl
-              { \seq_put_right:Nn \l__leadsheets_chords_sequences_seq {####1} }
+              { \seq_gput_right:Nn \g__leadsheets_chords_sequences_seq {####1} }
           }
         \leadsheets_verse_begin:n {#2}
         \tl_use:c {l__leadsheets_#2_format_tl}
@@ -554,7 +567,7 @@
           {
             \prop_gput:NVf \g__leadsheets_chords_sequences_prop
               \l_leadsheets_verse_type_tl
-              { \seq_use:Nn \l__leadsheets_chords_sequences_seq {} }
+              { \seq_use:Nn \g__leadsheets_chords_sequences_seq {} }
           }
         \leadsheets_verse_end:n {#2}
         \par
@@ -620,6 +633,7 @@
     verses-format   .tl_set:N   = \l__leadsheets_verses_format_tl ,
     verses-label-format .tl_set:N   = \l__leadsheets_verses_label_format_tl ,
     verses-after-label  .tl_set:N   = \l__leadsheets_verses_after_label_tl ,
+    verses-default-class .tl_set:N  = \l__leadsheets_verses_default_class_tl ,
     obey-lines      .bool_set:N = \l__leadsheets_obey_lines_bool ,
     obey-lines-parskip .skip_set:N = \l__leadsheets_obey_parskip_skip ,
     bar-shortcuts   .bool_set:N = \l__leadsheets_bar_shorthands_bool ,
@@ -633,3 +647,4 @@
   }
 
 \endinput
+2015/05/22: \l__leadsheets_chords_sequences_prop changed into global

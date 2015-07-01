@@ -1,12 +1,9 @@
-\LeadsheetsExplLibrary{chordnames}
-  {2014/08/10 typesetting chord names with easy syntax}
+\LeadsheetsExplLibrary{chordnames}{2015/05/22 typesetting chord names with easy syntax}
 
 \leadsheets_load_library:n {musicsymbols}
 
-\bool_new:N \l__leadsheets_output_notation_german_bool
-\bool_new:N \l__leadsheets_input_notation_german_bool
-\bool_new:N \l__leadsheets_notation_literal_bool
-\bool_set_true:N \l__leadsheets_notation_literal_bool
+% \bool_new:N \l__leadsheets_output_notation_german_bool
+% \bool_new:N \l__leadsheets_input_notation_german_bool
 
 \tl_new:N \l__leadsheets_chord_tl
 \tl_new:N \l__leadsheets_tension_tl
@@ -17,6 +14,7 @@
 
 \cs_new_protected:Npn \leadsheets_chord_sym:Nnn #1#2#3
   { \tl_replace_all:Nnn #1 {#2} {#3} }
+\cs_generate_variant:Nn \leadsheets_chord_sym:Nnn {NnV}
 
 \tl_new:N \l__leadsheets_sharp_tl
 \tl_new:N \l__leadsheets_flat_tl
@@ -31,6 +29,8 @@
 \tl_new:N \l__leadsheets_dim_tl
 \tl_new:N \l__leadsheets_add_tl
 \tl_new:N \l__leadsheets_major_seven_tl
+\tl_new:N \l__leadsheets_german_B_tl
+\tl_new:N \l__leadsheets_german_H_tl
 
 \tl_set:Nn \l__leadsheets_sharp_tl       {\sharp}
 \tl_set:Nn \l__leadsheets_flat_tl        {\flat}
@@ -46,6 +46,8 @@
 \tl_set:Nn \l__leadsheets_add_tl         {\textsuperscript{add}}
 \tl_set:Nn \l__leadsheets_major_seven_tl {\textsuperscript{maj7}}
 \tl_set:Nn \l__leadsheets_major_nine_tl  {\textsuperscript{maj9}}
+\tl_set:Nn \l__leadsheets_german_B_tl    {B}
+\tl_set:Nn \l__leadsheets_german_H_tl    {H}
 
 \group_begin:
 % for convenient input of sharps:
@@ -74,23 +76,10 @@
     \leadsheets_chord_sym:Nnn  \l__leadsheets_chord_tl {sus}
       {\l__leadsheets_sus_tl}
     \leadsheets_chord_sym:Nnn  \l__leadsheets_chord_tl {^} {\textsuperscript}
-    \bool_if:NF \l__leadsheets_notation_literal_bool
+    \bool_if:NT \l__leadsheets_output_notation_german_bool
       {
-        % convert to English to German input:
-        \bool_if:NT \l__leadsheets_input_notation_german_bool
-          {
-            \leadsheets_chord_sym:Nnn \l__leadsheets_chord_tl {B}   {@@@}
-            \leadsheets_chord_sym:Nnn \l__leadsheets_chord_tl {H}   {B}
-            \leadsheets_chord_sym:Nnn \l__leadsheets_chord_tl {@@@} {Bb}
-          }
-        % convert to English to German output:
-        \bool_if:NT \l__leadsheets_output_notation_german_bool
-          {
-            \leadsheets_chord_sym:Nnn \l__leadsheets_chord_tl {Bb}  {@@@}
-            \leadsheets_chord_sym:Nnn \l__leadsheets_chord_tl {B}   {H}
-            \leadsheets_chord_sym:Nnn \l__leadsheets_chord_tl {@@@} {B}
-            \leadsheets_chord_sym:Nnn \l__leadsheets_chord_tl {B#}  {H}
-          }
+        \leadsheets_chord_sym:NnV \l__leadsheets_chord_tl {B} \l__leadsheets_german_B_tl
+        \leadsheets_chord_sym:NnV \l__leadsheets_chord_tl {H} \l__leadsheets_german_H_tl
       }
     \leadsheets_chord_sym:Nnn  \l__leadsheets_chord_tl {#b} {}
     \leadsheets_chord_sym:Nnn  \l__leadsheets_chord_tl {b#} {}
@@ -98,10 +87,10 @@
       {\l__leadsheets_doublesharp_tl}
     \leadsheets_chord_sym:Nnn  \l__leadsheets_chord_tl {bb}
       {\l__leadsheets_doubleflat_tl}
-    \leadsheets_chord_sym:Nnn  \l__leadsheets_chord_tl {#} {\l__leadsheets_sharp_tl}
-    \leadsheets_chord_sym:Nnn  \l__leadsheets_chord_tl {b} {\l__leadsheets_flat_tl}
-    \leadsheets_chord_sym:Nnn  \l__leadsheets_chord_tl {dim} {\l__leadsheets_dim_tl}
-    \leadsheets_chord_sym:Nnn  \l__leadsheets_chord_tl {add} {\l__leadsheets_add_tl}
+    \leadsheets_chord_sym:NnV  \l__leadsheets_chord_tl {#} \l__leadsheets_sharp_tl
+    \leadsheets_chord_sym:NnV  \l__leadsheets_chord_tl {b} \l__leadsheets_flat_tl
+    \leadsheets_chord_sym:NnV  \l__leadsheets_chord_tl {dim} \l__leadsheets_dim_tl
+    \leadsheets_chord_sym:NnV  \l__leadsheets_chord_tl {add} \l__leadsheets_add_tl
     \leadsheets_tension_sym:Nn \l__leadsheets_chord_tl {0}
     \leadsheets_tension_sym:Nn \l__leadsheets_chord_tl {1}
     \leadsheets_tension_sym:Nn \l__leadsheets_chord_tl {2}
@@ -161,28 +150,11 @@
     dim          .tl_set:N = \l__leadsheets_dim_tl ,
     major-seven  .tl_set:N = \l__leadsheets_major_seven_tl ,
     major-nine   .tl_set:N = \l__leadsheets_major_nine_tl ,
-    output-notation .choice: ,
-    output-notation/literal .code:n =
-      \bool_set_false:N \l__leadsheets_input_notation_german_bool
-      \bool_set_false:N \l__leadsheets_output_notation_german_bool
-      \bool_set_true:N \l__leadsheets_notation_literal_bool ,
-    output-notation/german  .code:n =
-      \bool_set_true:N \l__leadsheets_output_notation_german_bool
-      \bool_set_false:N \l__leadsheets_notation_literal_bool ,
-    output-notation/english .code:n =
-      \bool_set_false:N \l__leadsheets_output_notation_german_bool
-      \bool_set_false:N \l__leadsheets_notation_literal_bool ,
-    input-notation .choice: ,
-    input-notation/literal  .code:n =
-      \bool_set_false:N \l__leadsheets_input_notation_german_bool
-      \bool_set_false:N \l__leadsheets_output_notation_german_bool
-      \bool_set_true:N \l__leadsheets_notation_literal_bool ,
-    input-notation/german   .code:n =
-      \bool_set_true:N \l__leadsheets_input_notation_german_bool
-      \bool_set_false:N \l__leadsheets_notation_literal_bool ,
-    input-notation/english  .code:n =
-      \bool_set_false:N \l__leadsheets_input_notation_german_bool
-      \bool_set_false:N \l__leadsheets_notation_literal_bool
+    german-B     .tl_set:N = \l__leadsheets_german_B_tl ,
+    german-H     .tl_set:N = \l__leadsheets_german_H_tl
+    % since version 0.2 those are defined in the `chords` library:
+    % output-notation .choice: ,
+    % input-notation .choice: ,
   }
 
 \NewDocumentCommand \setchordnames {m}
@@ -191,3 +163,11 @@
 \NewDocumentCommand \chordname {} { \leadsheets_chord: }
 
 \endinput
+
+HISTORY:
+
+2014/08/10 - first version
+2015/05/08 - drop `literal' option for input and output notation
+           - input/output notation is now handled by the `chords' library
+           - German output of B and H can be customized
+2015/05/22 - improvements to the chord macros

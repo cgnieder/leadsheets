@@ -1,8 +1,12 @@
-\LeadsheetsExplLibrary{chords}{2014/08/10 printing chords}
+\LeadsheetsExplLibrary{chords}{2015/05/08 printing chords}
 
 \msg_new:nnn {leadsheets} {no-chords}
   { No~ more~ chords~ left~ for~ verse~ type~ `#1'~ \msg_line_context: }
 
+% \leadsheets_load_library:n {chordnames}
+\bool_new:N \l__leadsheets_output_notation_german_bool
+\bool_new:N \l__leadsheets_input_notation_german_bool
+  
 \tl_new:N    \l__leadsheets_current_chord_tl
 \tl_new:N    \l__leadsheets_chord_stack_alignment_tl
 \tl_set:Nn   \l__leadsheets_chord_stack_alignment_tl {c}
@@ -16,23 +20,13 @@
 
 \prop_new:N  \g__leadsheets_chords_sequences_prop
 
-\seq_new:N   \l__leadsheets_chords_sequences_seq
+\seq_new:N   \g__leadsheets_chords_sequences_seq
 
 \dim_new:N   \l__leadsheets_empty_chord_dim
 \dim_set:Nn  \l__leadsheets_empty_chord_dim {1em}
 
 \cs_new:Npn \leadsheets_chord_print:n #1 {#1}
 \cs_generate_variant:Nn \leadsheets_chord_print:n {V}
-
-\cs_new_protected:Npn \leadsheets_chord:nnn #1#2#3
-  {
-    \leadsheets_if_record_chords:T
-      { \seq_put_right:Nn \l__leadsheets_chords_sequences_seq { {#3} } }
-    \leadsheets_set_chord:nnn
-      {#1}
-      {#2}
-      { \leadsheets_chord_write:n {#3} }
-  }
 
 \cs_new_protected:Npn \leadsheets_set_chord:nnn #1#2#3
   {
@@ -59,11 +53,40 @@
     #3
   }
 
-\cs_new_protected:Npn \leadsheets_chord_write:n #1
+\cs_new_protected:Npn \leadsheets_chord:nnn #1#2#3
   {
-%    \bool_if:NT \l__leadsheets_chord_print_bool
-%      {
-    \tl_set:Nn \l__leadsheets_current_chord_tl {#1}
+    \leadsheets_if_record_chords:T
+      { \seq_gput_right:Nn \g__leadsheets_chords_sequences_seq { {#3} } }
+    \leadsheets_set_chord:nnn
+      {#1}
+      {#2}
+      { \leadsheets_chord_write:n {#3} }
+  }
+
+\group_begin:
+
+\cs_new_protected:Npn \leadsheets_chord_write:n
+  {
+    \group_begin:
+      \char_set_catcode_other:N \#
+      \__leadsheets_chord_write:n
+  }
+
+% for convenient input of sharps:
+\char_set_catcode_other:N \#
+% # is other so we need another parameter character:
+\char_set_catcode_parameter:N \?
+
+\cs_new_protected:Npn \__leadsheets_chord_write:n ?1
+  {
+    \tl_set:Nn \l__leadsheets_current_chord_tl {?1}
+    % => convert to English input
+    \bool_if:NTF \l__leadsheets_input_notation_german_bool
+      {
+        \tl_replace_all:Nnn \l__leadsheets_current_chord_tl {B} {Bb}
+        \tl_replace_all:Nnn \l__leadsheets_current_chord_tl {H} {B}
+      }
+      { \tl_replace_all:Nnn \l__leadsheets_current_chord_tl {H} {B} }
     \bool_if:nT
       {
         \leadsheets_if_property_p:Vn \l_leadsheets_current_song_id_tl {key}
@@ -87,9 +110,20 @@
           {transpose-key}
           \l_leadsheets_current_song_id_tl
       }
+    % => convert to specified output
+    \bool_if:NT \l__leadsheets_output_notation_german_bool
+      {
+        \tl_replace_all:Nnn \l__leadsheets_current_chord_tl {Bb}  {@@@}
+        \tl_replace_all:Nnn \l__leadsheets_current_chord_tl {B}   {H}
+        \tl_replace_all:Nnn \l__leadsheets_current_chord_tl {@@@} {B}
+        \tl_replace_all:Nnn \l__leadsheets_current_chord_tl {B#}  {H}
+      }
+    % => this is \chordname initially:
     \leadsheets_chord_print:V \l__leadsheets_current_chord_tl
-%      }
+    \group_end:
   }
+\group_end:
+
 \cs_generate_variant:Nn \leadsheets_chord_write:n { V }
 
 \cs_new_protected:Npn \leadsheets_place_above:nnn #1#2#3
@@ -126,13 +160,22 @@
     chord-cs         .code:n     =
       \cs_set_protected:Npn \leadsheets_chord_print:n {#1} ,
     chord-cs         .initial:n  = \chordname ,
-    print-chords     .bool_set:N = \l__leadsheets_chord_print_bool
+    print-chords     .bool_set:N = \l__leadsheets_chord_print_bool ,
+    chordnames/output-notation .choice: ,
+    chordnames/output-notation/german  .code:n =
+      \bool_set_true:N \l__leadsheets_output_notation_german_bool ,
+    chordnames/output-notation/english .code:n =
+      \bool_set_false:N \l__leadsheets_output_notation_german_bool ,
+    chordnames/input-notation .choice: ,
+    chordnames/input-notation/german   .code:n =
+      \bool_set_true:N \l__leadsheets_input_notation_german_bool ,
+    chordnames/input-notation/english  .code:n =
+      \bool_set_false:N \l__leadsheets_input_notation_german_bool
   }
 
-\NewDocumentCommand \chord {st-m} { \leadsheets_chord:nnn {#1} {#2} {#3} }
+\NewDocumentCommand \chord {st-} { \leadsheets_chord:nnn {#1} {#2} }
 
-\NewDocumentCommand \writechord {m}
-  { \leadsheets_chord_write:n {#1} }
+\NewDocumentCommand \writechord {} { \leadsheets_chord_write:n }
 
 % --------------------------------------------------------------------------
 % record changes for a verse and automatically print them in the next:
@@ -174,7 +217,7 @@
 
 \cs_new_protected:Npn \leadsheets_recall_chord:nn #1#2
   {
-    \seq_pop_left:NNF \l__leadsheets_chords_sequences_seq
+    \seq_pop_left:NNF \g__leadsheets_chords_sequences_seq
       \l__leadsheets_tmpa_tl
       { \msg_error:nnV {leadsheets} {no-chords} \l_leadsheets_verse_type_tl }
     \leadsheets_set_chord:nnn
@@ -187,3 +230,14 @@
   { \leadsheets_recall_chord:nn {#1} {#2} }
 
 \endinput
+
+HISTORY:
+
+2014/08/10 - first version
+2015/05/08 - input/output notation is done here now instead of in the
+             `chordnames' library so transposing works with either input
+             correctly
+           - options `input-notation' and `output-notation' now directly
+             belong to leadsheets and not to the `chordnames' library
+             anymore.
+

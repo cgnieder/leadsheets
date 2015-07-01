@@ -1,5 +1,5 @@
-% !arara: pdflatex: { shell: on }
-% !arara: biber
+% arara: pdflatex: { shell: on }
+% arara: biber
 % arara: pdflatex
 % arara: pdflatex
 \documentclass[load-preamble+]{cnltx-doc}
@@ -374,6 +374,13 @@ typesetting of chords:
     parentheses are typeset as superscripts.  Everything between parentheses
     is always a superscript: \verbcode+\chordname{F#7(#11)}+
     \chordname{F#7(#11)}.
+  \command{writechord}[\marg{chord}]
+    This command can and actually \emph{should} be used for placing chords
+    inline. It transforms the chords according to the options knows the
+    options \option{input-notation} and \option{output-notation}.  This
+    command also transforms the chord according to the options inside of the
+    \env{song} environment \option{transpose} and \option{enharmonic} before
+    printing it, see also page~\pageref{cs:writechord}.
 \end{commands}
 
 There are several token lists that are treated specially inside \cs{chordname}:
@@ -481,64 +488,51 @@ doesn't change the input syntax.
     The token list \code{maj9}.
 \end{options}
 
-There are two further options which concern the different notations of the
-pitches \chordname{B} and \chordname{Bb} in German (and a few other European
+There are further options which concern the different notations of the pitches
+\chordname{B} and \chordname{Bb} in German (and a few other European
 countries) and English.
 \begin{options}
-  \keychoice{input-notation}{literal,german,english}\Default{literal}
-    If set to \code{german} B should be input as \code{H} and B~flat as
-    \code{B}. If set to \code{american} B should be input as \code{B} and
-    B~flat as \code{Bb}.
-  \keychoice{output-notation}{literal,german,english}\Default{literal}
-    \setchordnames{output-notation=german}If set to \code{german} B is output
-    as \chordname{B} and B-flat as \chordname{Bb}.
+  \keychoice{input-notation}{german,english}\Default{english}
+    If\changedversion{0.2} set to \code{german} B should be input as \code{H}
+    and B~flat as \code{B}. If set to \code{english} B should be input as
+    \code{B} and B~flat as \code{Bb}.
+  \keychoice{output-notation}{german,english}\Default{english}
+    \setchordnames{output-notation=german}If\changedversion{0.2} set to
+    \code{german} B is output as \chordname{B} and B-flat as \chordname{Bb}.
+  \keyval{german-B}{code}\Default{B}
+    Customize\sinceversion{0.2} the output of B~flat when
+    \keyis{output-notation}{german}.
+  \keyval{german-H}{code}\Default{H}
+    Customize\sinceversion{0.2} the output of B when
+    \keyis{output-notation}{german}.
 \end{options}
-Setting one option to a value other than \code{literal} implicitly sets the
-other one to \code{english} except the other option already has been set.
-This is shown in the example below.  Setting on option to \code{literal} again
-also sets the other option to \code{literal}.  This also resets the options.
-Earlier settings are forgotten.  What does that mean?  Here is an exercise:
-which options are active at each step and at the end?
-\begin{sourcecode}
-  1. \setchordnames{ input-notation = german }
-  2. \setchordnames{ output-notation = german , input-notation = english }
-  3. \setchordnames{ input-notation = german }
-  4. \setchordnames{ output-notation = english , input-notation = literal }
-  5. \setchordnames{ output-notation = german }
-\end{sourcecode}
-Here's the solution:
-\begin{enumerate}
-  \item \keyis{input-notation}{german} and \keyis{output-notation}{english}
-  \item \keyis{input-notation}{english} and \keyis{output-notation}{german}
-  \item \keyis{input-notation}{german} and \keyis{output-notation}{german}
-  \item \keyis{input-notation}{literal} and \keyis{output-notation}{literal}
-  \item \keyis{input-notation}{german} and \keyis{output-notation}{english}
-\end{enumerate}
+% TODO: reformulate the next paragraphs:
 
-The following example shows the effects of different input and output
-notations.
+Let's see a few examples for the \option{input-notation} and
+\option{output-notation} options.
+
 \begin{example}
-  input and output literal:\par
-  \chordname{Bb} \chordname{B} \chordname{B#}\par
-  \chordname{B} \chordname{H} \chordname{H#}\par
+  input and output English:\par
+  \writechord{Bb} \writechord{B} \writechord{B#}\par
+  \writechord{B} \writechord{H} \writechord{H#}\par
   \medskip
 
   \setchordnames{input-notation=german}
   input German and output English:\par
-  \chordname{Bb} \chordname{B} \chordname{B#}\par
-  \chordname{B} \chordname{H} \chordname{H#}\par
+  \writechord{Bb} \writechord{B} \writechord{B#}\par
+  \writechord{B} \writechord{H} \writechord{H#}\par
   \medskip
 
   \setchordnames{output-notation=german}
   input and output German:\par
-  \chordname{Bb} \chordname{B} \chordname{B#}\par
-  \chordname{B} \chordname{H} \chordname{H#}\par
+  \writechord{Bb} \writechord{B} \writechord{B#}\par
+  \writechord{B} \writechord{H} \writechord{H#}\par
 
   \medskip
   \setchordnames{input-notation=english}
   input English and output German:\par
-  \chordname{Bb} \chordname{B} \chordname{B#}\par
-  \chordname{B} \chordname{H} \chordname{H#}\par
+  \writechord{Bb} \writechord{B} \writechord{B#}\par
+  \writechord{B} \writechord{H} \writechord{H#}
 \end{example}
 
 \section{The \library*{musejazz} Library}\label{sec:musejazz-libr}
@@ -886,7 +880,7 @@ following option:
 \subsection{Options}\label{sec:verses-options}
 
 The \env{verse} environment and all related environments have the following
-option:
+options:
 
 \begin{options}
   \keyval{format}{code}\Default
@@ -894,6 +888,11 @@ option:
     be used to add formatting, \eg, \keyis{format}{\cs*{itshape}}.
   \keyval{label-format}{code}\Default
     The same for the environment labels.
+  \keyval{class}{class-name}\Default{default}
+    The \env{verse} environment and all related environments all belong to a
+    class, the default class is called \code{default}.  This is of interest
+    when using the \option{remember-chords} and \option{recall-chords}
+    options.\label{option:class}
 \end{options}
 
 This can be used either locally, \ie, as option to the corresponding
@@ -954,7 +953,9 @@ shortcut for the command \cs{chord}, \shortcut{\_} is a shortcut for
     \option{transpose} and \option{enharmonic} before printing it.  This
     command can/should be used for placing chords inline or for typesetting
     the \property{key} property in a template.  The command is used by
-    \cs{chord} for the actual printing.
+    \cs{chord} for the actual printing.  The command also transforms the
+    chords according to the options \option{input-notation} and
+    \option{output-notation}.\label{cs:writechord}
 \end{commands}
 
 \begin{example}[side-by-side]
@@ -1123,7 +1124,7 @@ can use the option \option{recall-chords}:
   \begin{verse}
     ^Lorem ipsum ^dolor sit ^amet, consetetur ^sadipscing
   \end{verse}
-  \begin{chorus}[recall-chords=verse]
+  \begin{chorus}[recall-chords=verse-default]
     ^Lorem ipsum ^dolor sit amet, consetetur ^sadipscing
   \end{chorus}
   \end{song}
@@ -1306,9 +1307,11 @@ They have more options.  Here's a complete list:
     definitions, see section~\ref{sec:verse-type-templates}) prints the name
     of the current environment (as determined by the translation of the
     corresponding string, see also section~\ref{sec:internationalization}).
-  \keyval{recall-chords}{environment}
+  \keylit{recall-chords}{\meta{environment}-\meta{class}}
     An option to be used with the \option{remember-chords} mechanism, see
-    section~\ref{sec:remembering-chords} for an example.
+    section~\ref{sec:remembering-chords} for an example.  If you're not using
+    different classes then \meta{class} needs to be \code{default}, see also
+    page~\pageref{option:class}.
 \end{options}
 
 There are also a number of general options for setting the defaults of some
