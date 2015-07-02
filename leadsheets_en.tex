@@ -1,4 +1,4 @@
-% arara: pdflatex: { shell: on }
+% !arara: pdflatex: { shell: on }
 % arara: biber
 % arara: pdflatex
 % arara: pdflatex
@@ -9,7 +9,7 @@
   info    = Typesetting leadsheets and songbooks ,
   authors = Clemens Niederberger ,
   email   = contact@mychemistry.eu ,
-  url     = https://github.com/cgnieder/leadsheets/ ,
+  url     = http://www.mychemistry.eu/forums/forum/leadsheets/ ,
   add-cmds = {
     chord , chordname ,
     definesongtitletemplate ,
@@ -24,7 +24,7 @@
     ifversestarred ,
     newversetype ,
     printsongpropertylist ,
-    setchordnames ,
+    setchords ,
     setleadsheets ,
     songproperty ,
     useleadsheetslibraries ,
@@ -97,10 +97,10 @@
   }%
 }
 \newrobustcmd*\musicsymbols{\library{musicsymbols}}
-\newrobustcmd*\chordnames{\library{chordnames}}
+\newrobustcmd*\chords{\library{chords}}
 \newrobustcmd*\musejazz{\library{musejazz}}
 
-\setchordnames{format=\libertineLF}
+\setchords{format=\libertineLF}
 
 \makeatletter
 \colorlet{property}{cnltxgreen}
@@ -195,6 +195,8 @@ so you don't have to think about it any more you can use
 \begin{sourcecode}
   \usepackage[full]{leadsheets}
 \end{sourcecode}
+This actually loads every library except the \library{musejazz} library.
+
 If you instead use\packageoption{minimal}
 \begin{sourcecode}
   \usepackage[minimal]{leadsheets}
@@ -207,6 +209,7 @@ libraries yourself in order to use the package.
   \command{useleadsheetslibrary}[\marg{library}]
     With this command one of \leadsheets' libraries can be loaded.
 \end{commands}
+
 The libraries are divided into two parts: libraries to be loaded by users and
 auxiliary libraries loaded by other libraries but not to be loaded directly by
 users.
@@ -216,19 +219,19 @@ The user-libraries are the following ones:
   \item[\library{musicsymbols}] \packageoption{musicsymbols}This library makes
     the music symbol font provided by MusiX\TeX{} available as text font.  It
     is described in part~\ref{part:musicsymbols-library}.
-  \item[\library{chordnames}] \packageoption{chordnames}This library defines a
+  \item[\library{chords}] \packageoption{chords}This library defines a
     few macros for typesetting of chord symbols.  It is described in
-    part~\ref{part:chordnames-library}.  It also loads the
+    part~\ref{part:chords-library}.  It also loads the
     \library{musicsymbols}library.
-  \item[\library{musejazz}] \packageoption{musejazz}extends the \chordnames\
+  \item[\library{musejazz}] \packageoption{musejazz}extends the \chords\
     library to use MuseScore's \enquote{MuseJazz} font, see
-    section~\ref{sec:musejazz-libr}.  It loads the \library{chordnames}
+    section~\ref{sec:musejazz-libr}.  It loads the \library{chords}
     library.
-  \item[\library{songs}]  \packageoption{songs}This is the main library.  It
-    defines everything necessary for the typesetting of the leadsheets.  It
-    currently loads \emph{all other libraries}, \ie, user libraries \emph{and}
-    internal libraries.  This library is described in
-    part~\ref{part:leadsheets-library}.
+  \item[\library{songs}]  \packageoption{songs}This is the \emph{main
+    library}.  It defines everything necessary for the typesetting of the
+    leadsheets.  It currently loads \emph{all other libraries}, \ie, user
+    libraries \emph{and} internal libraries, except for the \library{musejazz}
+    library.  This library is described in part~\ref{part:leadsheets-library}.
 \end{description}
 Those libraries can also be loaded as a package option.  If you say
 \begin{sourcecode}
@@ -239,7 +242,7 @@ then \emph{only} the \library{musicsymbols} library is loaded.  Saying
   \usepackage[songs]{leadsheets}
 \end{sourcecode}
 is the same as using the package \emph{without} any options.  ``Without any''
-also means that neither \library{musicsymbols}, \library{chordnames} nor
+also means that neither \library{musicsymbols}, \library{chords} nor
 \library{songs} has been given as class option!
 
 There is also a number of auxiliary libraries which are all needed by
@@ -254,10 +257,9 @@ the following list gives hints to where some of the concepts are explained:
   \item[\library{transposing}]  This is an auxiliary library not meant to be
     loaded directly by users.  It defines a transposing mechanism for chord
     symbols.  See section~\ref{sec:transposing} for further details.
-  \item[\library{chords}]  This is an auxiliary library not meant to be loaded
-    directly by users.  It defines the necessary macros for printing the
-    chords in songs as well as the mechanism of remembering and recalling
-    chord sequences of verses.
+  \item[\library{chordnames}]  This is an auxiliary library not meant to be
+    loaded directly by users.  It defines the necessary macros for printing
+    chords.
   \item[\library{templates}] This is an auxiliary library not meant to be
     loaded directly by users.  It defines the necessary macros for
     \leadsheets' template mechanism.  See section~\ref{sec:templates} for
@@ -351,20 +353,28 @@ bars:
 \end{commands}
 
 \clearpage
-\part{The \library*{chordnames} Library (and the \library*{musejazz} Library)}\label{part:chordnames-library}
+\part{The \library*{chords} Library (and the \library*{musejazz} Library)}\label{part:chords-library}
 \dictum[Wes Montgomery]{%
   I never practice my guitar -- from time to time I just open the case and
   throw in a piece of raw meat.%
 }
 
-\section{The \cs*{chordname} Command}
+\begin{figure}
+  \centering
+  \includegraphics[scale=.5,trim=0 22cm 10cm 2cm,clip]{ring-of-fire.pdf}
+  \caption{One possible layout for \leadsheets{} mimicking the typewriter
+    style.}
+  \label{fig:leadsheet}
+\end{figure}
 
-\chordnames{} provides the command \cs{chordname}\marg{chord} for convenient
+\section{The \cs*{writechord} Command}
+
+\chords{} provides the command \cs{writechord}\marg{chord} for convenient
 typesetting of chords:
 
 \begin{example}[side-by-side]
-  \chordname{Bb7(#9)} \chordname{Bbb6}
-  \chordname{C#7(b9)} \chordname{C##13}
+  \writechord{Bb7(#9)} \writechord{Bbb6}
+  \writechord{C#7(b9)} \writechord{C##13}
 \end{example}
 
 \begin{commands}
@@ -372,8 +382,8 @@ typesetting of chords:
     Typesetting chords.  Inside the argument every \code{\#} will be replaced
     by $\sharp$ and every \code{b} is replaced with $\flat$.  Numerals and
     parentheses are typeset as superscripts.  Everything between parentheses
-    is always a superscript: \verbcode+\chordname{F#7(#11)}+
-    \chordname{F#7(#11)}.
+    is always a superscript: \verbcode+\writechord{F#7(#11)}+
+    \writechord{F#7(#11)}.
   \command{writechord}[\marg{chord}]
     This command can and actually \emph{should} be used for placing chords
     inline. It transforms the chords according to the options knows the
@@ -383,60 +393,60 @@ typesetting of chords:
     printing it, see also page~\pageref{cs:writechord}.
 \end{commands}
 
-There are several token lists that are treated specially inside \cs{chordname}:
+There are several token lists that are treated specially inside \cs{writechord}:
 \begin{labeling}[--]{xxxxx}
   \item[\code{\^{}}] This token is replaced by \cs*{textsuperscript}.
   \item[\code{ma}] The symbol for major chords.  Per default this is
-    empty. \verbcode+\chordname{Gma}+ \chordname{Gma}.
+    empty. \verbcode+\writechord{Gma}+ \writechord{Gma}.
   \item[\code{mi}] The symbol for minor chords.  Per default this is
-    \code{m}.  \verbcode+\chordname{Gmi}+ \chordname{Gmi}.
+    \code{m}.  \verbcode+\writechord{Gmi}+ \writechord{Gmi}.
   \item[\code{o}] The symbol for diminished chords.  Per default this is
-    \code{\cs*{textsuperscript}\Marg{o}}.  \verbcode+\chordname{Go}+
-    \chordname{Go}.
+    \code{\cs*{textsuperscript}\Marg{o}}.  \verbcode+\writechord{Go}+
+    \writechord{Go}.
   \item[\code{+}] The symbol for augmented chords.  Per default this is
-    \code{\cs*{textsuperscript}\Marg{+}}.  \verbcode!\chordname{G+}!
-    \chordname{G+}.
+    \code{\cs*{textsuperscript}\Marg{+}}.  \verbcode!\writechord{G+}!
+    \writechord{G+}.
   \item[\code{/o}] The symbol for half diminished chords.  Per default
     this is \code{\cs*{textsuperscript}\Marg{\cs*{o}\Marg{}}}.
-    \verbcode+\chordname{G/o}+ \chordname{G/o}.
+    \verbcode+\writechord{G/o}+ \writechord{G/o}.
   \item[\code{\#}] The \enquote{sharp} symbol.  Per default this is
-    \cs{sharp}.  \verbcode+\chordname{F#}+ \chordname{F#}.
+    \cs{sharp}.  \verbcode+\writechord{F#}+ \writechord{F#}.
   \item[\code{\#\#}] The \enquote{double sharp} symbol.  Per default this is
-    \cs{doublesharp}.  \verbcode+\chordname{F##}+ \chordname{F##}.
+    \cs{doublesharp}.  \verbcode+\writechord{F##}+ \writechord{F##}.
   \item[\code{b}] The \enquote{flat} symbol.  Per default this is
-    \cs{flat}.  \verbcode+\chordname{Eb}+ \chordname{Eb}.
+    \cs{flat}.  \verbcode+\writechord{Eb}+ \writechord{Eb}.
   \item[\code{bb}] The \enquote{double flat} symbol.  Per default this is
-    \cs{doubleflat}.  \verbcode+\chordname{Ebb}+ \chordname{Ebb}.
+    \cs{doubleflat}.  \verbcode+\writechord{Ebb}+ \writechord{Ebb}.
   \item[\code{b\#}] Cancelling flat/sharp combination: this is removed.
   \item[\code{\#b}] Cancelling sharp/flat combination: this is removed.
-  \item[\code{add}] This is superscripted: \verbcode+\chordname{Gadd9}+
-    \chordname{Gadd9}.
-  \item[\code{sus}] This is superscripted: \verbcode+\chordname{Gsus4}+
-    \chordname{Gsus4}.
-  \item[\code{dim}] This is superscripted: \verbcode+\chordname{Gdim5}+
-    \chordname{Gdim5}.
-  \item[\code{maj7}] This is superscripted: \verbcode+\chordname{Gmaj7}+
-    \chordname{Gmaj7}.
-  \item[\code{maj9}] This is superscripted: \verbcode+\chordname{Gmaj9}+
-    \chordname{Gmaj9}.
+  \item[\code{add}] This is superscripted: \verbcode+\writechord{Gadd9}+
+    \writechord{Gadd9}.
+  \item[\code{sus}] This is superscripted: \verbcode+\writechord{Gsus4}+
+    \writechord{Gsus4}.
+  \item[\code{dim}] This is superscripted: \verbcode+\writechord{Gdim5}+
+    \writechord{Gdim5}.
+  \item[\code{maj7}] This is superscripted: \verbcode+\writechord{Gmaj7}+
+    \writechord{Gmaj7}.
+  \item[\code{maj9}] This is superscripted: \verbcode+\writechord{Gmaj9}+
+    \writechord{Gmaj9}.
 \end{labeling}
 
 How these token lists are treated depends on optional settings:
 
 \begin{example}
-  \setchordnames{
+  \setchords{
     major-seven = $\Delta$ ,
     major-nine  = $\Delta$\textsuperscript{9}
   }
-  \chordname{Gmaj7} \chordname{Gmaj9}
-  \chordname{G^6} \chordname{G6}
-  \chordname{G7^#5}
+  \writechord{Gmaj7} \writechord{Gmaj9}
+  \writechord{G^6} \writechord{G6}
+  \writechord{G7^#5}
 \end{example}
 
 If you want to use the library standalone then you can say:
 \begin{sourcecode}
   \usepackage[minimal]{leadsheets}
-  \useleadsheetslibraries{chordnames}
+  \useleadsheetslibraries{chords}
 \end{sourcecode}
 This also loads the \musicsymbols{} library.
 
@@ -444,12 +454,12 @@ This also loads the \musicsymbols{} library.
 
 Options are set with the command
 \begin{commands}
-  \command{setchordnames}[\marg{options}]
+  \command{setchords}[\marg{options}]
     where \meta{options} is a comma separated list of keyval options.
 \end{commands}
 Actually there's a second possibility: options can also be set with the
 command \cs{setleadsheets} (see section~\ref{sec:options}) if they're preceded
-by \code{chordnames/} (including the slash).
+by \code{chords/} (including the slash).
 
 The options allow detailed customization of how chords are printed.  It
 doesn't change the input syntax.
@@ -489,7 +499,7 @@ doesn't change the input syntax.
 \end{options}
 
 There are further options which concern the different notations of the pitches
-\chordname{B} and \chordname{Bb} in German (and a few other European
+\writechord{B} and \writechord{Bb} in German (and a few other European
 countries) and English.
 \begin{options}
   \keychoice{input-notation}{german,english}\Default{english}
@@ -497,8 +507,8 @@ countries) and English.
     and B~flat as \code{B}. If set to \code{english} B should be input as
     \code{B} and B~flat as \code{Bb}.
   \keychoice{output-notation}{german,english}\Default{english}
-    \setchordnames{output-notation=german}If\changedversion{0.2} set to
-    \code{german} B is output as \chordname{B} and B-flat as \chordname{Bb}.
+    \setchords{output-notation=german}If\changedversion{0.2} set to
+    \code{german} B is output as \writechord{B} and B-flat as \writechord{Bb}.
   \keyval{german-B}{code}\Default{B}
     Customize\sinceversion{0.2} the output of B~flat when
     \keyis{output-notation}{german}.
@@ -506,7 +516,6 @@ countries) and English.
     Customize\sinceversion{0.2} the output of B when
     \keyis{output-notation}{german}.
 \end{options}
-% TODO: reformulate the next paragraphs:
 
 Let's see a few examples for the \option{input-notation} and
 \option{output-notation} options.
@@ -517,19 +526,19 @@ Let's see a few examples for the \option{input-notation} and
   \writechord{B} \writechord{H} \writechord{H#}\par
   \medskip
 
-  \setchordnames{input-notation=german}
+  \setchords{input-notation=german}
   input German and output English:\par
   \writechord{Bb} \writechord{B} \writechord{B#}\par
   \writechord{B} \writechord{H} \writechord{H#}\par
   \medskip
 
-  \setchordnames{output-notation=german}
+  \setchords{output-notation=german}
   input and output German:\par
   \writechord{Bb} \writechord{B} \writechord{B#}\par
   \writechord{B} \writechord{H} \writechord{H#}\par
 
   \medskip
-  \setchordnames{input-notation=english}
+  \setchords{input-notation=english}
   input English and output German:\par
   \writechord{Bb} \writechord{B} \writechord{B#}\par
   \writechord{B} \writechord{H} \writechord{H#}
@@ -537,7 +546,7 @@ Let's see a few examples for the \option{input-notation} and
 
 \section{The \library*{musejazz} Library}\label{sec:musejazz-libr}
 
-The \musejazz\ library extends the \chordnames\ library to use
+The \musejazz\ library extends the \chords\ library to use
 MuseScore's\footnote{\url{http://musescore.com/}} font \enquote{MuseJazz} for
 the chord symbols.  The library contains the two lines which explains why it
 requires \LuaLaTeX\ or \XeLaTeX.  Well, and the font, obviously.
@@ -555,7 +564,7 @@ Here is a small example of it's usage and the outcome:
   \usepackage{leadsheets}
   \useleadsheetslibrary{musejazz}
   \begin{document}
-  \Huge\chordname{Bb7(#9)}\space\chordname{F##9}
+  \Huge\writechord{Bb7(#9)}\space\writechord{F##9}
   \end{document}
 \end{example}
 
@@ -889,10 +898,10 @@ options:
   \keyval{label-format}{code}\Default
     The same for the environment labels.
   \keyval{class}{class-name}\Default{default}
-    The \env{verse} environment and all related environments all belong to a
-    class, the default class is called \code{default}.  This is of interest
-    when using the \option{remember-chords} and \option{recall-chords}
-    options.\label{option:class}
+    The\sinceversion{0.2} \env{verse} environment and all related environments
+    all belong to a class, the default class is called \code{default}.  This
+    is of interest when using the \option{remember-chords} and
+    \option{recall-chords} options.\label{option:class}
 \end{options}
 
 This can be used either locally, \ie, as option to the corresponding
@@ -1141,17 +1150,17 @@ table~\ref{tab:key-signatures}, the chords of a song can be transposed.
     \meta{number} can be a negative number, then the chords are transposed
     down.
   \keychoice{enharmonic}{sharp,flat}
-    Suppose you transpose a song in the key of \chordname{E} down a semitone.
-    \leadsheets{} will then transpose to the key of \chordname{Eb}.  It always
+    Suppose you transpose a song in the key of \writechord{E} down a semitone.
+    \leadsheets{} will then transpose to the key of \writechord{Eb}.  It always
     chooses the key whose signature has less accidentals.  You can force a
     variant, though, by using this option.  With \keyis{enharmonic}{sharp}
-    \leadsheets{} would have chosen \chordname{D#} instead of \chordname{Eb}.
+    \leadsheets{} would have chosen \writechord{D#} instead of \writechord{Eb}.
   \keybool{transpose-capo}
     When this is set to true chords are transposed down on semitone per capo
     fret.
 \end{options}
 
-The transposing mechanism relies on the \chordnames{} input syntax which means
+The transposing mechanism relies on the \chords{} input syntax which means
 that if you change \option{chord-cs} horrible things may happen.  \emph{So
   don't change \option{chord-cs} and use \option{transpose} at the same time!}
 
@@ -1159,7 +1168,7 @@ that if you change \option{chord-cs} horrible things may happen.  \emph{So
   \centering
   \catcode`\#=12
   \catcode`\!=6
-  \def\showsignature!1{\chordname{!1}&\code{!1}}%
+  \def\showsignature!1{\writechord{!1}&\code{!1}}%
   \caption{Allowed keys for the \property{key} property.}
   \begin{tabular}{*{12}{l}}
     \toprule
@@ -1311,7 +1320,10 @@ They have more options.  Here's a complete list:
     An option to be used with the \option{remember-chords} mechanism, see
     section~\ref{sec:remembering-chords} for an example.  If you're not using
     different classes then \meta{class} needs to be \code{default}, see also
-    page~\pageref{option:class}.
+    page~\pageref{option:class}. The \option{class} to a \env{verse}-like
+    environment allows for example to have verses with different chords which
+    are still counted reguarly together with the \option{remember-chords}
+    option.
 \end{options}
 
 There are also a number of general options for setting the defaults of some
@@ -1589,7 +1601,7 @@ commands.
         {}%
       \ifsongproperty{key}
         {%
-          & \setchordnames{
+          & \setchords{
               major = -\GetTranslation{leadsheets/major} ,
               minor = -\GetTranslation{leadsheets/minor}
             }%

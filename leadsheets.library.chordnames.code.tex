@@ -1,4 +1,4 @@
-\LeadsheetsExplLibrary{chordnames}{2015/05/22 typesetting chord names with easy syntax}
+\LeadsheetsExplLibrary{chordnames}{2015/07/02 typesetting chord names with easy syntax}
 
 \leadsheets_load_library:n {musicsymbols}
 
@@ -133,7 +133,7 @@
     \group_end:
   }
 
-\keys_define:nn {leadsheets/chordnames}
+\keys_define:nn {leadsheets/chords}
   {
     format       .tl_set:N = \l__leadsheets_format_tl ,
     sharp        .tl_set:N = \l__leadsheets_sharp_tl ,
@@ -157,8 +157,8 @@
     % input-notation .choice: ,
   }
 
-\NewDocumentCommand \setchordnames {m}
-  { \keys_set:nn {leadsheets/chordnames} {#1} }
+\NewDocumentCommand \setchords {m}
+  { \keys_set:nn {leadsheets/chords} {#1} }
 
 \NewDocumentCommand \chordname {} { \leadsheets_chord: }
 
@@ -171,3 +171,4 @@ HISTORY:
            - input/output notation is now handled by the `chords' library
            - German output of B and H can be customized
 2015/05/22 - improvements to the chord macros
+2015/07/02 - this is not a use library any more

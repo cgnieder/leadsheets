@@ -5,9 +5,9 @@
 % --------------------------------------------------------------------------
 % package information:
 \ExplSyntaxOn
-\tl_const:Nx \c_leadsheets_date_tl    {2015/05/22}
-\tl_const:Nx \c_leadsheets_version_tl {0.2}
-\tl_const:Nx \c_leadsheets_info_tl    {Typesetting leadsheets and songbooks}
+\tl_const:Nn \c_leadsheets_date_tl    {2015/07/02}
+\tl_const:Nn \c_leadsheets_version_tl {0.2}
+\tl_const:Nn \c_leadsheets_info_tl    {Typesetting leadsheets and songbooks}
 
 \ProvidesExplPackage
   {leadsheets}
@@ -134,9 +134,9 @@
     musicsymbols .code:n =
       \bool_set_true:N \l__leadsheets_with_options_bool
       \leadsheets_load_library:n {musicsymbols} ,
-    chordnames   .code:n =
+    chords       .code:n =
       \bool_set_true:N \l__leadsheets_with_options_bool
-      \leadsheets_load_library:n {chordnames} ,
+      \leadsheets_load_library:n {chords} ,
     musejazz     .code:n =
       \bool_set_true:N \l__leadsheets_with_options_bool
       \leadsheets_load_library:n {musejazz} ,

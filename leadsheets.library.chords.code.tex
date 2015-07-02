@@ -1,9 +1,9 @@
-\LeadsheetsExplLibrary{chords}{2015/05/08 printing chords}
+\LeadsheetsExplLibrary{chords}{2015/07/02 printing chords}
 
 \msg_new:nnn {leadsheets} {no-chords}
   { No~ more~ chords~ left~ for~ verse~ type~ `#1'~ \msg_line_context: }
 
-% \leadsheets_load_library:n {chordnames}
+\leadsheets_load_library:n {chordnames}
 \bool_new:N \l__leadsheets_output_notation_german_bool
 \bool_new:N \l__leadsheets_input_notation_german_bool
   
@@ -69,11 +69,14 @@
   {
     \group_begin:
       \char_set_catcode_other:N \#
+      \char_set_catcode_active:N \^
       \__leadsheets_chord_write:n
   }
 
 % for convenient input of sharps:
 \char_set_catcode_other:N \#
+% because ^ is active in the song environment:
+\char_set_catcode_active:N \^
 % # is other so we need another parameter character:
 \char_set_catcode_parameter:N \?
 
@@ -161,15 +164,15 @@
       \cs_set_protected:Npn \leadsheets_chord_print:n {#1} ,
     chord-cs         .initial:n  = \chordname ,
     print-chords     .bool_set:N = \l__leadsheets_chord_print_bool ,
-    chordnames/output-notation .choice: ,
-    chordnames/output-notation/german  .code:n =
+    chords/output-notation .choice: ,
+    chords/output-notation/german  .code:n =
       \bool_set_true:N \l__leadsheets_output_notation_german_bool ,
-    chordnames/output-notation/english .code:n =
+    chords/output-notation/english .code:n =
       \bool_set_false:N \l__leadsheets_output_notation_german_bool ,
-    chordnames/input-notation .choice: ,
-    chordnames/input-notation/german   .code:n =
+    chords/input-notation .choice: ,
+    chords/input-notation/german   .code:n =
       \bool_set_true:N \l__leadsheets_input_notation_german_bool ,
-    chordnames/input-notation/english  .code:n =
+    chords/input-notation/english  .code:n =
       \bool_set_false:N \l__leadsheets_input_notation_german_bool
   }
 
@@ -234,10 +237,10 @@
 HISTORY:
 
 2014/08/10 - first version
-2015/05/08 - input/output notation is done here now instead of in the
+2015/07/02 - input/output notation is done here now instead of in the
              `chordnames' library so transposing works with either input
              correctly
            - options `input-notation' and `output-notation' now directly
-             belong to leadsheets and not to the `chordnames' library
-             anymore.
+             belong to the `chords' library.
+           - this is now a user library
 
