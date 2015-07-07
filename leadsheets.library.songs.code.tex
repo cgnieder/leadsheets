@@ -60,6 +60,7 @@
 \int_new:N   \g__leadsheets_song_id_int
 
 \skip_new:N  \l__leadsheets_obey_parskip_skip
+\skip_new:N  \l__leadsheets_obey_parindent_skip
 
 % --------------------------------------------------------------------------
 % load necessary libraries:
@@ -110,12 +111,14 @@
 
 % --------------------------------------------------------------------------
 % the `song' environment:
-\NewDocumentEnvironment {song} { O{}m }
+\NewDocumentEnvironment {song} { O{} }
   {
     \int_gincr:N \g__leadsheets_song_id_int
     \tl_set:Nx \l__leadsheets_tmpa_tl
       { song-\int_to_arabic:n { \g__leadsheets_song_id_int } }
-    \leadsheets_startsong:nVn {#1} \l__leadsheets_tmpa_tl {#2}
+    \char_set_catcode_other:N \#
+    \skip_set_eq:NN \l__leadsheets_obey_parskip_skip \parskip
+    \leadsheets_startsong:nVn {#1} \l__leadsheets_tmpa_tl
   }
   {}
 
@@ -129,7 +132,10 @@
 \__leadsheets_active_eol: %
 \tl_const:Nn \c__leadsheets_eol_tl {^^M}%
 \cs_new_protected:Npn \leadsheets_obey_lines: {%
-  \skip_set_eq:NN \l__leadsheets_obey_parskip_skip \parskip
+  \bool_if:NT \l__leadsheets_obey_lines_bool {%
+    \skip_set_eq:NN \l__leadsheets_obey_parindent_skip \parindent%
+    \skip_zero:N \parindent%
+  }%
   \cs_set:Npn ^^M{%
     \peek_meaning:NTF ^^M%
       {\par \skip_vertical:N \l__leadsheets_obey_parskip_skip}%
@@ -141,6 +147,10 @@
     \peek_meaning:NTF^^M%
       {\par}%
       {\c_space_tl}%
+  }%
+  \bool_if:NT \l__leadsheets_obey_lines_bool {%
+    \skip_set_eq:NN \parindent \l__leadsheets_obey_parindent_skip%
+    \skip_zero:N \l__leadsheets_obey_parindent_skip%
   }%
 }%
 \group_end:
@@ -162,6 +172,7 @@
       \leadsheets_print_song:nwn {#2}
   }
 \cs_generate_variant:Nn \leadsheets_startsong:nnn { nV }
+
 
 \cs_new_protected:Npn \leadsheets_specials:
   {
@@ -223,6 +234,8 @@
     \leadsheets_set_property:nnx {#1} {counter}
       { \int_to_arabic:n {\g__leadsheets_song_id_int} }
   }
+\cs_generate_variant:Nn \keys_set:nn {nV}
+\cs_generate_variant:Nn \leadsheets_song_define:nn {nV}
 
 \cs_new_protected:Npn \leadsheets_define_song_properties:n #1
   {
@@ -396,7 +409,7 @@
       \ifsongproperty{key}
         {
           &
-          \setchordnames{
+          \setchords{
             major = -\GetTranslation{leadsheets/major} ,
             minor = -\GetTranslation{leadsheets/minor}
           }
@@ -648,3 +661,4 @@
 \endinput
 2015/05/22: \l__leadsheets_chords_sequences_prop changed into global
 2015/07/02: added `class' option to verses
+2015/07/05: enable usage of # in the key property

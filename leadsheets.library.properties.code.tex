@@ -12,7 +12,14 @@
   }
 
 \cs_new_protected:Npn \leadsheets_set_property:nnn #1#2#3
-  { \prop_gput:cnn {l__leadsheets_songs_#2_prop} {#1} {#3} }
+  {
+    \tl_set_rescan:Nnn \l__leadsheets_tmpa_tl
+      { \char_set_catcode_other:N \# }
+      {#3}
+    \prop_gput:cnV {l__leadsheets_songs_#2_prop} {#1}
+      \l__leadsheets_tmpa_tl
+  }
+\cs_generate_variant:Nn \prop_gput:cnn {cnV}
 \cs_generate_variant:Nn \leadsheets_set_property:nnn { nnx }
 
 \cs_new:Npn \leadsheets_get_property:nn #1#2
@@ -165,3 +172,4 @@
 \@onlypreamble\copysongproperty
 
 \endinput
+2015/07/05: enable usage of # in the key property
