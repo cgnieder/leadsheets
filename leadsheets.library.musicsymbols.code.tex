@@ -1,14 +1,14 @@
-\LeadsheetsLibrary{musicsymbols}{2014/08/10 musical symbols}
+\LeadsheetsLibrary{musicsymbols}{2015/07/13 musical symbols}
 \RequirePackage{etoolbox}
 
 % define a LaTeX font that uses the `musix' font from MusiXTeX:
 \DeclareFontFamily{U}{musix}{}%
 \DeclareFontShape{U}{musix}{m}{n}{%
-  <-12>   musix11
-  <12-15> musix13
-  <15-18> musix16
-  <18-23> musix20
-  <23->   musix29
+  <-12>   s * [1.5] musix11
+  <12-15> s * [1.5] musix13
+  <15-18> s * [1.5] musix16
+  <18-23> s * [1.5] musix20
+  <23->   s * [1.5] musix29
 }{}%
 
 % a font switch command:
@@ -19,25 +19,32 @@
 % the `symbol' command: raises the symnol since most symbols are too low for
 % use in normal text:
 \newrobustcmd*\musicsymbol[2][0pt]{%
-  \raisebox{\dimexpr.5ex+(#1)\relax}{\textmusix{#2}}%
+  \raisebox{\dimexpr.45ex+(#1)\relax}{\textmusix{#2}}%
 }
 
-% define the symbol
+\newrobustcmd*\leadsheets@altostrut{%
+  \vphantom{\rule[-.5\normalbaselineskip]{1pt}{1.4\normalbaselineskip}}%
+}
+\newrobustcmd*\leadsheets@treblestrut{%
+  \vphantom{\rule[-.4\normalbaselineskip]{1pt}{1.5\normalbaselineskip}}%
+}
+
+% define the symbols
 \renewrobustcmd*\sharp       {\musicsymbol[.2ex]{4}\kern-.06em}
 \renewrobustcmd*\flat        {\kern-.05em\musicsymbol{2}\kern-.06em}
 \renewrobustcmd*\natural     {\musicsymbol{6}\kern-.06em}
-\newrobustcmd*\doublesharp   {\musicsymbol{5}\kern-.05em}
+\newrobustcmd*\doublesharp   {\kern.05em\musicsymbol{5}\kern-.05em}
 \newrobustcmd*\doubleflat    {\kern-.05em\musicsymbol{3}\kern-.06em}
-\newrobustcmd*\trebleclef    {\musicsymbol{H}}
-\newrobustcmd*\bassclef      {\musicsymbol{J}}
-\newrobustcmd*\altoclef      {\musicsymbol{K}}
-\newrobustcmd*\allabreve     {\kern-.15em\musicsymbol{R}}
-\newrobustcmd*\meterC        {\kern-.15em\musicsymbol{S}}
-\newrobustcmd*\wholerest     {\musicsymbol{<}}
-\newrobustcmd*\halfrest      {\musicsymbol{=}}
-\newrobustcmd*\quarterrest   {\musicsymbol[-1ex]{>}\kern.25em}
-\newrobustcmd*\eighthrest    {\musicsymbol[-1ex]{?}\kern.33em}
-\newrobustcmd*\sixteenthrest {\musicsymbol[-1ex]{@}\kern.33em}
+\newrobustcmd*\trebleclef    {\leadsheets@treblestrut\smash{\musicsymbol{H}}}
+\newrobustcmd*\bassclef      {\strut\smash{\musicsymbol{J}}}
+\newrobustcmd*\altoclef      {\leadsheets@altostrut\smash{\musicsymbol{K}}}
+\newrobustcmd*\allabreve     {\strut\smash{\kern-.1em\musicsymbol[.25ex]{R}\kern.05em}}
+\newrobustcmd*\meterC        {\strut\smash{\kern-.1em\musicsymbol[.25ex]{S}\kern.05em}}
+\newrobustcmd*\wholerest     {\kern.05em\musicsymbol{<}\kern.05em}
+\newrobustcmd*\halfrest      {\kern.05em\musicsymbol{=}\kern.05em}
+\newrobustcmd*\quarterrest   {\strut\smash{\musicsymbol[-1.5ex]{>}\kern.4em}}
+\newrobustcmd*\eighthrest    {\musicsymbol[-1.5ex]{?}\kern.5em}
+\newrobustcmd*\sixteenthrest {\kern.05em\musicsymbol[-1.5ex]{@}\kern.5em}
 
 \newcommand*\leadsheets@size{\f@size pt}
 \newlength\leadsheets@barheight
@@ -102,3 +109,6 @@
 }
 
 \endinput
+
+2014/08/10 - initial release
+2015/07/13 - scale musix font by 1.9 => else the symbols are rather small!

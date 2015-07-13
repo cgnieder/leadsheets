@@ -247,7 +247,7 @@
   }
 
 % --------------------------------------------------------------------------
-\cs_new:Npn \leadsheets_print_song:nwn #1#2\end#3
+\cs_new_protected:Npn \leadsheets_print_song:nwn #1#2\end#3
   {
     \tl_clear:N \l__leadsheets_song_body_tl
     \leadsheets_if_print_song:nT {#1}
@@ -261,24 +261,19 @@
             #2
           }
       }
-    \tl_if_eq:nnTF {#3} {song}
-      {
-        \leadsheets_if_print_song:nT {#1}
-          { \leadsheets_end_song:n {#1} }
-        \group_end:
-        \end{song}
-      }
-      {
-        \tl_put_right:Nn \l__leadsheets_song_body_tl { \end{#3} }
-        \__leadsheets_continue_song:nwn {#1}
-      }
+    \__leadsheets_continue_or_end_song:nn {#1} {#3}
   }
 
 \cs_new:Npn \__leadsheets_continue_song:nwn #1#2\end#3
   {
     \leadsheets_if_print_song:nT {#1}
       { \tl_put_right:Nn \l__leadsheets_song_body_tl {#2} }
-    \tl_if_eq:nnTF {#3} {song}
+    \__leadsheets_continue_or_end_song:nn {#1} {#3}
+  }
+
+\cs_new_protected:Npn \__leadsheets_continue_or_end_song:nn #1#2
+  {
+    \tl_if_eq:nnTF {#2} {song}
       {
         \leadsheets_if_print_song:nT {#1}
           { \leadsheets_end_song:n {#1} }
@@ -286,7 +281,7 @@
         \end{song}
       }
       {
-        \tl_put_right:Nn \l__leadsheets_song_body_tl { \end{#3} }
+        \tl_put_right:Nn \l__leadsheets_song_body_tl { \end{#2} }
         \__leadsheets_continue_song:nwn {#1}
       }
   }
