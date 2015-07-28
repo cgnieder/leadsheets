@@ -691,17 +691,28 @@ Although I used the word \enquote{global} above \emph{all options are local to
     The command that is used to parse the chords.  See
     section~\ref{sec:placing-chords} for details.  \meta{cs} needs to be a
     command that takes a mandatory argument.
-  \keyval{song-format}{\TeX{} code}\Default
-    \meta{\TeX{} code} is inserted \emph{before} the song title at the
+  \keyval{song-format}{code}\Default
+    \meta{code} is inserted \emph{before} the song title at the
     beginning of the \env{song} environment.
-  \keyval{text-format}{\TeX{} code}\Default
-    \meta{\TeX{} code} is inserted \emph{after} the song title at the
+  \keyval{text-format}{code}\Default
+    \meta{code} is inserted \emph{after} the song title at the
     beginning of the \env{song} environment.
+  \keyval{before-song}{code}\Default
+    \meta{code}\sinceversion{0.3} is inserted at the beginning of a song
+    \emph{before} the title!
+  \keyval{after-song}{code}\Default
+    \meta{code}\sinceversion{0.3} is inserted after the whole song.
+  \keyval{after-title}{code}\Default
+    \meta{code}\sinceversion{0.3} is inserted after the title of the song but
+    before the body of the environment.
   % \keybool{numbered}\Default{false}
   %   Determines wether verses are numbered or not.
   \keyval{print-tags}{list of tags}
     A comma separated list of tags. When specified a song will only be printed
     if it is tagged with at least one of the tags in \meta{list of tags}.
+  \keyval{add-to-reset}{list of counters}
+    A\sinceversion{0.3} comma separated list of counters which should be
+    reset for each song.
   \keybool{obey-lines}\Default{false}
     An experimental option.  Use at your own risk!  If set to \code{true} then
     inside the \env{verse} like environments end-of-lines will be obeyed and

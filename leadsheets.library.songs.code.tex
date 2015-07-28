@@ -1,4 +1,4 @@
-\LeadsheetsExplLibrary{songs}{2015/07/02 typesetting songs}
+\LeadsheetsExplLibrary{songs}{2015/07/27 typesetting songs}
 
 % --------------------------------------------------------------------------
 % messages:
@@ -39,6 +39,9 @@
 \tl_new:N    \l__leadsheets_capo_number_format_tl
 \tl_new:N    \l__leadsheets_recall_verse_type_tl
 \tl_new:N    \l__leadsheets_song_body_tl
+\tl_new:N    \l__leadsheets_song_pre_hook_tl
+\tl_new:N    \l__leadsheets_song_post_hook_tl
+\tl_new:N    \l__leadsheets_song_mid_hook_tl
 
 \bool_new:N  \l__leadsheets_print_selected_bool
 \bool_new:N  \l__leadsheets_transpose_bool
@@ -258,8 +261,10 @@
             \leadsheets_songtitle:
             \leadsheets_check_capo:
             \tl_use:N \l__leadsheets_songtext_format_tl
-            #2
           }
+        \tl_put_right:NV \l__leadsheets_song_body_tl
+          \l__leadsheets_song_mid_hook_tl
+        \tl_put_right:Nn \l__leadsheets_song_body_tl {#2}
       }
     \__leadsheets_continue_or_end_song:nn {#1} {#3}
   }
@@ -290,6 +295,10 @@
   {
     \bool_set_true:N \l__leadsheets_measuring_bool
     \leadsheets_reset_counters:
+    \tl_put_left:NV \l__leadsheets_song_body_tl
+      \l__leadsheets_song_pre_hook_tl
+    \tl_put_right:NV \l__leadsheets_song_body_tl
+      \l__leadsheets_song_post_hook_tl
     \box_clear:N \l__leadsheets_tmpa_box
     \vbox_set:NV \l__leadsheets_tmpa_box \l__leadsheets_song_body_tl
     \leadsheets_set_property:nnx {#1} {height}
@@ -650,10 +659,17 @@
     capo-nr-format  .initial:n  = {Roman} ,
     capo-nr         .code:n     =
       \cs_set_protected:Npn \leadsheets_capo_number_print:n ##1 {#1} ,
-    capo-nr         .initial:n  = #1.
+    capo-nr         .initial:n  = #1. ,
+    before-song     .tl_set:N   = \l__leadsheets_song_pre_hook_tl ,
+    after-song      .tl_set:N   = \l__leadsheets_song_post_hook_tl ,
+    after-title     .tl_set:N   = \l__leadsheets_song_mid_hook_tl ,
+    add-to-reset    .code:n     =
+      \clist_map_inline:nn {#1} { \leadsheets_add_to_reset:n {##1} }
   }
 
 \endinput
 2015/05/22: \l__leadsheets_chords_sequences_prop changed into global
 2015/07/02: added `class' option to verses
 2015/07/05: enable usage of # in the key property
+2015/07/27: new options `before-song', `after-song', `after-title' and
+            `add-to-reset'
