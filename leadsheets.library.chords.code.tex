@@ -5,7 +5,6 @@
 %
 % --------------------------------------------------------------------------
 % Clemens Niederberger
-% Web:    http://www.mychemistry.eu/forums/forum/leadsheets/
 % E-Mail: contact@mychemistry.eu
 % --------------------------------------------------------------------------
 % Copyright 2014-2016 Clemens Niederberger
@@ -22,12 +21,13 @@
 %
 % The Current Maintainer of this work is Clemens Niederberger.
 % --------------------------------------------------------------------------
-\LeadsheetsExplLibrary{chords}{2015/07/02 printing chords}
+\LeadsheetsExplLibrary{chords}{2016/07/02 printing chords}
 
 \msg_new:nnn {leadsheets} {no-chords}
   { No~ more~ chords~ left~ for~ verse~ type~ `#1'~ \msg_line_context: }
 
 \leadsheets_load_library:n {chordnames}
+
 \bool_new:N \l__leadsheets_output_notation_german_bool
 \bool_new:N \l__leadsheets_input_notation_german_bool
   
@@ -114,28 +114,31 @@
         \tl_replace_all:Nnn \l__leadsheets_current_chord_tl {H} {B}
       }
       { \tl_replace_all:Nnn \l__leadsheets_current_chord_tl {H} {B} }
-    \bool_if:nT
+    \leadsheets_if_library:nT {songs}
       {
-        \leadsheets_if_property_p:Vn \l_leadsheets_current_song_id_tl {key}
-        &&
-        ( \l__leadsheets_transpose_bool || \l__leadsheets_transpose_capo_bool )
-      }
-      {
-        \leadsheets_transpose:xVN
-          { \leadsheets_get_property:Vn \l_leadsheets_current_song_id_tl {key} }
-          \l__leadsheets_transpose_steps_int
-          \l__leadsheets_current_chord_tl
-      }
-    \bool_if:nTF
-      {
-        ! \leadsheets_if_property_p:Vn \l_leadsheets_current_song_id_tl {key}
-        &&
-        ( \l__leadsheets_transpose_bool || \l__leadsheets_transpose_capo_bool )
-      }
-      {
-        \msg_warning:nnV {leadsheets}
-          {transpose-key}
-          \l_leadsheets_current_song_id_tl
+        \bool_if:nT
+          {
+            \leadsheets_if_property_p:Vn \l_leadsheets_current_song_id_tl {key}
+            &&
+            ( \l__leadsheets_transpose_bool || \l__leadsheets_transpose_capo_bool )
+          }
+          {
+            \leadsheets_transpose:xVN
+              { \leadsheets_get_property:Vn \l_leadsheets_current_song_id_tl {key} }
+              \l__leadsheets_transpose_steps_int
+              \l__leadsheets_current_chord_tl
+          }
+        \bool_if:nTF
+          {
+            ! \leadsheets_if_property_p:Vn \l_leadsheets_current_song_id_tl {key}
+            &&
+            ( \l__leadsheets_transpose_bool || \l__leadsheets_transpose_capo_bool )
+          }
+          {
+            \msg_warning:nnV {leadsheets}
+              {transpose-key}
+              \l_leadsheets_current_song_id_tl
+          }
       }
     % => convert to specified output
     \bool_if:NT \l__leadsheets_output_notation_german_bool
@@ -158,7 +161,8 @@
     \bool_if:NTF \l__leadsheets_chord_print_bool
       {
         \group_begin:
-          \leadsheets_ignore_lines:
+          \leadsheets_if_library:nT {songs}
+            { \leadsheets_ignore_lines: }
           \bool_if:NT \g__leadsheets_smash_next_chord_bool
             {
               \bool_set_true:N \l__leadsheets_smash_chords_bool
@@ -235,13 +239,6 @@
       { \prg_return_false: }
   }
 
-\cs_new:Npn \leadsheets_remember_or_recall_chords:w
-  {
-    \leadsheets_if_recall_chords:TF
-      { \recallchord }
-      { \chord }
-  }
-
 \cs_new_protected:Npn \leadsheets_recall_chord:nn #1#2
   {
     \seq_pop_left:NNF \g__leadsheets_chords_sequences_seq
@@ -256,6 +253,13 @@
 \NewDocumentCommand \recallchord {st-}
   { \leadsheets_recall_chord:nn {#1} {#2} }
 
+\NewDocumentCommand \getorprintchord {}
+  {
+    \leadsheets_if_recall_chords:TF
+      { \recallchord }
+      { \chord }
+  }
+  
 \endinput
 
 HISTORY:
@@ -267,4 +271,4 @@ HISTORY:
            - options `input-notation' and `output-notation' now directly
              belong to the `chords' library.
            - this is now a user library
-
+2016/07/02 - \getorprintchord

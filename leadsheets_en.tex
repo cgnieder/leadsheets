@@ -1,20 +1,22 @@
-% !arara: pdflatex: { shell: on }
-% arara: biber
-% arara: pdflatex
-% arara: pdflatex
+% arara: pdflatex: { shell: on , action: nonstopmode }
+% !arara: biber
+% !arara: pdflatex
+% !arara: pdflatex
 \documentclass[load-preamble+]{cnltx-doc}
-\usepackage{leadsheets}
+\usepackage{leadsheets,bookmark}
 \setcnltx{
   package = leadsheets ,
   info    = Typesetting leadsheets and songbooks ,
   authors = Clemens Niederberger ,
   email   = contact@mychemistry.eu ,
-  url     = http://www.mychemistry.eu/forums/forum/leadsheets/ ,
+  url     = https://github.com/cgnieder/leadsheets/ ,
   add-cmds = {
-    chord , chordname ,
+    choir , chord , chordname ,
     definesongtitletemplate ,
     defineversetypetemplate , 
     expandcode ,
+    ifallsongproperties ,
+    ifanysongproperty ,
     ifobeylines ,
     ifsongmeasuring ,
     ifsongpropertiesequal ,
@@ -22,6 +24,14 @@
     ifversenamed ,
     ifversenumbered ,
     ifversestarred ,
+    includeleadsheet ,
+    instruction ,
+    leadsheetstranslate ,
+    lsenparen ,
+    mkchoir ,
+    mkinstruction ,
+    mklsenparen ,
+    mklsenparens ,
     newversetype ,
     printsongpropertylist ,
     setchords ,
@@ -42,6 +52,7 @@
     endmdframed ,
     mdframed ,
     newfontfamily ,
+    newrobustcmd ,
     musejazz
   } ,
   add-envs = {
@@ -52,7 +63,8 @@
     info ,
     interlude ,
     intro , intro* ,
-    outro , outro *
+    outro , outro * ,
+    prechorus , prechorus* ,
     solo , solo* ,
     song ,
     verse
@@ -315,6 +327,8 @@ they're not explained here.
       \showsymbol{wholerest}   & \showsymbol{halfrest} \\
       \showsymbol{quarterrest} & \showsymbol{eighthrest} \\
       \showsymbol{sixteenthrest} \\
+    \midrule
+      \showsymbol{Break} \\
     \bottomrule
   \end{tabular}
   \label{tab:musicsymbols}
@@ -352,8 +366,15 @@ bars:
     The distance between two bar rules as in \cs{doublebar} or \cs{stopbar}.
 \end{commands}
 
+Finally \musicsymbols{} provides a macro for adding an abitrary meter:
+\begin{commands}
+  \command{meter}[\marg{numerator}\marg{denominator}]
+    \sinceversion{0.5}For example \verbcode+\meter{6}{8}+: \meter{6}{8}
+\end{commands}
+
 \clearpage
-\part{The \library*{chords} Library (and the \library*{musejazz} Library)}\label{part:chords-library}
+\part{The \library*{chords} Library (and the \library*{musejazz}
+  Library)}\label{part:chords-library}
 \dictum[Wes Montgomery]{%
   I never practice my guitar -- from time to time I just open the case and
   throw in a piece of raw meat.%
@@ -491,7 +512,9 @@ doesn't change the input syntax.
   \keyval{major}{code}\Default
     The token list \code{ma}.
   \keyval{minor}{code}\Default{m}
-    The token list \code{mi}.
+    The token list \code{mi}.  This option knows a special value.  If you set
+    \keyis{minor}{lowercase} then minor chords are converted to lowercase
+    letters.  This means an input \code{Dmi} becomes \code{d}.
   \keyval{major-seven}{code}\Default{\cs*{textsuperscript}\Marg{maj7}}
     The token list \code{maj7}.
   \keyval{major-nine}{code}\Default{\cs*{textsuperscript}\Marg{maj9}}
@@ -558,7 +581,7 @@ requires \LuaLaTeX\ or \XeLaTeX.  Well, and the font, obviously.
 
 Here is a small example of it's usage and the outcome:
 
-\begin{example}[compile,program=lualatex,max-pages=1,add-frame=false]
+\begin{example}[compile,program=xelatex,max-pages=1,add-frame=false]
   % compile with LuaLaTeX or XeLaTeX
   \documentclass[margin=4mm]{standalone}
   \usepackage{leadsheets}
@@ -722,6 +745,10 @@ Although I used the word \enquote{global} above \emph{all options are local to
     Makes the characters \shortcut{:} and \shortcut{\barsymbol} active inside
     the \env{song} environment.  See sections~\ref{sec:special-characters}
     and~\ref{sec:typesetting-bars} for more details.
+  \keybool{disable-measuring}\Default{false}
+    \sinceversion{0.4}This option turns of the song height measuring.  This
+    makes song title template definitions easier (see section~\ref{sec:title-templates} for
+    details).  \emph{The song property \property{height} will be set to 0pt then!}
 \end{options}
 
 \subsection{Song Properties}\label{sec:song-properties}
@@ -796,15 +823,17 @@ templates (see section~\ref{sec:title-templates}).  One specific property,
 There are three more properties, \property{counter}, \property{ID} and
 \property{height} that cannot be set but are set automatically for each song.
 The \property{counter} simply holds the number of the current song starting
-from \code{1} for the first song.  The \property{ID} currently always ia
+from \code{1} for the first song.  The \property{ID} currently always is
 \code{song\meta{counter}} where \meta{counter} is the current
 \property{counter} value.  The property \property{height} holds the height of
 the typeset song in pt.  The height is determined by placing the body of the
 respective \env{song} environment in a vertical box and measuring the height
-and depth of the box.  This is done in a measuring phase that can be tested in
-a songtitle template definition, see section~\ref{sec:title-templates} for
-details. \emph{ This is important since the property \property{height} is not
-available in the measuring phase but only afterwards!}
+and depth of the box.  This is done in a measuring phase that can and should
+be tested in a songtitle template definition, see
+section~\ref{sec:title-templates} for details.  \emph{This is important since
+  the property \property{height} is not available in the measuring phase but
+  only afterwards!}  If the option \option{disable-measuring} has been set the
+property \property{height} will have the value~0pt!
 
 In principle all properties can get list of entries where items are separated
 with \code{\visualizespaces{ and }}.  Of course this doesn't make sense for
@@ -1488,16 +1517,22 @@ contents or other auxiliary files.
     mandatory argument.
   \expandable\command{ifsongproperty}[\marg{property}\marg{true}\marg{false}]
     Checks if property \meta{property} has been set.
+  \command{ifanysongproperty}[\Marg{csv list of properties}\marg{true}\marg{false}]
+    \sinceversion{0.4}Checks if any of the properties in \meta{csv list of
+      properties} has been set.
+  \command{ifallsongproperties}[\Marg{csv list of properties}\marg{true}\marg{false}]
+    \sinceversion{0.4}Checks if all of the properties in \meta{csv list of
+      properties} have been set.
   \command{ifsongpropertiesequal}[\marg{property 1}\marg{property
     2}\marg{true}\marg{false}]
     Checks if properties \meta{property 1} and \meta{property 2} have been set
     to the same value.
   \expandable\command{ifsongmeasuring}[\marg{true}\marg{false}]
     \leadsheets{} measures the height of a song body before it typesets it and
-    it can be necessary in a template to know if the measuring phase is active
-    or not.  For example the song property \property{height} should only be
-    used if \emph{not} in the measuring phase: it's value get's determined
-    there and is not yet available.
+    it can often be necessary in a template to know if the measuring phase is
+    active or not.  For example the song property \property{height} should
+    only be used if \emph{not} in the measuring phase: it's value get's
+    determined there and is not yet available.
   \command{expandcode}[\marg{code}]
     Exhaustively expands \meta{code}.  Experienced users won't need this.  It
     is essentially
@@ -1934,10 +1969,253 @@ that \cs{printsongpropertylist} is not expandable.
 \end{table}
 
 \clearpage
-\part{Appendix}
+\part{The \library*{external} Library and the \cls*{leadsheet} Class}
 \dictum[Thelonious Monk]{%
   Talking about music is like dancing about architecture.%
 }
+
+\section{The Idea}
+
+For\sinceversion{0.5} some users -- like myself -- it may be desirable to
+create leadsheets that can be reused in another document as a compilation of
+songs.  The usual way would be to
+\begin{itemize}
+  \item either solve this manually by copying the \env{song} environment from
+    one document to the other.  This is not ideal, of course.
+  \item place the \env{song} in a file of its own and \cs*{input} it in the
+    different documents.  This is easy and safe but requires a total of three
+    files for two documents.  That's not really a problem, though, so it is a
+    valid way.
+\end{itemize}
+
+\leadsheets{} now provides a third way.  You write the single leadsheet using
+the \cls{leadsheet} class that comes with this package.  Let's call this file
+\code{single.tex} for the following discussion:
+\begin{sourcecode}
+  \documentclass{leadsheet}
+  \usepackage[T1]{fontenc}
+  \usepackage[utf8]{inputenc}
+  
+  \begin{document}
+
+  \begin{song}{ ... }
+    ...
+  \end{song}
+
+  \end{document}
+\end{sourcecode}
+
+You can now include this document as is in another file -- let's call it
+\code{multiple.tex}:
+\begin{sourcecode}
+  \documentclass{scrartcl}
+  \usepackage{leadsheets}
+  \useleadsheetslibraries{external}
+
+  \begin{document}
+
+  \includeleadsheet{single.tex}
+  
+  \end{document}
+\end{sourcecode}
+
+Depending on the settings this removes the complete preamble from
+\code{single.tex} and only includes the document body of the file.
+
+\section{The \cls*{leadsheet} Class}\label{sec:leadsheet-class}
+
+The \cls{leadsheet} class is a class file built upon the \cls{scrartcl}
+class.  It defines a song title template \titletemplate{leadsheet}, makes a
+few setup choices
+\begin{sourcecode}
+  \setleadsheets{
+    title-template = leadsheet ,
+    bar-shortcuts ,
+    verse/numbered ,
+    verses-format = ,
+    verses-label-format = \bfseries ,
+    info/format = \itshape ,
+    chorus/format = \itshape
+  }
+\end{sourcecode}
+and sets the header and the footer of the leadsheet pages.
+
+\begin{example}[
+  compile,
+  graphics={trim={2cm 18cm 2cm 2cm},clip},
+  add-sourcecode-options={literate=}]
+  \documentclass{leadsheet}
+  \usepackage[T1]{fontenc}
+  \usepackage[utf8]{inputenc}
+  \usepackage[ngerman]{babel}
+
+  \begin{document}
+
+  \begin{song}{title={Mary Had A Little Lamb}, music={Stevie Ray Vaughan},
+    interpret={Stevie Ray Vaughan}, lyrics={traditional}, tags={srv,blues}}
+  \begin{verse}
+    Mary had a little lamb \\
+    Its fleece was white as snow, yea \\
+    Everywhere the child went \\
+    The little lamb was sure to go, yea
+  \end{verse}
+  \begin{verse}
+    He followed her to school one day \\
+    And broke the teacher's rule \\
+    What a time did they have \\
+    That day at school
+  \end{verse}
+  \end{song}
+
+  \end{document}
+\end{example}
+
+The header contains \enquote{\meta{song title} (\meta{interpret})} if the
+leadsheet has more than one page in total.  Otherwise it is empty.
+
+The footer contains \enquote{\meta{page} of \meta{pages}} if the leadsheet has
+more than one page in total.  Otherwise it is empty.
+
+The class provides the verse type \env{prechorus}:
+\begin{environments}
+  \environment{prechorus}[\oarg{options}]
+    Environment for marking the pre-chorus of a song.
+\end{environments}
+
+\begin{commands}
+  \command{instruction}[\marg{text}]
+    Short macro to add instructional text.
+  \command{mkinstruction}[\marg{text}]
+    The formatting macro used by \cs{instruction}.  You can redefine it in
+    order to change the appearance.  The default definition is: \\
+    \verbcode+\newcommand*\mkinstruction[1]{\emph{#1}}+
+  \command{choir}[\marg{text}]
+    Short macro to add (background) choir text.
+  \command{mkchoir}[\marg{text}]
+    The formatting macro used by \cs{choir}.  You can redefine it in
+    order to change the appearance.  The default definition is: \\
+    \verbcode+\newcommand*\mkchoir[1]{\instruction{\leadsheetstranslate{choir}: #1}}+
+  \command{lsenparen}[\marg{text}]
+    Short macro to add parentheses around text.  Used internally by
+    \cs{instruction}.
+  \command{mklsenparens}
+    The parentheses setting macro used by \cs{lsenparen}.  You can redefine it
+    in order to change the parentheses.  The default definition is: \\
+    \verbcode+\newcommand*\mklsenparens{[]}+ \\
+    \emph{The definition needs to be expandable and to expand to exactly two
+      tokens or braced groups, one for the opening parenthesis and the second
+      for the closing parenthesis!}
+  \command{mklsenparen}[\marg{openen parenthesis}\marg{closing
+    parenthesis}\marg{text}]
+    The formatting macro used by \cs{lsenparen}.  You can redefine it in
+    order to change the appearance.  The default definition is: \\
+    \verbcode+\newcommand*\mklsenparen[3]{\textup{#1}#3\textup{#2}}+
+\end{commands}
+
+Here is an example that demonstrates \cs{choir} and \cs{instruction}.  (The
+code of the example code has been saved in a file called
+\code{single-leadsheet.tex}.  It is used later on again.)\label{single-leadsheet}
+\begin{example}[compile,graphics={trim={2cm 18cm 2cm 2cm},clip},
+  add-sourcecode-options={literate=}]
+  \documentclass{leadsheet}
+  \usepackage[T1]{fontenc}
+  \usepackage[utf8]{inputenc}
+
+  \begin{document}
+
+  \begin{song}{title=foobar}
+  \begin{verse}
+    \instruction{keyboard only} \\
+    Lorem ipsum dolor sit amet, consetetur sadipscing \\
+    \choir{sed diam nonumy eirmod tempor invidunt ut labore et dolore}
+  \end{verse}
+  \begin{prechorus}
+    \instruction{+ band} \\
+    Lorem ipsum dolor sit amet, consetetur sadipscing
+  \end{prechorus}
+  \end{song}
+
+  \end{document}
+\end{example}
+  
+\section{The \library*{external} Library}
+
+Loading the \library{external} library allows to include complete leadsheet
+documents (\ie, with preamble) into a main document.  This requires the
+included leadsheet to use the \cls{leadsheet} class (see
+section~\ref{sec:leadsheet-class}).  When the file is included the whole
+preamble of said file will be discarded.  This can be changed with an option
+but then \cs*{usepackage} and \cs*{RequirePackage} will still be disabled and
+simply do nothing in the included file.
+
+\begin{commands}
+  \command{includeleadsheet}[\sarg\oarg{options}\marg{file name}]
+    Include the leadsheet \meta{file name}.  \meta{options} apply locally for
+    the included file.  The file \meta{file name} may include a complete
+    document preamble.
+\end{commands}
+
+\begin{filecontents*}{single-leadsheet.tex}
+\documentclass{leadsheet}
+\usepackage[T1]{fontenc}
+\usepackage[utf8]{inputenc}
+
+\begin{document}
+
+\begin{song}{title=foobar}
+\begin{verse}
+  \instruction{keyboard only} \\
+  Lorem ipsum dolor sit amet, consetetur sadipscing \\
+  \choir{sed diam nonumy eirmod tempor invidunt ut labore et dolore}
+\end{verse}
+\begin{prechorus}
+  \instruction{+ band} \\
+  Lorem ipsum dolor sit amet, consetetur sadipscing
+\end{prechorus}
+\end{song}
+
+\end{document}
+\end{filecontents*}
+The next example shows the basic usage by inputting the example file mentioned
+on page~\pageref{single-leadsheet}.  \emph{Notice that the formatting setup by
+  the \cls{leadsheets} is not used}.  Also the title template
+\titletemplate{leadsheet} is not defined in this process.
+\begin{example}[compile,graphics={trim={2cm 18cm 2cm 2cm},clip},
+  add-sourcecode-options={literate=}]
+  \documentclass{scrartcl}
+  \usepackage{leadsheets}
+  \useleadsheetslibraries{external}
+
+  \begin{document}
+
+  \includeleadsheet{single-leadsheet}
+  
+  \end{document}  
+\end{example}
+Also notice that the \env{prechorus} environment and the \cs{instruction} and
+\cs{choir} macros \emph{are} available!  \emph{All new macros defined in the
+  \cls{leadsheet} class and described in section~\ref{sec:leadsheet-class} are
+  defined}.  If you do not want this then you can use the starred version of
+\cs{includeleadsheet}.  In this process the preamble of the included file is
+gobbled.  It may be desirable not to have the preamble gobbled, though --
+because of custom macro definitions for example.
+\begin{options}
+  \keybool{gobble-preamble}\Default{true}
+    If set to \code{false} \cs{includeleadsheet} will not gobble the preamble
+    of the file it inputs.  Using this is dangerous: for it to work
+    \cs*{usepackage} and \cs*{RequirePackage} have to be disabled while the
+    file is included.  So including the preamble may lead to more problems
+    than it solves.
+\end{options}
+
+The included leadsheets do not have to be a complete document -- a standard
+tex file only consisting of the \env{song} environments will work just as
+nicely.  Files that are complete documents but are using another class than
+\cls{leadsheet} will lead to errors, though.
+
+\clearpage
+\part{Appendix}
+\dictum[Thelonious Monk]{Wrong is right.}
 \appendix
 
 \end{document}

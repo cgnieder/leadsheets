@@ -5,7 +5,6 @@
 %
 % --------------------------------------------------------------------------
 % Clemens Niederberger
-% Web:    http://www.mychemistry.eu/forums/forum/leadsheets/
 % E-Mail: contact@mychemistry.eu
 % --------------------------------------------------------------------------
 % Copyright 2014-2016 Clemens Niederberger
@@ -22,7 +21,7 @@
 %
 % The Current Maintainer of this work is Clemens Niederberger.
 % --------------------------------------------------------------------------
-\LeadsheetsLibrary{musicsymbols}{2015/07/13 musical symbols}
+\LeadsheetsLibrary{musicsymbols}{2016/02/15 musical symbols}
 \RequirePackage{etoolbox}
 
 % define a LaTeX font that uses the `musix' font from MusiXTeX:
@@ -54,7 +53,7 @@
 }
 
 % define the symbols
-\renewrobustcmd*\sharp       {\musicsymbol[.2ex]{4}\kern-.06em}
+\renewrobustcmd*\sharp       {\kern.05em\musicsymbol[.2ex]{4}\kern-.05em}
 \renewrobustcmd*\flat        {\kern-.05em\musicsymbol{2}\kern-.06em}
 \renewrobustcmd*\natural     {\musicsymbol{6}\kern-.06em}
 \newrobustcmd*\doublesharp   {\kern.05em\musicsymbol{5}\kern-.05em}
@@ -69,6 +68,17 @@
 \newrobustcmd*\quarterrest   {\strut\smash{\musicsymbol[-1.5ex]{>}\kern.4em}}
 \newrobustcmd*\eighthrest    {\musicsymbol[-1.5ex]{?}\kern.5em}
 \newrobustcmd*\sixteenthrest {\kern.05em\musicsymbol[-1.5ex]{@}\kern.5em}
+
+\RequirePackage{amsmath}
+\newrobustcmd*\meter[2]{%
+  \ensuremath{%
+    \genfrac{}{}{0pt}{}%
+      {\text{\textbf{#1}}}%
+      {\text{\textbf{#2}}}%
+  }%
+}
+
+\newrobustcmd*\Break{\ensuremath{\perp}}
 
 \newcommand*\leadsheets@size{\f@size pt}
 \newlength\leadsheets@barheight
@@ -89,25 +99,26 @@
 \newrobustcmd*\leadsheets@repeatcolon{%
   \leavevmode
   \setlength\leadsheets@barheight\leadsheets@size
-  \raise.1\leadsheets@barheight\hbox{:}%
+  \raise.1\leadsheets@barheight\hbox{\textup{:}}%
 }
 
 \newrobustcmd*\leadsheets@interbar{\kern\interbarwidth\relax}
 
-\newrobustcmd*\normalbar{%
+\newrobustcmd*\leadsheets@normalbar{%
   \genericbar{\normalbarwidth}%
 }
+\newrobustcmd*\normalbar{\leadsheets@normalbar}
 
 \newrobustcmd*\leftrepeat{%
   \leadsheets@thickbar
   \leadsheets@interbar
-  \normalbar
+  \leadsheets@normalbar
   \leadsheets@repeatcolon
 }
 
 \newrobustcmd*\rightrepeat{%
   \leadsheets@repeatcolon
-  \normalbar
+  \leadsheets@normalbar
   \leadsheets@interbar
   \leadsheets@thickbar
 }
@@ -121,13 +132,13 @@
 }
 
 \newrobustcmd*\doublebar{%
-  \normalbar
+  \leadsheets@normalbar
   \leadsheets@interbar
-  \normalbar
+  \leadsheets@normalbar
 }
 
 \newrobustcmd*\stopbar{%
-  \normalbar
+  \leadsheets@normalbar
   \leadsheets@interbar
   \leadsheets@thickbar
 }
@@ -136,3 +147,4 @@
 
 2014/08/10 - initial release
 2015/07/13 - scale musix font by 1.5 => else the symbols are rather small!
+2016/01/15 - \Break; improvements of bars

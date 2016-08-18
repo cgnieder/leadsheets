@@ -5,7 +5,6 @@
 %
 % --------------------------------------------------------------------------
 % Clemens Niederberger
-% Web:    http://www.mychemistry.eu/forums/forum/leadsheets/
 % E-Mail: contact@mychemistry.eu
 % --------------------------------------------------------------------------
 % Copyright 2014-2016 Clemens Niederberger
@@ -22,19 +21,20 @@
 %
 % The Current Maintainer of this work is Clemens Niederberger.
 % --------------------------------------------------------------------------
-\LeadsheetsExplLibrary{chordnames}{2015/07/02 typesetting chord names with easy syntax}
+\LeadsheetsExplLibrary{chordnames}{2016/07/05 typesetting chord names with easy syntax}
 
 \leadsheets_load_library:n {musicsymbols}
-
-% \bool_new:N \l__leadsheets_output_notation_german_bool
-% \bool_new:N \l__leadsheets_input_notation_german_bool
 
 \tl_new:N \l__leadsheets_chord_tl
 \tl_new:N \l__leadsheets_tension_tl
 \tl_new:N \l__leadsheets_format_tl
 
 \cs_new_protected:Npn \leadsheets_tension_sym:Nn #1#2
-  { \tl_replace_all:Nnn #1 {#2} { \textsuperscript{#2} } }
+  { \tl_replace_all:Nnn #1 {#2} { \textsuperscript {#2} } }
+
+\cs_new_protected:Npn \leadsheets_tension_sym:Nnn #1#2#3
+  { \tl_replace_all:Nnn #1 {#2} { \textsuperscript {#3} } }
+\cs_generate_variant:Nn \leadsheets_tension_sym:Nnn {NnV}
 
 \cs_new_protected:Npn \leadsheets_chord_sym:Nnn #1#2#3
   { \tl_replace_all:Nnn #1 {#2} {#3} }
@@ -93,12 +93,9 @@
 \cs_gset_protected:Npn \leadsheets_chord_aux:n !1
  {
     \tl_set:Nn \l__leadsheets_chord_tl {!1}
-    \leadsheets_chord_sym:Nnn  \l__leadsheets_chord_tl {maj7}
-      {\l__leadsheets_major_seven_tl}
-    \leadsheets_chord_sym:Nnn  \l__leadsheets_chord_tl {maj9}
-      {\l__leadsheets_major_nine_tl}
-    \leadsheets_chord_sym:Nnn  \l__leadsheets_chord_tl {sus}
-      {\l__leadsheets_sus_tl}
+    \leadsheets_chord_sym:NnV  \l__leadsheets_chord_tl {maj7} \l__leadsheets_major_seven_tl
+    \leadsheets_chord_sym:NnV  \l__leadsheets_chord_tl {maj9} \l__leadsheets_major_nine_tl
+    \leadsheets_chord_sym:NnV  \l__leadsheets_chord_tl {sus} \l__leadsheets_sus_tl
     \leadsheets_chord_sym:Nnn  \l__leadsheets_chord_tl {^} {\textsuperscript}
     \bool_if:NT \l__leadsheets_output_notation_german_bool
       {
@@ -107,10 +104,8 @@
       }
     \leadsheets_chord_sym:Nnn  \l__leadsheets_chord_tl {#b} {}
     \leadsheets_chord_sym:Nnn  \l__leadsheets_chord_tl {b#} {}
-    \leadsheets_chord_sym:Nnn  \l__leadsheets_chord_tl {##}
-      {\l__leadsheets_doublesharp_tl}
-    \leadsheets_chord_sym:Nnn  \l__leadsheets_chord_tl {bb}
-      {\l__leadsheets_doubleflat_tl}
+    \leadsheets_chord_sym:NnV  \l__leadsheets_chord_tl {##} \l__leadsheets_doublesharp_tl
+    \leadsheets_chord_sym:NnV  \l__leadsheets_chord_tl {bb} \l__leadsheets_doubleflat_tl
     \leadsheets_chord_sym:NnV  \l__leadsheets_chord_tl {#} \l__leadsheets_sharp_tl
     \leadsheets_chord_sym:NnV  \l__leadsheets_chord_tl {b} \l__leadsheets_flat_tl
     \leadsheets_chord_sym:NnV  \l__leadsheets_chord_tl {dim} \l__leadsheets_dim_tl
@@ -125,12 +120,9 @@
     \leadsheets_tension_sym:Nn \l__leadsheets_chord_tl {7}
     \leadsheets_tension_sym:Nn \l__leadsheets_chord_tl {8}
     \leadsheets_tension_sym:Nn \l__leadsheets_chord_tl {9}
-    \leadsheets_chord_sym:Nnn  \l__leadsheets_chord_tl {/o}
-      {\textsuperscript{\l__leadsheets_half_dim_tl}}
-    \leadsheets_chord_sym:Nnn  \l__leadsheets_chord_tl {o}
-      {\textsuperscript{\l__leadsheets_full_dim_tl}}
-    \leadsheets_chord_sym:Nnn  \l__leadsheets_chord_tl {+}
-      {\textsuperscript{\l__leadsheets_aug_tl}}
+    \leadsheets_tension_sym:NnV  \l__leadsheets_chord_tl {/o} \l__leadsheets_half_dim_tl
+    \leadsheets_tension_sym:NnV  \l__leadsheets_chord_tl {o} \l__leadsheets_full_dim_tl
+    \leadsheets_tension_sym:NnV  \l__leadsheets_chord_tl {+} \l__leadsheets_aug_tl
     \leadsheets_chord_sym:Nnn \l__leadsheets_chord_tl  {(}
       { \leadsheets_tension:w( }
     \leadsheets_chord_sym:Nnn \l__leadsheets_chord_tl  {mi}
@@ -140,11 +132,30 @@
     \tl_replace_all:Nnn \l__leadsheets_chord_tl
       {\textsuperscript\textsuperscript}
       {\textsuperscript}
+    \bool_if:NT \l__leadsheets_lowercase_minor_bool
+      {
+        \tl_put_left:Nn \l__leadsheets_chord_tl { \__leadsheets_start_minor:w }
+        \tl_put_right:Nn \l__leadsheets_chord_tl { \q_stop }
+      }
+%    \show \l__leadsheets_chord_tl
     \tl_use:N \l__leadsheets_chord_tl
     \group_end:
   }
 
 \group_end:
+
+% lowercase letters for minor chords:
+\bool_new:N \l__leadsheets_lowercase_minor_bool
+
+\cs_new_protected:Npn \__leadsheets_start_minor:w #1 \q_stop
+  {
+    \tl_if_in:nnTF {#1} {\l__leadsheets_minor_tl}
+      { \__leadsheets_revert_minor:w #1 \q_stop }
+      {#1}
+  }
+
+\cs_new_protected:Npn \__leadsheets_revert_minor:w #1 \l__leadsheets_minor_tl #2 \q_stop
+  { \tl_lower_case:n {#1} #2 }
 
 \cs_new_protected:Npn \leadsheets_tension:w (#1)
   {
@@ -168,14 +179,23 @@
     full-dim     .tl_set:N = \l__leadsheets_full_dim_tl ,
     aug          .tl_set:N = \l__leadsheets_aug_tl ,
     major        .tl_set:N = \l__leadsheets_major_tl ,
-    minor        .tl_set:N = \l__leadsheets_minor_tl ,
+    minor        .code:n   =
+      \str_if_eq:nnTF {#1} {lowercase}
+        {
+          \bool_set_true:N \l__leadsheets_lowercase_minor_bool
+          \tl_clear:N \l__leadsheets_minor_tl
+        }
+        {
+          \bool_set_false:N \l__leadsheets_lowercase_minor_bool
+          \tl_set:Nn \l__leadsheets_minor_tl {#1}
+        } ,
     sus          .tl_set:N = \l__leadsheets_sus_tl ,
     add          .tl_set:N = \l__leadsheets_add_tl ,
     dim          .tl_set:N = \l__leadsheets_dim_tl ,
     major-seven  .tl_set:N = \l__leadsheets_major_seven_tl ,
     major-nine   .tl_set:N = \l__leadsheets_major_nine_tl ,
     german-B     .tl_set:N = \l__leadsheets_german_B_tl ,
-    german-H     .tl_set:N = \l__leadsheets_german_H_tl
+    german-H     .tl_set:N = \l__leadsheets_german_H_tl ,
     % since version 0.2 those are defined in the `chords` library:
     % output-notation .choice: ,
     % input-notation .choice: ,
@@ -195,4 +215,8 @@ HISTORY:
            - input/output notation is now handled by the `chords' library
            - German output of B and H can be customized
 2015/05/22 - improvements to the chord macros
-2015/07/02 - this is not a use library any more
+2015/07/02 - this is not a user library any more
+2016/07/05 - with option `minor=lowercase' minor chords are now printed with
+             lowercase letters; requires user input `Dmi' in order to get `d';
+             lowercase letters can of course be input directly but then are
+             immune to transposing

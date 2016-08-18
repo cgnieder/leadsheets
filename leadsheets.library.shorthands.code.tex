@@ -5,7 +5,6 @@
 %
 % --------------------------------------------------------------------------
 % Clemens Niederberger
-% Web:    http://www.mychemistry.eu/forums/forum/leadsheets/
 % E-Mail: contact@mychemistry.eu
 % --------------------------------------------------------------------------
 % Copyright 2014-2016 Clemens Niederberger
@@ -23,45 +22,46 @@
 % The Current Maintainer of this work is Clemens Niederberger.
 % --------------------------------------------------------------------------
 \LeadsheetsExplLibrary{shorthands}
-  {2014/08/10 definition and activation of shorthands}
+  {2016/06/29 definition and activation of shorthands}
 
-\seq_new:N   \l__leadsheets_shorthands_seq
+\seq_new:N \l__leadsheets_shorthands_seq
 
-\group_begin:
-\char_set_catcode_active:N \~
-
-\cs_new_protected:Npn \leadsheets_define_shorthand:Npn #1
+\cs_new_protected:Npn \leadsheets_define_shorthand:NN #1#2
   {
     \seq_if_in:NnF \l__leadsheets_shorthands_seq {#1}
       { \seq_put_right:Nn \l__leadsheets_shorthands_seq {#1} }
-    \group_begin:
-    \__leadsheets_define_shorthand_aux_i:np {#1}
+    \char_set_active_eq:NN #1#2
   }
 
-\cs_new_protected:Npn \__leadsheets_define_shorthand_aux_i:np #1#2#
+\cs_new_protected:Npn \leadsheets_remove_shorthand:N #1
   {
-    \char_set_lccode:nn {`~} {`#1}
-    \__leadsheets_define_shorthand_aux_ii:nn {#2}
+    \leadsheets_define_shorthand:NN #1 \c_empty_tl
+    \seq_remove_all:Nn \l__leadsheets_shorthands_seq {#1}
+    \prop_remove:Nn \l__leadsheets_shorthands_prop {#1}
   }
 
-\cs_new_protected:Npn \__leadsheets_define_shorthand_aux_ii:nn #1#2
-  { \tl_to_lowercase:n { \group_end: \cs_set:Npn ~ } #1 {#2} }
+\prg_new_conditional:Npnn \leadsheets_if_shorthand:N #1 {p,T,F,TF}
+  {
+    \seq_if_in:NnTF \l__leadsheets_shorthands_seq {#1}
+      { \prg_return_true: }
+      { \prg_return_false: }
+  }
 
-\group_end:
+\cs_new_protected:Npn \leadsheets_for_all_shorthands_do:n #1
+  { \seq_map_inline:Nn \l__leadsheets_shorthands_seq {#1} }
+
+\cs_new_protected:Npn \leadsheets_activate_shorthand:N #1
+  { \leadsheets_if_shorthand:NT #1 { \char_set_catcode_active:N #1 } }
 
 \cs_new_protected:Npn \leadsheets_activate_shorthands:n #1
-  {
-    \tl_map_inline:nn {#1}
-      {
-        \seq_if_in:NnT \l__leadsheets_shorthands_seq {##1}
-          { \char_set_catcode_active:N ##1 }
-      }
-  }
+  { \tl_map_inline:nn {#1} { \leadsheets_activate_shorthand:N ##1 } }
 
 \cs_new_protected:Npn \leadsheets_activate_all_shorthands:
   {
-    \seq_map_inline:Nn \l__leadsheets_shorthands_seq
-     { \char_set_catcode_active:N ##1 }
+    \leadsheets_for_all_shorthands_do:n
+      { \leadsheets_activate_shorthand:N ##1 }
   }
 
 \endinput
+2016/06/29 - breaking change: \leadsheets_define_shorthand:Npn is now
+             \leadsheets_define_shorthand:NN

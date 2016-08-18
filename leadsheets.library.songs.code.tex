@@ -5,7 +5,6 @@
 %
 % --------------------------------------------------------------------------
 % Clemens Niederberger
-% Web:    http://www.mychemistry.eu/forums/forum/leadsheets/
 % E-Mail: contact@mychemistry.eu
 % --------------------------------------------------------------------------
 % Copyright 2014-2016 Clemens Niederberger
@@ -22,7 +21,7 @@
 %
 % The Current Maintainer of this work is Clemens Niederberger.
 % --------------------------------------------------------------------------
-\LeadsheetsExplLibrary{songs}{2016/02/02 typesetting songs}
+\LeadsheetsExplLibrary{songs}{2016/07/02 typesetting songs}
 
 % --------------------------------------------------------------------------
 % messages:
@@ -43,6 +42,12 @@
     You~ need~ to~ specify~ the~ `key'~ property~ for~ song~ `#1'~
     ( \leadsheets_get_property:nn {#1} {title} )~ in~ order~ to~ use~ the~
     transposing~ mechanism~ \msg_line_context:
+  }
+
+\msg_new:nnn {leadsheets} {verse-exists}
+  {
+    The~ verse~ type~ `#1'~ you~ are~ about~ to~ define~ \msg_line_context:
+    \c_space_tl already~ exists.
   }
 
 % --------------------------------------------------------------------------
@@ -74,6 +79,7 @@
 \bool_new:N  \l__leadsheets_obey_lines_bool
 \bool_new:N  \l__leadsheets_bar_shorthands_bool
 \bool_new:N  \l__leadsheets_measuring_bool
+\bool_new:N  \l__leadsheets_disable_measuring_bool
 \bool_new:N  \l__leadsheets_recall_verse_type_bool
 
 \clist_new:N \l__leadsheets_print_tags_clist
@@ -105,9 +111,7 @@
 
 % --------------------------------------------------------------------------
 % define shorthands
-\leadsheets_define_shorthand:Npn ^ {\leadsheets_remember_or_recall_chords:w}
-\leadsheets_define_shorthand:Npn _ {\writechord}
-\leadsheets_define_shorthand:Npn | #1
+\cs_new_protected:Npn \leadsheets_bar:w #1
   {
     \str_case:nnF {#1}
       {
@@ -123,7 +127,7 @@
       {\doublebar}
   }
 
-\leadsheets_define_shorthand:Npn :
+\cs_new_protected:Npn \leadsheets_bar_repeat:
   {
     \peek_charcode_remove:NTF |
       {\__leadsheets_checkrepeat:}
@@ -136,6 +140,11 @@
       {\rightrepeat}
   }
 
+\leadsheets_define_shorthand:NN ^ \getorprintchord
+\leadsheets_define_shorthand:NN _ \writechord
+\leadsheets_define_shorthand:NN | \leadsheets_bar:w
+\leadsheets_define_shorthand:NN : \leadsheets_bar_repeat:
+  
 % --------------------------------------------------------------------------
 % the `song' environment:
 \NewDocumentEnvironment {song} { O{} }
@@ -213,30 +222,30 @@
 
 % --------------------------------------------------------------------------
 % define song properties:
-\definesongproperty {title}
-\definesongproperty {subtitle}
-\definesongproperty {short-title}
-\definesongproperty {sort-title}
-\definesongproperty {sort-short-title}
-\definesongproperty {composer}
-\definesongproperty {sort-composer}
-\definesongproperty {music}
-\definesongproperty {sort-music}
-\definesongproperty {lyrics}
-\definesongproperty {sort-lyrics}
-\definesongproperty {arr}
-\definesongproperty {sort-arr}
-\definesongproperty {band}
-\definesongproperty {sort-band}
-\definesongproperty {genre}
-\definesongproperty {interpret}
-\definesongproperty {sort-interpret}
-\definesongproperty {key}
-\definesongproperty {capo}
-\definesongproperty {tempo}
-\definesongproperty {tags}
-\definesongproperty {counter}
-\definesongproperty {ID}
+\leadsheets_define_property:n {title}
+\leadsheets_define_property:n {subtitle}
+\leadsheets_define_property:n {short-title}
+\leadsheets_define_property:n {sort-title}
+\leadsheets_define_property:n {sort-short-title}
+\leadsheets_define_property:n {composer}
+\leadsheets_define_property:n {sort-composer}
+\leadsheets_define_property:n {music}
+\leadsheets_define_property:n {sort-music}
+\leadsheets_define_property:n {lyrics}
+\leadsheets_define_property:n {sort-lyrics}
+\leadsheets_define_property:n {arr}
+\leadsheets_define_property:n {sort-arr}
+\leadsheets_define_property:n {band}
+\leadsheets_define_property:n {sort-band}
+\leadsheets_define_property:n {genre}
+\leadsheets_define_property:n {interpret}
+\leadsheets_define_property:n {sort-interpret}
+\leadsheets_define_property:n {key}
+\leadsheets_define_property:n {capo}
+\leadsheets_define_property:n {tempo}
+\leadsheets_define_property:n {tags}
+\leadsheets_define_property:n {counter}
+\leadsheets_define_property:n {ID}
 
 % properties that should take the value of another property if they're not set
 % explicitly:
@@ -282,8 +291,8 @@
         \tl_set:Nn \l_leadsheets_current_song_id_tl {#1}
         \tl_put_right:Nn \l__leadsheets_song_body_tl
           {
-            \leadsheets_songtitle:
-            \leadsheets_check_capo:
+            \__leadsheets_check_capo:
+            \__leadsheets_songtitle:
             \tl_use:N \l__leadsheets_songtext_format_tl
           }
         \tl_put_right:NV \l__leadsheets_song_body_tl
@@ -315,10 +324,9 @@
       }
   }
 
-\cs_new:Npn \leadsheets_end_song:n #1
+\cs_new_protected:Npn \leadsheets_end_song:n #1
   {
-    \bool_set_true:N \l__leadsheets_measuring_bool
-    \leadsheets_reset_counters:
+    \__leadsheets_start_measuring:nw {#1}
     \tl_put_left:NV \l__leadsheets_song_body_tl
       \l__leadsheets_song_pre_hook_tl
     \tl_put_right:NV \l__leadsheets_song_body_tl
@@ -334,15 +342,43 @@
           }
         pt
       }
-    \bool_set_false:N \l__leadsheets_measuring_bool
-    \leadsheets_reset_counters:
+    \__leadsheets_stop_measuring:
     \tl_use:N \l__leadsheets_song_body_tl
+  }
+
+\cs_new_protected:Npn \__leadsheets_save_macro:N #1
+  { \cs_set_eq:cN { __leadsheets_ \cs_to_str:N #1 } #1 }
+
+\cs_new_protected:Npn \__leadsheets_restore_macro:N #1
+  {
+    \cs_set_eq:Nc #1 { __leadsheets_ \cs_to_str:N #1 }
+    \cs_undefine:c { __leadsheets_ \cs_to_str:N #1 }
+  }
+  
+\cs_new_protected:Npn \__leadsheets_start_measuring:nw #1#2 \__leadsheets_stop_measuring:
+  {
+    \bool_if:NF \l__leadsheets_disable_measuring_bool
+      { \bool_set_true:N \l__leadsheets_measuring_bool }
+    \bool_if:NTF \l__leadsheets_measuring_bool
+      {
+        \__leadsheets_save_macro:N \if@filesw
+        \__leadsheets_reset_counters: \@fileswfalse #2
+        \__leadsheets_restore_macro:N \if@filesw
+      }
+      { \leadsheets_set_property:nnn {#1} {height} {0pt} }
+    \__leadsheets_stop_measuring:
+  }
+
+\cs_new_protected:Npn \__leadsheets_stop_measuring:
+  {
+    \bool_set_false:N \l__leadsheets_measuring_bool
+    \__leadsheets_reset_counters:
   }
 
 \cs_new_protected:Npn \leadsheets_add_to_reset:n #1
   { \seq_put_right:Nn \l__leadsheets_reset_counters_seq {#1} }
 
-\cs_new_protected:Npn \leadsheets_reset_counters:
+\cs_new_protected:Npn \__leadsheets_reset_counters:
   {
     \seq_map_inline:Nn \l__leadsheets_reset_counters_seq
       { \setcounter {##1} {0} }
@@ -392,13 +428,6 @@
           { \prg_return_false: }
       }
       { \prg_return_true: }
-  }
-
-\keys_define:nn { leadsheets }
-  {
-    print-tags .code:n =
-      \bool_set_true:N \l__leadsheets_print_selected_bool
-      \clist_set:Nn \l__leadsheets_print_tags_clist {#1}
   }
 
 % --------------------------------------------------------------------------
@@ -458,7 +487,7 @@
 
 % --------------------------------------------------------------------------
 % capo settings:
-\cs_new_protected:Npn \leadsheets_check_capo:
+\cs_new_protected:Npn \__leadsheets_check_capo:
   {
     \leadsheets_if_property:VnTF \l_leadsheets_current_song_id_tl {capo}
       {
@@ -475,7 +504,7 @@
       }
   }
 
-\cs_new:Npn \leadsheets_capo_number_print:n #1 {#1.}
+\cs_new_protected:Npn \leadsheets_capo_number_print:n #1 {#1.}
 
 \cs_new_protected:Npn \leadsheets_capo:
   {
@@ -539,21 +568,37 @@
     \ignorespacesafterend
   }
 
-\cs_new_protected:Npn \leadsheets_new_verse_type:Nnn #1#2#3
+\seq_new:N \l__leadsheets_verse_types_seq
+
+\prg_new_conditional:Npnn \leadsheets_if_verse_type_exist:n #1 {p,T,F,TF}
   {
-    \bool_new:c {l__leadsheets_#2_empty_bool}
-    \bool_new:c {l__leadsheets_#2_numbered_bool}
-    \bool_new:c {l__leadsheets_#2_named_bool}
+    \seq_if_in:NnTF \l__leadsheets_verse_types_seq {#1}
+      { \prg_return_true: }
+      { \prg_return_false: }
+  }
+
+% #1: boolean
+% #2: name
+% #3: options
+\cs_new_protected:Npn \__leadsheets_new_verse_type:nnn #1#2#3
+  {
+    \seq_put_right:Nn \l__leadsheets_verse_types_seq {#2}
+    \clist_map_inline:nn {empty,numbered,named}
+      {
+        \bool_if_exist:cF {l__leadsheets_#2_##1_bool}
+          { \bool_new:c {l__leadsheets_#2_##1_bool} }
+      }
     \bool_set_true:c {l__leadsheets_#2_named_bool}
-    \bool_if:NTF #1
+    \bool_if:nTF {#1}
       { \bool_set_true:c {l__leadsheets_#2_empty_bool} }
       { \bool_set_false:c {l__leadsheets_#2_empty_bool} }
-    \tl_new:c {l__leadsheets_#2_class_tl}
-    \tl_new:c {l__leadsheets_#2_format_tl}
-    \tl_new:c {l__leadsheets_#2_template_tl}
-    \tl_new:c {l__leadsheets_#2_label_format_tl}
-    \tl_new:c {l__leadsheets_#2_after_label_tl}
-    \newcounter {#2}
+    \clist_map_inline:nn {class,format,template,label_format,after_label}
+      {
+        \tl_if_exist:cF {l__leadsheets_#2_##1_tl}
+          { \tl_new:c {l__leadsheets_#2_##1_tl} }
+      }
+    \cs_if_exist:cF {the#2}
+      { \newcounter {#2} }
     \leadsheets_add_to_reset:n {#2}
     \tl_set:cn {the#2} { \arabic {#2} . }
     \keys_define:nn {leadsheets/#2}
@@ -578,8 +623,8 @@
           \tl_set:Nn \l__leadsheets_recall_verse_type_tl {##1}
           \bool_set_true:N \l__leadsheets_recall_verse_type_bool ,
         name          .code:n     =
-         \@trnslt@declare@translation {leadsheets/#2} {fallback} {##1}
-         \@trnslt@declare@translation {leadsheets/#2} {English} {##1}
+         \leadsheets_declare_translation:nnn {fallback} {#2} {##1}
+         \leadsheets_declare_translation:nnn {English}  {#2} {##1}
       }
     \NewDocumentEnvironment {#2} {O{}}
       {
@@ -603,9 +648,6 @@
           { \seq_gclear:N \g__leadsheets_chords_sequences_seq }
         \leadsheets_if_recall_chords:T
           {
-            % \prop_show:N \g__leadsheets_chords_sequences_prop
-            % \tl_show:N \l__leadsheets_recall_verse_type_tl
-            % \seq_show:N \g__leadsheets_chords_sequences_seq
             \prop_get:NVN
               \g__leadsheets_chords_sequences_prop
               \l__leadsheets_recall_verse_type_tl
@@ -627,28 +669,50 @@
         \leadsheets_verse_end:n {#2}
         \par
       }
-    \@trnslt@declare@translation {leadsheets/#2} {fallback} {}
-    \@trnslt@declare@translation {leadsheets/#2} {English} {}
+    \leadsheets_declare_translation:nnn {fallback} {#2} {}
+    \leadsheets_declare_translation:nnn {English}  {#2} {}
     \keys_set:nn {leadsheets/#2} {#3}
   }
 
+% #1: boolean
+% #2: name
+% #3: options
+\cs_new_protected:Npn \leadsheets_new_verse_type:nnn #1#2#3
+  {
+    \leadsheets_if_verse_type_exist:nTF {#2}
+      { \msg_error:nnn {leadsheets} {verse-exists} {#2} }
+      { \__leadsheets_new_verse_type:nnn {#1} {#2} {#3} }
+  }
+
+% #1: boolean
+% #2: name
+% #3: options
+\cs_new_protected:Npn \leadsheets_provide_verse_type:nnn #1#2#3
+  {
+    \leadsheets_if_verse_type_exist:nF {#2}
+      { \__leadsheets_new_verse_type:nnn {#1} {#2} {#3} }
+  }
+  
 \NewDocumentCommand \newversetype {smO{}}
-  { \leadsheets_new_verse_type:Nnn #1 {#2} {#3} }
+  { \leadsheets_new_verse_type:nnn {#1} {#2} {#3} }
+
+\NewDocumentCommand \provideversetype {smO{}}
+  { \leadsheets_provide_verse_type:nnn {#1} {#2} {#3} }
 
 \cs_undefine:N \verse
 \cs_undefine:N \endverse
 
 \newversetype {verse}     [ name=Verse, named=false, after-label= ]
-\newversetype*{verse*}
+\newversetype*{verse*}    [ name=Verse ]
 \newversetype {chorus}    [ name=Chorus ]
-\newversetype*{chorus*}
+\newversetype*{chorus*}   [ name=Chorus ]
 \newversetype {intro}     [ name=Intro ]
 \newversetype*{intro*}    [ name=Intro ]
 \newversetype {outro}     [ name=Outro ]
 \newversetype {interlude} [ name=Interlude ]
 \newversetype {bridge}    [ name=Bridge ]
 \newversetype*{info}
-\newversetype*{solo*}
+\newversetype*{solo*}     [ name=Solo ]
 \newversetype {solo}      [ name=Solo ]
 
 % --------------------------------------------------------------------------
@@ -669,41 +733,47 @@
 
 % --------------------------------------------------------------------------
 
-\keys_define:nn { leadsheets }
+\keys_define:nn {leadsheets}
   {
-    title-template  .tl_set:N   = \l__leadsheets_songtitle_template_tl ,
-    title-template  .initial:n  = minimal ,
-    text-format     .tl_set:N   = \l__leadsheets_songtext_format_tl ,
-    song-format     .tl_set:N   = \l__leadsheets_song_format_tl ,
-    verse/type      .choice: ,
-    verse/type/verse   .code:n  =
+    title-template       .tl_set:N   = \l__leadsheets_songtitle_template_tl ,
+    title-template       .initial:n  = minimal ,
+    text-format          .tl_set:N   = \l__leadsheets_songtext_format_tl ,
+    song-format          .tl_set:N   = \l__leadsheets_song_format_tl ,
+    verse/type           .choice: ,
+    verse/type/verse     .code:n     =
       \tl_set:Nn \l_leadsheets_verse_type_tl {verse} ,
-    verse/type/unknown .code:n  =
+    verse/type/unknown   .code:n     =
       \msg_warning:nnn {leadsheets} {unknown-verse-type} {#1}
       \tl_set:Nn \l_leadsheets_verse_type_tl {verse} ,
-    verse/format    .tl_set:N   = \l__leadsheets_verse_format_tl ,
-    verse/format    .initial:n  = \l__leadsheets_verses_format_tl ,
-    verse/label-format  .tl_set:N   = \l__leadsheets_verse_label_format_tl ,
-    verse/label-format  .initial:n  = \l__leadsheets_verses_label_format_tl ,
-    verses-format   .tl_set:N   = \l__leadsheets_verses_format_tl ,
-    verses-label-format .tl_set:N   = \l__leadsheets_verses_label_format_tl ,
-    verses-after-label  .tl_set:N   = \l__leadsheets_verses_after_label_tl ,
-    verses-default-class .tl_set:N  = \l__leadsheets_verses_default_class_tl ,
-    obey-lines      .bool_set:N = \l__leadsheets_obey_lines_bool ,
-    obey-lines-parskip .skip_set:N = \l__leadsheets_obey_parskip_skip ,
-    bar-shortcuts   .bool_set:N = \l__leadsheets_bar_shorthands_bool ,
-    capo-nr-format  .choices:nn =
+    verse/format         .tl_set:N   = \l__leadsheets_verse_format_tl ,
+    verse/format         .initial:n  = \l__leadsheets_verses_format_tl ,
+    verse/label-format   .tl_set:N   = \l__leadsheets_verse_label_format_tl ,
+    verse/label-format   .initial:n  = \l__leadsheets_verses_label_format_tl ,
+    verses-format        .tl_set:N   = \l__leadsheets_verses_format_tl ,
+    verses-label-format  .tl_set:N   = \l__leadsheets_verses_label_format_tl ,
+    verses-after-label   .tl_set:N   = \l__leadsheets_verses_after_label_tl ,
+    verses-default-class .tl_set:N   = \l__leadsheets_verses_default_class_tl ,
+    obey-lines           .bool_set:N = \l__leadsheets_obey_lines_bool ,
+    obey-lines-parskip   .skip_set:N = \l__leadsheets_obey_parskip_skip ,
+    bar-shortcuts        .bool_set:N = \l__leadsheets_bar_shorthands_bool ,
+    bar-shortcuts        .initial:n  = true ,
+    capo-nr-format       .choices:nn =
       { arabic , roman , Roman }
       { \tl_set:NV \l__leadsheets_capo_number_format_tl \l_keys_choice_tl } ,
-    capo-nr-format  .initial:n  = {Roman} ,
-    capo-nr         .code:n     =
+    capo-nr-format       .initial:n  = {Roman} ,
+    capo-nr              .code:n     =
       \cs_set_protected:Npn \leadsheets_capo_number_print:n ##1 {#1} ,
-    capo-nr         .initial:n  = #1. ,
-    before-song     .tl_set:N   = \l__leadsheets_song_pre_hook_tl ,
-    after-song      .tl_set:N   = \l__leadsheets_song_post_hook_tl ,
-    after-title     .tl_set:N   = \l__leadsheets_song_mid_hook_tl ,
-    add-to-reset    .code:n     =
-      \clist_map_inline:nn {#1} { \leadsheets_add_to_reset:n {##1} }
+    capo-nr              .initial:n  = #1. ,
+    before-song          .tl_set:N   = \l__leadsheets_song_pre_hook_tl ,
+    after-song           .tl_set:N   = \l__leadsheets_song_post_hook_tl ,
+    after-title          .tl_set:N   = \l__leadsheets_song_mid_hook_tl ,
+    add-to-reset         .code:n     =
+      \clist_map_inline:nn {#1} { \leadsheets_add_to_reset:n {##1} } ,
+    print-tags           .code:n     =
+      \bool_set_true:N \l__leadsheets_print_selected_bool
+      \clist_set:Nn \l__leadsheets_print_tags_clist {#1} ,
+    disable-measuring    .bool_set:N = \l__leadsheets_disable_measuring_bool ,
+    disable-measuring    .initial:n  = false
   }
 
 \endinput
@@ -713,3 +783,9 @@
 2015/07/27: new options `before-song', `after-song', `after-title' and
             `add-to-reset'
 2015/02/02: enable to recall chords even if verse is used the first time
+2016/05/18: new option `disable-measuring'
+            set \@fileswfalse during the measuring phase
+            if measuring is disabled the `height' property is set to 0pt
+2016/06/29: - adapt to changed shorthand library
+            - activate bar-shortcuts per default
+2016/07/02: fix issue when \capo is used in a title template

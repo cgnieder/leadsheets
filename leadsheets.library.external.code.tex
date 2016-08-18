@@ -1,0 +1,181 @@
+% --------------------------------------------------------------------------
+% the LEADSHEETS package
+% 
+%   typesetting leadsheets and songbooks
+%
+% --------------------------------------------------------------------------
+% Clemens Niederberger
+% E-Mail: contact@mychemistry.eu
+% --------------------------------------------------------------------------
+% Copyright 2014-2016 Clemens Niederberger
+%
+% This work may be distributed and/or modified under the
+% conditions of the LaTeX Project Public License, either version 1.3
+% of this license or (at your option) any later version.
+% The latest version of this license is in
+%   http://www.latex-project.org/lppl.txt
+% and version 1.3 or later is part of all distributions of LaTeX
+% version 2005/12/01 or later.
+%
+% This work has the LPPL maintenance status `maintained'.
+%
+% The Current Maintainer of this work is Clemens Niederberger.
+% --------------------------------------------------------------------------
+\LeadsheetsExplLibrary{external}
+  {2016/08/18 include external leadsheets into a main file}
+
+\msg_new:nnn {leadsheets} {class-not-registered}
+  {
+    You've~ tried~ to~ include~ the~ leadsheet~ `#1'~ which~ uses~ the~
+    document~ class~ `#2'.~ However,~ this~ class~ is~ not~ yet~ registered.~
+    You~ can~ register~ it~ using~ the~ option~ `register-class'.
+  }
+
+\msg_new:nnn {leadsheets} {file-not-found}
+  {
+    You've~ tried~ to~ include~ the~ leadsheet~ `#1'.~ However,~ I~ can't~
+    find~ the~ file~ `#1'.~ Please~ make~ sure~ the~ file~ exists~ in~ a~
+    path~ where~ TeX~ can~ find~ it.
+  }
+
+\cs_generate_variant:Nn \msg_error:nnnn {nnV}
+  
+\cs_new_protected:Npn \__leadsheets_disable_document_env:
+  {
+    \cs_set_protected:Npn \document
+      {
+        \cs_set_protected:Npn \enddocument
+          { \tex_endinput:D }
+      }
+  }
+
+% --------------------------------------------------------------------------
+% don't allow any class per default
+\seq_new:N \l__leadsheets_external_classes_seq
+
+\cs_new_protected:Npn \leadsheets_add_external_class:n #1
+  {
+    \seq_put_right:Nn \l__leadsheets_external_classes_seq {#1}
+    \seq_remove_duplicates:N \l__leadsheets_external_classes_seq
+  }
+\cs_generate_variant:Nn \leadsheets_add_external_class:n {V}
+
+\leadsheets_add_external_class:n {leadsheet}
+  
+\prg_new_conditional:Npnn \leadsheets_if_is_external_class:n #1 {p,T,F,TF}
+  {
+    \seq_if_in:NnTF \l__leadsheets_external_classes_seq {#1}
+      { \prg_return_true: }
+      { \prg_return_false: }
+  }
+
+\bool_new:N \l__leadsheets_gobble_preamble_bool
+
+\keys_define:nn {leadsheets}
+  {
+    gobble-preamble .bool_set:N = \l__leadsheets_gobble_preamble_bool ,
+    gobble-preamble .initial:n  = true ,
+    register-class  .code:n     =
+      \clist_map_inline:nn {#1}
+        {
+          \tl_set:Nx \l__leadsheets_tmpa_tl { \tl_trim_spaces:n {##1} }
+          \leadsheets_add_external_class:V \l__leadsheets_tmpa_tl
+        }
+  }
+
+\cs_new_protected:Npn \leadsheets_documentclass:wnw
+  {
+    \peek_meaning:NTF [ % ]
+      { \__leadsheets_documentclass:wnw }
+      { \__leadsheets_documentclass:nw }
+  }
+
+\cs_new_protected:Npn \__leadsheets_documentclass:wnw [#1]
+  { \__leadsheets_documentclass:nw }
+
+\cs_new_protected:Npn \__leadsheets_documentclass:nw #1
+  {
+    \peek_meaning:NTF [ % ]
+      { \__leadsheets_documentclass_aux:nw {#1} }
+      { \__leadsheets_documentclass:n {#1} }
+  }
+
+\cs_new_protected:Npn \__leadsheets_documentclass_aux:nw #1[#2]
+  { \__leadsheets_documentclass:n {#1} }
+
+\cs_new_protected:Npn \__leadsheets_documentclass:n #1
+  {
+    \leadsheets_if_is_external_class:nF {#1}
+      {
+        \msg_error:nnVn {leadsheets} {class-not-registered}
+          \l__leadsheets_current_leadsheet_tl
+          {#1}
+      }
+    \RenewDocumentCommand \usepackage {omo} {}
+    \RenewDocumentCommand \RequirePackage {omo} {}
+    \__leadsheets_disable_document_env:
+    \bool_if:NT \l__leadsheets_gobble_preamble_bool
+      { \__leadsheets_gobble_preamble:wn }
+  }
+
+% include a file into a leadsheet only reading code between \LeadsheetSurvive
+% and \LeadsheetEndSurvive
+\cs_new_protected:Npn \leadsheets_include_external_file:nn #1#2
+  {
+    \tl_set_from_file:Nnn \l__leadsheets_tmpa_tl
+      {}
+      { #1 \tl_if_blank:nF {#2} {.} #2 }
+    \cs_set:Npn \LeadsheetSurvive ##1 \LeadsheetEndSurvive ##2 \q_stop
+      { ##1 \__leadsheets_extract_survival:ww ##2 \q_stop }
+    \__leadsheets_include_external_file_aux:V \l__leadsheets_tmpa_tl
+  }
+
+\cs_new_protected:Npn \__leadsheets_include_external_file_aux:n #1
+  { \__leadsheets_extract_survival:ww #1 \LeadsheetSurvive\LeadsheetSurvive \q_stop }
+\cs_generate_variant:Nn \__leadsheets_include_external_file_aux:n {V}
+
+\cs_new_protected:Npn \__leadsheets_extract_survival:ww
+  #1 \LeadsheetSurvive #2 \LeadsheetSurvive #3 \q_stop
+  {
+    \tl_if_blank:nF {#3}
+      { \LeadsheetSurvive #2 \LeadsheetSurvive #3 \q_stop }
+  }
+
+\NewDocumentCommand \AddExternalFile {mm}
+  { \leadsheets_include_external_file:nn {#1} {#2} }
+\NewDocumentCommand \AddExternalClass {m}
+  { \leadsheets_include_external_file:nn {#1} {cls} }
+\NewDocumentCommand \AddExternalPackage {m}
+  { \leadsheets_include_external_file:nn {#1} {sty} }
+
+\cs_new_protected:Npn \__leadsheets_gobble_preamble:wn #1 \begin #2
+  {
+    \str_if_eq:nnTF {#2} {document}
+      { \begin {#2} }
+      { \__leadsheets_gobble_preamble:wn }
+  }
+
+\cs_new_protected:Npn \leadsheets_include_leadsheet:nn #1#2
+  {
+    \file_if_exist:nTF {#2}
+      {
+        \group_begin:
+          \keys_set:nn {leadsheets} {#1}
+          \tl_set:Nn \l__leadsheets_current_leadsheet_tl {#2}
+          \cs_set_eq:NN \documentclass \leadsheets_documentclass:wnw
+          \file_input:n {#2}
+        \group_end:
+      }
+      { \msg_error:nnn {leadsheets} {file-not-found} {#2} }
+  }
+
+\NewDocumentCommand \includeleadsheet {sO{}m}
+  {
+    \IfBooleanF {#1}
+      { \leadsheets_include_external_file:nn {leadsheet} {cls} }
+    \leadsheets_include_leadsheet:nn {#2} {#3}
+  }
+  
+\endinput
+
+2016/08/18 - first version

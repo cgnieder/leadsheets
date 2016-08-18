@@ -5,7 +5,6 @@
 %
 % --------------------------------------------------------------------------
 % Clemens Niederberger
-% Web:    http://www.mychemistry.eu/forums/forum/leadsheets/
 % E-Mail: contact@mychemistry.eu
 % --------------------------------------------------------------------------
 % Copyright 2014-2016 Clemens Niederberger
@@ -22,7 +21,7 @@
 %
 % The Current Maintainer of this work is Clemens Niederberger.
 % --------------------------------------------------------------------------
-\LeadsheetsExplLibrary{properties}{2014/08/10 song properties}
+\LeadsheetsExplLibrary{properties}{2016/05/18 song properties}
 
 \cs_generate_variant:Nn \tl_if_eq:nnTF {x}
 
@@ -59,6 +58,35 @@
 \cs_generate_variant:Nn \leadsheets_if_property:nnTF { V }
 \cs_generate_variant:Nn \leadsheets_if_property:nnT  { V }
 \cs_generate_variant:Nn \leadsheets_if_property_p:nn { V }
+
+\prg_new_protected_conditional:Npnn \leadsheets_if_any_property:nn #1#2 {T,F,TF}
+  {
+    \bool_set_false:N \l__leadsheets_tmpa_bool
+    \clist_map_inline:nn {#1}
+      {
+        \prop_if_in:cnT {l__leadsheets_songs_#2_prop} {#1}
+          { \bool_set_true:N \l__leadsheets_tmpa_bool }
+      }
+    \bool_if:NTF \l__leadsheets_tmpa_bool
+      { \prg_return_true: }
+      { \prg_return_false: }
+  }
+\cs_generate_variant:Nn \leadsheets_if_any_property:nnTF {V}
+
+\prg_new_protected_conditional:Npnn \leadsheets_if_all_properties:nn #1#2 {T,F,TF}
+  {
+    \bool_set_false:N \l__leadsheets_tmpa_bool
+    \clist_map_inline:nn {#1}
+      {
+        \prop_if_in:cnTF {l__leadsheets_songs_#2_prop} {#1}
+          { \bool_set_true:N \l__leadsheets_tmpa_bool }
+          { \bool_set_false:N \l__leadsheets_tmpa_bool }
+      }
+    \bool_if:NTF \l__leadsheets_tmpa_bool
+      { \prg_return_true: }
+      { \prg_return_false: }
+  }
+\cs_generate_variant:Nn \leadsheets_if_all_properties:nnTF {V}
 
 \prg_new_protected_conditional:Npnn \leadsheets_if_properties_eq:nnn #1#2#3 {T,F,TF}
   {
@@ -171,15 +199,25 @@
 \DeclareExpandableDocumentCommand \ifsongproperty {m}
   { \leadsheets_if_property:VnTF \l_leadsheets_current_song_id_tl {#1} }
 
+\NewDocumentCommand \ifanysongproperty {m}
+  { \leadsheets_if_any_property:VnTF \l_leadsheets_current_song_id_tl {#1} }
+
+\NewDocumentCommand \ifallsongproperties {m}
+  { \leadsheets_if_all_properties:VnTF \l_leadsheets_current_song_id_tl {#1} }
+  
 \DeclareExpandableDocumentCommand \ifsongmeasuring {}
   { \leadsheets_if_measuring:TF }
 
 \NewDocumentCommand \ifsongpropertiesequal {mm}
   { \leadsheets_if_properties_eq:VnnTF \l_leadsheets_current_song_id_tl {#1} {#2} }
 
+% #1: property 1
+% #2: property 2
 \NewDocumentCommand \ifsongpropertyequal {mm}
   { \leadsheets_if_property_eq:VnnTF \l_leadsheets_current_song_id_tl {#1} {#2} }
 
+% #1: property
+% #2: tokenlist
 \NewDocumentCommand \definesongproperty {m}
   { \leadsheets_define_property:n {#1} }
 \@onlypreamble\definesongproperty
@@ -190,3 +228,4 @@
 
 \endinput
 2015/07/05: enable usage of # in the key property
+2016/05/18: new commands \ifanysongproperty and \ifallsongproperties

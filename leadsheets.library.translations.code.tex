@@ -5,7 +5,6 @@
 %
 % --------------------------------------------------------------------------
 % Clemens Niederberger
-% Web:    http://www.mychemistry.eu/forums/forum/leadsheets/
 % E-Mail: contact@mychemistry.eu
 % --------------------------------------------------------------------------
 % Copyright 2014-2016 Clemens Niederberger
@@ -22,48 +21,62 @@
 %
 % The Current Maintainer of this work is Clemens Niederberger.
 % --------------------------------------------------------------------------
-\LeadsheetsExplLibrary{translations}{2014/08/10 dictionary for leadsheets}
+\LeadsheetsExplLibrary{translations}{2016/06/28 dictionary for leadsheets}
 
 \cs_new:Npn \leadsheets_translation:n #1
-  { \GetTranslation{leadsheets/#1} }
+  { \GetTranslation {leadsheets/#1} }
 \cs_generate_variant:Nn \leadsheets_translation:n { V }
 
-\DeclareTranslation {German}  {leadsheets/chorus} {Refrain}
-\DeclareTranslation {German}  {leadsheets/verse}  {Strophe}
+\cs_new_protected:Npn \leadsheets_declare_translation:nnn #1#2#3
+  { \declaretranslation {#1} {leadsheets/#2} {#3} }
+\cs_generate_variant:Nn \leadsheets_translation:n { V }
 
-\DeclareTranslationFallback   {leadsheets/composer} {Composer}
-\DeclareTranslation {English} {leadsheets/composer} {Composer}
-\DeclareTranslation {German}  {leadsheets/composer} {Komponist}
+\NewDocumentCommand \defleadsheetstranslation {mmm}
+  { \leadsheets_declare_translation:nnn {#1} {#2} {#3} }
 
-\DeclareTranslationFallback   {leadsheets/lyrics} {Lyrics}
-\DeclareTranslation {English} {leadsheets/lyrics} {Lyrics}
-\DeclareTranslation {German}  {leadsheets/lyrics} {Text}
+\DeclareExpandableDocumentCommand \leadsheetstranslate {m}
+  { \leadsheets_translation:n {#1} }
 
-\DeclareTranslationFallback   {leadsheets/key} {Key}
-\DeclareTranslation {English} {leadsheets/key} {Key}
-\DeclareTranslation {German}  {leadsheets/key} {Tonart}
+\leadsheets_declare_translation:nnn {German}   {chorus} {Refrain}
+\leadsheets_declare_translation:nnn {German}   {verse}  {Strophe}
 
-\DeclareTranslationFallback   {leadsheets/interpret}
+\leadsheets_declare_translation:nnn {Fallback} {composer} {composer}
+\leadsheets_declare_translation:nnn {English}  {composer} {composer}
+\leadsheets_declare_translation:nnn {German}   {composer} {Komponist}
+
+\leadsheets_declare_translation:nnn {Fallback} {lyrics} {lyrics}
+\leadsheets_declare_translation:nnn {English}  {lyrics} {lyrics}
+\leadsheets_declare_translation:nnn {German}   {lyrics} {Text}
+
+\leadsheets_declare_translation:nnn {Fallback} {key} {key}
+\leadsheets_declare_translation:nnn {English}  {key} {key}
+\leadsheets_declare_translation:nnn {German}   {key} {Tonart}
+ 
+\leadsheets_declare_translation:nnn {Fallback} {interpret}
   {as~ interpreted~ by~ \printsongpropertylist{interpret}{~\&~}{,~}{~\&~}}
-\DeclareTranslation {English} {leadsheets/interpret}
+\leadsheets_declare_translation:nnn {English}  {interpret}
   {as~ interpreted~ by~ \printsongpropertylist{interpret}{~\&~}{,~}{~\&~}}
-\DeclareTranslation {German}  {leadsheets/interpret}
+\leadsheets_declare_translation:nnn {German}   {interpret}
   {wie~ von~ \printsongpropertylist{interpret}{~\&~}{,~}{~\&~}~ interpretiert}
 
-\DeclareTranslationFallback   {leadsheets/major} {major}
-\DeclareTranslation {English} {leadsheets/major} {major}
-\DeclareTranslation {German}  {leadsheets/major} {Dur}
+\leadsheets_declare_translation:nnn {Fallback} {major} {major}
+\leadsheets_declare_translation:nnn {English}  {major} {major}
+\leadsheets_declare_translation:nnn {German}   {major} {Dur}
 
-\DeclareTranslationFallback   {leadsheets/minor} {minor}
-\DeclareTranslation {English} {leadsheets/minor} {minor}
-\DeclareTranslation {German}  {leadsheets/minor} {Moll}
+\leadsheets_declare_translation:nnn {Fallback} {minor} {minor}
+\leadsheets_declare_translation:nnn {English}  {minor} {minor}
+\leadsheets_declare_translation:nnn {German}   {minor} {Moll}
 
-\DeclareTranslationFallback   {leadsheets/capo} {Capo}
-\DeclareTranslation {English} {leadsheets/capo} {Capo}
-\DeclareTranslation {German}  {leadsheets/capo} {Kapo}
+\leadsheets_declare_translation:nnn {Fallback} {capo} {capo}
+\leadsheets_declare_translation:nnn {English}  {capo} {capo}
+\leadsheets_declare_translation:nnn {German}   {capo} {Kapo}
 
-\DeclareTranslationFallback   {leadsheets/fret} {fret}
-\DeclareTranslation {English} {leadsheets/fret} {fret}
-\DeclareTranslation {German}  {leadsheets/fret} {Bund}
+\leadsheets_declare_translation:nnn {Fallback} {fret} {fret}
+\leadsheets_declare_translation:nnn {English}  {fret} {fret}
+\leadsheets_declare_translation:nnn {German}   {fret} {Bund}
 
-\endinput
+\tex_endinput:D
+
+2014/08/10: first version
+2016/05/18: new command: \leadsheets_declare_translation:nnn
+2016/06/28: new commands \leadsheetstranslate, \defleadsheetstranslation

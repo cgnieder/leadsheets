@@ -5,7 +5,6 @@
 %
 % --------------------------------------------------------------------------
 % Clemens Niederberger
-% Web:    http://www.mychemistry.eu/forums/forum/leadsheets/
 % E-Mail: contact@mychemistry.eu
 % --------------------------------------------------------------------------
 % Copyright 2014-2016 Clemens Niederberger
@@ -31,11 +30,11 @@
 \tl_new:N    \l__leadsheets_songtitle_template_tl
 \prop_new:N  \l__leadsheets_songtitle_template_prop
 
-\NewDocumentCommand \songtitle {} { \leadsheets_songtitle: }
+% \NewDocumentCommand \songtitle {} { \leadsheets_songtitle: }
 
 % the following is shamelessly adapted from the `needspace' package by
 % Peter Wilson and Herries Press:
-\cs_new:Npn \leadsheets_needspace:n #1
+\cs_new_protected:Npn \__leadsheets_needspace:n #1
   {
     \group_begin:
       \dim_set:Nn \l__leadsheets_tmpa_dim { #1 }
@@ -49,13 +48,13 @@
     \group_end:
   }
 
-\cs_new_protected:Npn \leadsheets_songtitle:
+\cs_new_protected:Npn \__leadsheets_songtitle:
   {
-    \leadsheets_use_songtitle_template:V \l__leadsheets_songtitle_template_tl
-    \leadsheets_needspace:n { 3\baselineskip }
+    \__leadsheets_use_songtitle_template:V \l__leadsheets_songtitle_template_tl
+    \__leadsheets_needspace:n { 3\baselineskip }
   }
 
-\cs_new_protected:Npn \leadsheets_use_songtitle_template:n #1
+\cs_new_protected:Npn \__leadsheets_use_songtitle_template:n #1
   {
     \prop_get:NnNTF \l__leadsheets_songtitle_template_prop
       {#1}
@@ -63,7 +62,7 @@
       { \l__leadsheets_tmpa_tl }
       { \msg_error:nnnn {leadsheets} {unknown-template} {songtitle} {#1} }
   }
-\cs_generate_variant:Nn \leadsheets_use_songtitle_template:n { V }
+\cs_generate_variant:Nn \__leadsheets_use_songtitle_template:n { V }
 
 \cs_new_protected:Npn \leadsheets_define_songtitle_template:nn #1#2
   { \prop_put:Nnn \l__leadsheets_songtitle_template_prop {#1} {#2} }

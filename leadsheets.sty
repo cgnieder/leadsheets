@@ -5,7 +5,6 @@
 %
 % --------------------------------------------------------------------------
 % Clemens Niederberger
-% Web:    http://www.mychemistry.eu/forums/forum/leadsheets/
 % E-Mail: contact@mychemistry.eu
 % --------------------------------------------------------------------------
 % Copyright 2014-2016 Clemens Niederberger
@@ -28,15 +27,15 @@
 % --------------------------------------------------------------------------
 % package information:
 \ExplSyntaxOn
-\tl_const:Nn \c_leadsheets_date_tl    {2016/02/02}
-\tl_const:Nn \c_leadsheets_version_tl {0.3a}
-\tl_const:Nn \c_leadsheets_info_tl    {Typesetting leadsheets and songbooks}
+\tl_const:Nn \leadsheetsdate    {2016/08/18}
+\tl_const:Nn \leadsheetsversion {0.5}
+\tl_const:Nn \leadsheetsinfo    {Typesetting leadsheets and songbooks}
 
 \ProvidesExplPackage
   {leadsheets}
-  {\c_leadsheets_date_tl}
-  {\c_leadsheets_version_tl}
-  {\c_leadsheets_info_tl \c_space_tl (CN)}
+  {\leadsheetsdate}
+  {\leadsheetsversion}
+  {\leadsheetsinfo \c_space_tl (CN)}
 
 % --------------------------------------------------------------------------
 % messages:
@@ -72,15 +71,54 @@
 \tl_new:N   \l__leadsheets_tmpb_tl
 \tl_new:N   \l__leadsheets_tmpc_tl
 \tl_new:N   \l__leadsheets_tmpd_tl
+\tl_new:N   \g__leadsheets_tmpa_tl
+
 \bool_new:N \l__leadsheets_tmpa_bool
+
 \dim_new:N  \l__leadsheets_tmpa_dim
+
 \seq_new:N  \l__leadsheets_tmpa_seq
 \seq_new:N  \l__leadsheets_tmpb_seq
+
 \int_new:N  \l__leadsheets_tmpa_int
 \int_new:N  \l__leadsheets_tmpb_int
 \int_new:N  \l__leadsheets_tmpc_int
+
 \box_new:N  \l__leadsheets_tmpa_box
 
+% --------------------------------------------------------------------------
+\prg_new_conditional:Npnn \leadsheets_if_package_loaded:n #1 {p,T,F,TF}
+  {
+    \cs_if_exist:cTF {ver@#1.sty}
+      { \prg_return_true: }
+      { \prg_return_false: }
+  }
+
+\DeclareExpandableDocumentCommand \leadsheetsifpackageloaded {m}
+  { \leadsheets_if_package_loaded:nTF {#1} }
+
+% % --------------------------------------------------------------------------
+% \seq_new:N \l__leadsheets_safed_commands_seq
+
+% \cs_new_protected:Npn \leadsheets_safe_define_protected:Npn #1
+%   {
+%     \seq_if_in:NnTF \l__leadsheets_safed_commands_seq {#1}
+%       {} % error
+%       {
+%         \seq_gput_right:Nn \l__leadsheets_safed_commands_seq {#1}
+%         \cs_gset_eq:cN {__leadsheets_ \cs_to_str:N #1:} #1
+%         \cs_set_protected:Npn #1
+%       }
+%   }
+
+% \cs_new_protected:Npn \leadsheets_restore:N #1
+%   {
+%     \seq_if_in:NnTF \l__leadsheets_safed_commands_seq {#1}
+%       { \cs_set_eq:Nc #1 {__leadsheets_ \cs_to_str:N #1:} }
+%       {} % error
+%     \seq_gremove_all:Nn \l__leadsheets_safed_commands_seq {#1}
+%   }
+  
 % --------------------------------------------------------------------------
 % library mechanism:
 \tl_const:Nn \c__leadsheets_library_extension_tl {code.tex}
@@ -95,9 +133,19 @@
     \__leadsheets_load_library:V \l__leadsheets_tmpa_tl
   }
 
+\prg_new_conditional:Npnn \leadsheets_if_library:n #1 {p,T,F,TF}
+  {
+    \cs_if_exist:cTF {leadsheets-library-#1-loaded}
+      { \prg_return_true: }
+      { \prg_return_false: }
+  }
+
+\DeclareExpandableDocumentCommand \leadsheetsiflibrary {m}
+  { \leadsheets_if_library:nTF {#1} }
+  
 \cs_new_protected:Npn \__leadsheets_load_library:n #1
   {
-    \cs_if_exist:cF {leadsheets-library-#1-loaded}
+    \leadsheets_if_library:nF {#1}
       {
         \file_if_exist:nTF
           {\c__leadsheets_library_prefix_tl.#1.\c__leadsheets_library_extension_tl}
@@ -118,13 +166,16 @@
     \ProvidesFile
       {\c__leadsheets_library_prefix_tl.#1.\c__leadsheets_library_extension_tl}
       [
-        \c_leadsheets_date_tl
+        \leadsheetsdate
         \c_space_tl
-        v \c_leadsheets_version_tl
+        v \leadsheetsversion
         \c_space_tl
         leadsheets~ library~ `#1'~ #2
       ]
   }
+
+% 
+\cs_new:Npn \LeadsheetSurvive #1 \LeadsheetEndSurvive {#1}
 
 % --------------------------------------------------------------------------
 % one of those defines a leadsheets library, either using expl syntax or 2e
@@ -180,7 +231,8 @@
           properties ,
           transposing ,
           templates ,
-          translations
+          translations ,
+          external
         }
   }
 \ProcessKeysOptions{leadsheets}
@@ -188,7 +240,12 @@
 \bool_if:NF \l__leadsheets_with_options_bool
   { \leadsheets_load_library:n {songs} }
   
-
 % --------------------------------------------------------------------------
 \tex_endinput:D
+
+2016/08/18 - new commands: \leadsheetsifpackageloaded, \leadsheetsiflibrary
+           - new class `leadsheet'
+           - new library `external'
+           - minor chords can now be typeset with lowercase letters
+             (chordnames)
 
