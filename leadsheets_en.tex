@@ -239,11 +239,14 @@ The user-libraries are the following ones:
     library to use MuseScore's \enquote{MuseJazz} font, see
     section~\ref{sec:musejazz-libr}.  It loads the \library{chords}
     library.
-  \item[\library{songs}]  \packageoption{songs}This is the \emph{main
+  \item[\library{songs}] \packageoption{songs}This is the \emph{main
     library}.  It defines everything necessary for the typesetting of the
     leadsheets.  It currently loads \emph{all other libraries}, \ie, user
     libraries \emph{and} internal libraries, except for the \library{musejazz}
-    library.  This library is described in part~\ref{part:leadsheets-library}.
+    library.  This library is described in part~\ref{part:leadsheets-songs-library}.
+  \item[\library{external}] \packageoption{external}enables to include
+    external leadsheet documents using the \cls{leadsheets} class into a main
+    document, see part~\ref{part:external-leadsheet} for details.
 \end{description}
 Those libraries can also be loaded as a package option.  If you say
 \begin{sourcecode}
@@ -592,7 +595,7 @@ Here is a small example of it's usage and the outcome:
 \end{example}
 
 \clearpage
-\part{The \library*{songs} Library}\label{part:leadsheets-library}
+\part{The \library*{songs} Library}\label{part:leadsheets-songs-library}
 \dictum[Jeff Beck]{%
   I don't care about the rules. If I don't break the rules at least ten
   times every song then I'm not doing my job.%
@@ -604,7 +607,7 @@ The \leadsheets{} package allows for easy creation of leadsheets but it also
 can be used to create complete songbooks. The basic idea is that songs are
 typeset in the \env{song} environment.  Each song gets a number of properties
 (see section~\ref{sec:song-properties}) that determine how the title of the
-song is typeset.  For the typesetting of the titles a template mechansim is
+song is typeset.  For the typesetting of the titles a template mechanism is
 used (see section~\ref{sec:title-templates}).  Songs can also be tagged.  The
 tags then allow to typeset only songs matching a list of tags that is
 specified via an option.
@@ -1136,7 +1139,7 @@ as \cs{chord} with one exception: it lacks the mandatory argument
 and \code{-}, though, as well as the mandatory space (\visiblespace)!
 
 Each \env{verse} like environment (see section~\ref{sec:other-envverse-like}
-for more information) is treated uniquely by this mechansim:
+for more information) is treated uniquely by this mechanism:
 
 \begin{example}
   \definesongtitletemplate{empty}{}
@@ -1453,7 +1456,7 @@ The titles of songs set with the \env{song} environment are displayed
 according to the chosen title template.  It is chosen through the option
 \option{title-template} which can be set with \cs{setleadsheets} or as option
 to a specific \env{song} environment.  \leadsheets{} provides few predefined
-templates and an easy mechansim to define own templates.
+templates and an easy mechanism to define own templates.
 
 \subsubsection{Existing Templates}
 
@@ -1969,7 +1972,8 @@ that \cs{printsongpropertylist} is not expandable.
 \end{table}
 
 \clearpage
-\part{The \library*{external} Library and the \cls*{leadsheet} Class}
+\part{The \library*{external} Library and the \cls*{leadsheet}
+  Class}\label{part:external-leadsheet}
 \dictum[Thelonious Monk]{%
   Talking about music is like dancing about architecture.%
 }

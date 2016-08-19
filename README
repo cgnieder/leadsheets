@@ -28,6 +28,7 @@ The leadsheets bundle consists of the following files
    leadsheets.library.<name>.code.tex:
     * chordnames
     * chords
+    * external
     * musejazz
     * musicsymbols
     * properties
