@@ -37,7 +37,7 @@
     abort!
   }
 
-\bool_if:nF { \xetex_if_engine_p: || \luatex_if_engine_p: }
+\bool_if:nF { \sys_if_engine_xetex_p: || \sys_if_engine_luatex_p: }
   { \msg_error:nn {leadsheets} {wrong-engine} \tex_endinput:D }
 
 \RequirePackage {fontspec}
