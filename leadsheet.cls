@@ -7,7 +7,7 @@
 % Clemens Niederberger
 % E-Mail: contact@mychemistry.eu
 % --------------------------------------------------------------------------
-% Copyright 2014-2016 Clemens Niederberger
+% Copyright 2014-2017 Clemens Niederberger
 %
 % This work may be distributed and/or modified under the
 % conditions of the LaTeX Project Public License, either version 1.3
@@ -21,7 +21,7 @@
 %
 % The Current Maintainer of this work is Clemens Niederberger.
 % --------------------------------------------------------------------------
-\ProvidesClass{leadsheet}[2016/07/21 v0.5 leadsheets class (part of the leadsheets package)]
+\ProvidesClass{leadsheet}[2017/01/23 v0.5a leadsheets class (part of the leadsheets package)]
 \LoadClassWithOptions{scrartcl}
 
 \RequirePackage{leadsheets}

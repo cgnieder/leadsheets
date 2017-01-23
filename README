@@ -1,5 +1,5 @@
 --------------------------------------------------------------------------
-the LEADSHEETS package v0.5 2016/08/18
+the LEADSHEETS package v0.5a 2017/01/23
  
   typesetting leadsheets and songbooks
 
@@ -8,7 +8,7 @@ Clemens Niederberger
 Web:    http://www.mychemistry.eu/forums/forum/leadsheets/
 E-Mail: contact@mychemistry.eu
 --------------------------------------------------------------------------
-Copyright 2014-2016 Clemens Niederberger
+Copyright 2014-2017 Clemens Niederberger
 
 This work may be distributed and/or modified under the
 conditions of the LaTeX Project Public License, either version 1.3
@@ -24,6 +24,7 @@ The Current Maintainer of this work is Clemens Niederberger.
 --------------------------------------------------------------------------
 The leadsheets bundle consists of the following files
  - leadsheets.sty
+ - leadsheet.cls
  - libraries -- they all follow the naming scheme
    leadsheets.library.<name>.code.tex:
     * chordnames
