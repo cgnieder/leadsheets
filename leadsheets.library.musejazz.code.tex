@@ -173,24 +173,6 @@
     \leadsheets_chord_sym:Nnn  \l__leadsheets_chord_tl {sus}
       {\l__leadsheets_sus_tl}
     \leadsheets_chord_sym:Nnn  \l__leadsheets_chord_tl {^} {\textsuperscript}
-    \bool_if:NF \l__leadsheets_notation_literal_bool
-      {
-        % convert to English to German input:
-        \bool_if:NT \l__leadsheets_input_notation_german_bool
-          {
-            \leadsheets_chord_sym:Nnn \l__leadsheets_chord_tl {B}   {@@@}
-            \leadsheets_chord_sym:Nnn \l__leadsheets_chord_tl {H}   {B}
-            \leadsheets_chord_sym:Nnn \l__leadsheets_chord_tl {@@@} {Bb}
-          }
-        % convert to English to German output:
-        \bool_if:NT \l__leadsheets_output_notation_german_bool
-          {
-            \leadsheets_chord_sym:Nnn \l__leadsheets_chord_tl {Bb}  {@@@}
-            \leadsheets_chord_sym:Nnn \l__leadsheets_chord_tl {B}   {H}
-            \leadsheets_chord_sym:Nnn \l__leadsheets_chord_tl {@@@} {B}
-            \leadsheets_chord_sym:Nnn \l__leadsheets_chord_tl {B#}  {H}
-          }
-      }
     \leadsheets_chord_sym:Nnn  \l__leadsheets_chord_tl {#b} {}
     \leadsheets_chord_sym:Nnn  \l__leadsheets_chord_tl {b#} {}
     \leadsheets_chord_sym:Nnn  \l__leadsheets_chord_tl {##}
@@ -279,4 +261,9 @@
     \group_end:
   }
 
-\tex_endinput:D
+\file_input_stop:
+
+HISTORY:
+
+2017/09/25 - the `literal' option has been dropped 2015/05/08 already - adopt
+             file accordingly
