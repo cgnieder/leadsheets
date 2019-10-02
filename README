@@ -1,5 +1,5 @@
 --------------------------------------------------------------------------
-the LEADSHEETS package v0.5b 2017/09/26
+the LEADSHEETS package v0.5d 2019/10/02
 
   typesetting leadsheets and songbooks
 
@@ -8,7 +8,7 @@ Clemens Niederberger
 Web:    https://github.com/cgnieder/leadsheets
 E-Mail: contact@mychemistry.eu
 --------------------------------------------------------------------------
-Copyright 2014-2017 Clemens Niederberger
+Copyright 2014--2019 Clemens Niederberger
 
 This work may be distributed and/or modified under the
 conditions of the LaTeX Project Public License, either version 1.3
