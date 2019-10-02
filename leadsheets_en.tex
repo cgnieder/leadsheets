@@ -1,7 +1,7 @@
-% arara: pdflatex: { shell: on , action: nonstopmode }
-% arara: biber
-% arara: pdflatex: { action: nonstopmode }
-% arara: pdflatex: { action: nonstopmode }
+% arara: pdflatex: { shell: on , interaction: nonstopmode }
+% !arara: biber
+% !arara: pdflatex: { interaction: nonstopmode }
+% !arara: pdflatex: { interaction: nonstopmode }
 % --------------------------------------------------------------------------
 % the LEADSHEETS package
 % 
@@ -26,7 +26,7 @@
 % The Current Maintainer of this work is Clemens Niederberger.
 % --------------------------------------------------------------------------
 \documentclass[load-preamble+]{cnltx-doc}
-\usepackage{leadsheets,bookmark}
+\usepackage{leadsheets,bookmark,csquotes}
 \setcnltx{
   package = leadsheets ,
   info    = Typesetting leadsheets and songbooks ,
@@ -259,7 +259,7 @@ The user-libraries are the following ones:
     part~\ref{part:chords-library}.  It also loads the
     \library{musicsymbols}library.
   \item[\library{musejazz}] \packageoption{musejazz}extends the \chords\
-    library to use MuseScore's \enquote{MuseJazz} font, see
+    library to use MuseScore's \enquote{MuseJazz Text} font, see
     section~\ref{sec:musejazz-libr}.  It loads the \library{chords}
     library.
   \item[\library{songs}] \packageoption{songs}This is the \emph{main
@@ -599,13 +599,13 @@ Let's see a few examples for the \option{input-notation} and
 \section{The \library*{musejazz} Library}\label{sec:musejazz-libr}
 
 The \musejazz\ library extends the \chords\ library to use
-MuseScore's\footnote{\url{http://musescore.com/}} font \enquote{MuseJazz} for
-the chord symbols.  The library contains the two lines which explains why it
-requires \LuaLaTeX\ or \XeLaTeX.  Well, and the font, obviously.
+MuseScore's\footnote{\url{http://musescore.com/}} font \enquote{MuseJazz Text}
+for the chord symbols.  The library contains the two lines which explains why
+it requires \LuaLaTeX\ or \XeLaTeX.  Well, and the font, obviously.
 
 \begin{sourcecode}
   \RequirePackage{fontspec}
-  \newfontfamily\musejazz{MuseJazz}
+  \newfontfamily\musejazz{MuseJazz Text}
 \end{sourcecode}
 
 Here is a small example of it's usage and the outcome:
@@ -965,7 +965,8 @@ options:
     \meta{code} is inserted at the beginning of the environment and can thus
     be used to add formatting, \eg, \keyis{format}{\cs*{itshape}}.
   \keyval{label-format}{code}\Default
-    The same for the environment labels.
+    The same for the environment labels.  The last command may take the label
+    as an argument so you can also use \cs*{textbf} for example.
   \keyval{class}{class-name}\Default{default}
     The\sinceversion{0.2} \env{verse} environment and all related environments
     all belong to a class, the default class is called \code{default}.  This

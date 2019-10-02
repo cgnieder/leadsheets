@@ -22,11 +22,11 @@
 % The Current Maintainer of this work is Clemens Niederberger.
 % --------------------------------------------------------------------------
 \LeadsheetsExplLibrary{musejazz}
-  {2014/08/10 using MuseScore's MuseJazz font for chordnames}
+  {2019/10/02 using MuseScore's MuseJazz font for chordnames}
 
 \leadsheets_load_library:n {chordnames}
 
-\msg_new:nnnn { leadsheets } { wrong-engine }
+\msg_new:nnnn {leadsheets} {wrong-engine}
   {
     the~ `musejazz'~ library~ needs~ either~ to~ be~ run~ with~ XeLaTeX~ or~
     with~ LuaLaTeX.
@@ -42,7 +42,7 @@
 
 \RequirePackage {fontspec}
 
-\newfontfamily \musejazz {MuseJazz}
+\newfontfamily \musejazz {MuseJazz~ Text}
 
 \cs_new_protected:Npn \leadsheets_char:Nn #1#2
   { \cs_set:Npx #1 { \tex_char:D "#2 \scan_stop: } }
@@ -267,3 +267,4 @@ HISTORY:
 
 2017/09/25 - the `literal' option has been dropped 2015/05/08 already - adopt
              file accordingly
+2019/10/02 - MuseScore's font has been renamed into `MuseJazz Text'
