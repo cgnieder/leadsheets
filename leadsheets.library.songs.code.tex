@@ -21,7 +21,7 @@
 %
 % The Current Maintainer of this work is Clemens Niederberger.
 % --------------------------------------------------------------------------
-\LeadsheetsExplLibrary{songs}{2016/07/02 typesetting songs}
+\LeadsheetsExplLibrary{songs}{2019/10/02 typesetting songs}
 
 % --------------------------------------------------------------------------
 % messages:
@@ -533,14 +533,16 @@
     \bool_if:cF {l__leadsheets_#1_empty_bool}
       {
         \tl_use:c {l__leadsheets_#1_label_format_tl}
-        \bool_if:cT {l__leadsheets_#1_named_bool}
-          {
-            \leadsheets_translation:n {#1}
-            \bool_if:cT {l__leadsheets_#1_numbered_bool} { ~ }
-          }
-        \bool_if:cT {l__leadsheets_#1_numbered_bool}
-          { \use:c {the#1} }
-        \tl_use:c {l__leadsheets_#1_after_label_tl}
+        {
+          \bool_if:cT {l__leadsheets_#1_named_bool}
+            {
+              \leadsheets_translation:n {#1}
+              \bool_if:cT {l__leadsheets_#1_numbered_bool} {~}
+            }
+          \bool_if:cT {l__leadsheets_#1_numbered_bool}
+            { \use:c {the#1} }
+          \tl_use:c {l__leadsheets_#1_after_label_tl}
+        }
       }
   }
 
@@ -790,3 +792,4 @@
 2016/06/29: - adapt to changed shorthand library
             - activate bar-shortcuts per default
 2016/07/02: fix issue when \capo is used in a title template
+2019/10/02: enable https://tex.stackexchange.com/q/442222/
