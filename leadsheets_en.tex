@@ -212,7 +212,7 @@ promising packages: \pkg{songs}~\cite{pkg:songs} and
 I wanted.  Just a bit too inflexible in the wrong places, needing tweaking
 here and there, and so on.  On the other hand I had quite some code lying on
 my hard drive with various attempts of typesetting leadsheets.  This package
-is now the attempt to have a clean, documented and customisable version of my
+is now the attempt to have a clean, documented and customizable version of my
 code\footnote{Plus new things!}.
 
 \section{The Structure of the Package}
@@ -395,7 +395,7 @@ bars:
     The distance between two bar rules as in \cs{doublebar} or \cs{stopbar}.
 \end{commands}
 
-Finally \musicsymbols{} provides a macro for adding an abitrary meter:
+Finally \musicsymbols{} provides a macro for adding an arbitrary meter:
 \begin{commands}
   \command{meter}[\marg{numerator}\marg{denominator}]
     \sinceversion{0.5}For example \verbcode+\meter{6}{8}+: \meter{6}{8}
@@ -698,7 +698,7 @@ to specify the different parts of a song.  They all are basically the same
 kind of environment, namely an \env*{itemize} environment internally where the
 only \cs*{item} has the name of the environment as option.  The \env{verse}
 environment is a little bit different since verses can be numbered.  If they
-are then each usage of \env{verse} inside \env{song} will step a vers number
+are then each usage of \env{verse} inside \env{song} will step a verse number
 and print it (as option to the internal \cs*{item}).
 
 \begin{environments}
@@ -775,7 +775,7 @@ Although I used the word \enquote{global} above \emph{all options are local to
     the \env{song} environment.  See sections~\ref{sec:special-characters}
     and~\ref{sec:typesetting-bars} for more details.
   \keybool{disable-measuring}\Default{false}
-    \sinceversion{0.4}This option turns of the song height measuring.  This
+    \sinceversion{0.4}This option turns off the song height measuring.  This
     makes song title template definitions easier (see section~\ref{sec:title-templates} for
     details).  \emph{The song property \property{height} will be set to 0pt then!}
 \end{options}
@@ -1396,7 +1396,7 @@ They have more options.  Here's a complete list:
     different classes then \meta{class} needs to be \code{default}, see also
     page~\pageref{option:class}. The \option{class} to a \env{verse}-like
     environment allows for example to have verses with different chords which
-    are still counted reguarly together with the \option{remember-chords}
+    are still counted regularly together with the \option{remember-chords}
     option.
 \end{options}
 
@@ -1408,7 +1408,7 @@ options for all environments:
   \keyval{verses-label-format}{code}\Default
     Sets the label format for all \env{verse} like environments.
   \keyval{verses-after-label}{code}\Default{:}
-    Defeault \meta{code} that is inserted in the label after the label text of
+    Default \meta{code} that is inserted in the label after the label text of
     \env{verse} like environments.
 \end{options}
 This options only determine the formatting of an environment if the
@@ -1565,7 +1565,7 @@ contents or other auxiliary files.
     \leadsheets{} measures the height of a song body before it typesets it and
     it can often be necessary in a template to know if the measuring phase is
     active or not.  For example the song property \property{height} should
-    only be used if \emph{not} in the measuring phase: it's value get's
+    only be used if \emph{not} in the measuring phase: its value gets
     determined there and is not yet available.
   \command{expandcode}[\marg{code}]
     Exhaustively expands \meta{code}.  Experienced users won't need this.  It
