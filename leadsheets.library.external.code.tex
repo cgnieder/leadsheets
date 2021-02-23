@@ -122,9 +122,9 @@
 % and \LeadsheetEndSurvive
 \cs_new_protected:Npn \leadsheets_include_external_file:nn #1#2
   {
-    \tl_set_from_file:Nnn \l__leadsheets_tmpa_tl
+    \file_get:nnN { #1 \tl_if_blank:nF {#2} {.} #2 }
       {}
-      { #1 \tl_if_blank:nF {#2} {.} #2 }
+      \l__leadsheets_tmpa_tl
     \cs_set:Npn \LeadsheetSurvive ##1 \LeadsheetEndSurvive ##2 \q_stop
       { ##1 \__leadsheets_extract_survival:ww ##2 \q_stop }
     \__leadsheets_include_external_file_aux:V \l__leadsheets_tmpa_tl
