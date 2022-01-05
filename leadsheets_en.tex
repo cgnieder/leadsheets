@@ -1,7 +1,7 @@
 % arara: pdflatex: { shell: on , interaction: nonstopmode }
-% !arara: biber
-% !arara: pdflatex: { interaction: nonstopmode }
-% !arara: pdflatex: { interaction: nonstopmode }
+% arara: biber
+% arara: pdflatex: { interaction: nonstopmode }
+% arara: pdflatex: { interaction: nonstopmode }
 % --------------------------------------------------------------------------
 % the LEADSHEETS package
 % 
@@ -99,8 +99,7 @@
 \defbibheading{bibliography}{\section{References}}
 \addbibresource{\jobname.bib}
 
-\usepackage{filecontents}
-\begin{filecontents}{\jobname.bib}
+\begin{filecontents}[overwrite]{\jobname.bib}
 @book{book:realbook,
   author    = {Various} ,
   title     = {The Real Book} ,
