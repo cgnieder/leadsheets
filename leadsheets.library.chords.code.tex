@@ -253,6 +253,16 @@
 \NewDocumentCommand \recallchord {st-}
   { \leadsheets_recall_chord:nn {#1} {#2} }
 
+\cs_new_protected:Npn \leadsheets_skip_chord:nn #1#2
+  {
+    \seq_pop_left:NNF \g__leadsheets_chords_sequences_seq
+      \l__leadsheets_tmpa_tl
+      { \msg_error:nnV {leadsheets} {no-chords} \l_leadsheets_verse_type_tl }
+  }
+
+\NewDocumentCommand \skipchord {st-}
+  { \leadsheets_skip_chord:nn {#1} {#2} }
+
 \NewDocumentCommand \getorprintchord {}
   {
     \leadsheets_if_recall_chords:TF
