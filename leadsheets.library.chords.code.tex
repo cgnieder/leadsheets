@@ -263,6 +263,13 @@
 \NewDocumentCommand \skipchord {st-}
   { \leadsheets_skip_chord:nn {#1} {#2} }
 
+\NewDocumentCommand \skipchordifrecalling {}
+  {
+    \leadsheets_if_recall_chords:TF
+      { \skipchord }
+      { \empty }
+  }
+
 \NewDocumentCommand \getorprintchord {}
   {
     \leadsheets_if_recall_chords:TF
