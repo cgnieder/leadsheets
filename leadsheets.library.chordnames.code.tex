@@ -52,6 +52,7 @@
 \tl_new:N \l__leadsheets_sus_tl
 \tl_new:N \l__leadsheets_dim_tl
 \tl_new:N \l__leadsheets_add_tl
+\tl_new:N \l__leadsheets_no_five_tl
 \tl_new:N \l__leadsheets_major_seven_tl
 \tl_new:N \l__leadsheets_major_nine_tl
 \tl_new:N \l__leadsheets_german_B_tl
@@ -69,6 +70,7 @@
 \tl_set:Nn \l__leadsheets_sus_tl         {\textsuperscript{sus}}
 \tl_set:Nn \l__leadsheets_dim_tl         {\textsuperscript{dim}}
 \tl_set:Nn \l__leadsheets_add_tl         {\textsuperscript{add}}
+\tl_set:Nn \l__leadsheets_no_five_tl     {\textsuperscript{no5}}
 \tl_set:Nn \l__leadsheets_major_seven_tl {\textsuperscript{maj7}}
 \tl_set:Nn \l__leadsheets_major_nine_tl  {\textsuperscript{maj9}}
 \tl_set:Nn \l__leadsheets_german_B_tl    {B}
@@ -94,6 +96,7 @@
 \cs_gset_protected:Npn \leadsheets_chord_aux:n !1
  {
     \tl_set:Nn \l__leadsheets_chord_tl {!1}
+    \leadsheets_chord_sym:NnV  \l__leadsheets_chord_tl {no5} \l__leadsheets_no_five_tl
     \leadsheets_chord_sym:NnV  \l__leadsheets_chord_tl {maj7} \l__leadsheets_major_seven_tl
     \leadsheets_chord_sym:NnV  \l__leadsheets_chord_tl {maj9} \l__leadsheets_major_nine_tl
     \leadsheets_chord_sym:NnV  \l__leadsheets_chord_tl {sus} \l__leadsheets_sus_tl
@@ -193,6 +196,7 @@
     sus          .tl_set:N = \l__leadsheets_sus_tl ,
     add          .tl_set:N = \l__leadsheets_add_tl ,
     dim          .tl_set:N = \l__leadsheets_dim_tl ,
+    no-five      .tl_set:N = \l__leadsheets_no_five_tl ,
     major-seven  .tl_set:N = \l__leadsheets_major_seven_tl ,
     major-nine   .tl_set:N = \l__leadsheets_major_nine_tl ,
     german-B     .tl_set:N = \l__leadsheets_german_B_tl ,
